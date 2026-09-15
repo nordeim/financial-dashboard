@@ -1,9 +1,9 @@
-# Finara (Financial Dashboard) — Master Project Architecture Document (PAD) v1.1
+# Finara (Financial Dashboard) — Master Project Architecture Document (PAD) v1.2
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
-**Companion Documents:** `README.md` (user onboarding), `AGENTS.md` (agent instructions), `CLAUDE.md` (Claude Code conventions), `docs/Finara_Dashboard.png` (visual reference of the original app), `docs/plans/2026-09-15-parity-remediation-round2.md` (parity audit + remediation plan)
-**Last Updated:** 2026-09-15 (v1.1 — parity remediation round 2: ADR-008..010, pure domain layer + Vitest, taxonomy alignment, dark mode, filters/bulk/edit/pagination, export restore)
+**Companion Documents:** `README.md` (user onboarding), `AGENTS.md` (agent instructions), `CLAUDE.md` (Claude Code conventions), `docs/Finara_Dashboard.png` (visual reference of the original app), `docs/plans/2026-09-15-parity-remediation-round2.md` (round-2 parity audit), `docs/plans/2026-09-15-parity-remediation-round3.md` (round-3 pixel-parity audit + plan this revision implements)
+**Last Updated:** 2026-09-15 (v1.2 — pixel-parity remediation round 3: ADR-011..013, source-exact design system, centered dialogs + native confirms, ui-maps module, CSS entrance animations; v1.1 — parity remediation round 2: ADR-008..010, pure domain layer + Vitest, taxonomy alignment, dark mode, filters/bulk/edit/pagination, export restore)
 **Audience:** Senior Engineers, Tech Leads, DevOps, and Onboarding Engineers
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
@@ -118,7 +118,7 @@ Finara is a personal-finance dashboard: income, expenses, 50/30/20 budgets, acco
 **ADR-009: Pure domain layer with Vitest seams (TDD)**
 
 - **Context:** Round-1 verification caught math bugs (analytics averages dividing all-time totals by window months; trend placeholders vs. real month-over-month) that browser spot-checks missed — the logic needed executable specifications.
-- **Decision:** Framework-free modules own every piece of domain math: `dashboard-kpis.ts` (KPI computation incl. placeholder-fallback trends and goal-progress savings), `expense-filters.ts` (filter/sort/badge-count logic), `date-format.ts` (5 format patterns), `import-export.ts` (Finara export normalization), plus the existing `money.ts`/`categories.ts`. Each carries a Vitest spec in `src/lib/__tests__/` (69 tests); views and route handlers stay thin consumers. Behavior changes land red → green.
+- **Decision:** Framework-free modules own every piece of domain math: `dashboard-kpis.ts` (KPI computation incl. placeholder-fallback trends and goal-progress savings), `expense-filters.ts` (filter/sort/badge-count logic), `date-format.ts` (5 format patterns), `import-export.ts` (Finara export normalization), `ui-maps.ts` (live-verified visual maps), plus the existing `money.ts`/`categories.ts`. Each carries a Vitest spec in `src/lib/__tests__/` (76 tests); views and route handlers stay thin consumers. Behavior changes land red → green.
 - **Rationale:** Pure functions are the cheapest thing to test; hoisting them out of components also satisfies the client-import rule (no Prisma/React in `src/lib` domain modules).
 - **Consequences:** (+) Regressions in money math and parity rules now fail CI-locally before review; the KPI semantics are documented in code. (−) A second place to look for logic (lib, not view) — the rule is "if it computes, it lives in lib".
 - **Alternatives Rejected:** Component-level React Testing Library tests (slower, brittle); snapshot tests (verify shape, not math).
@@ -130,6 +130,30 @@ Finara is a personal-finance dashboard: income, expenses, 50/30/20 budgets, acco
 - **Rationale:** One module feeds API validation, UI selects, and the CSV import guesser — aligning it once fixes every dialog; the test keeps future drift impossible to merge silently.
 - **Consequences:** (+) Six dialogs match the source app; validation and UI can't diverge. (−) The legacy map is dead code once no pre-remediation databases exist (safe to remove later).
 - **Alternatives Rejected:** Per-dialog hardcoding (the original bug); a DB enum table (overkill for a pinned set).
+
+**ADR-011: Source-exact design system via CSS variables + captured utility classes (round 3)**
+
+- **Context:** Rounds 1–2 approximated the source look (flat slate canvas, `shadow-sm` cards, emerald-500 buttons). The round-3 audit captured the live app's full DOM and stylesheet: gradient page shell, `bg-white/80 backdrop-blur-sm shadow-lg` cards, `--primary-sage #059669` / `--primary-navy #1E293B` tokens, vertical sidebar gradient, gray-based dark overrides, exact 500→600 feature-card gradients.
+- **Decision:** `globals.css` now defines the Finara token set (`:root`/`.dark`), `.sidebar-gradient`, `.card-hover`, and the `.text-primary-navy`/`.bg-primary-sage` utility families; every view was restyled with the exact utility-class strings extracted from the live DOM. Per-name visual maps that cannot be utility classes (9 sector hexes, 7 goal emoji, priority badges, account icons, 50/30/20 dots/badges) live in the pure module `src/lib/ui-maps.ts`, pinned by `ui-maps.test.ts`.
+- **Rationale:** Pixel parity by construction: copying verified strings beats re-deriving approximations; centralizing the non-class maps prevents per-view forking (the sector colors are fixed per sector NAME — proven by live delete-rank experiments — so a chart palette order would be wrong).
+- **Consequences:** (+) 85–95 VLM parity scores across views; theme-exact dark mode. (−) Class strings are intentionally verbose literals (readability cost accepted for fidelity); the evidence archive lives outside the repo (referenced from the plan doc).
+- **Alternatives Rejected:** Approximate restyle (round-1 result: visibly off); a component-level theme prop system (indirection without fidelity gain).
+
+**ADR-012: Centered dialog system + native confirm() deletes (round 3)**
+
+- **Context:** The clone used right-side Sheets for Add Transaction and immediate deletes; the live app opens every dialog as a centered modal (`max-w-2xl`, black/50 overlay) and deletes via the browser's native `confirm()` with fixed texts.
+- **Decision:** All add/edit dialogs (transaction, income, goal, account, investment, AI Coach at `h-[80vh]`) are shadcn `Dialog` centered modals; the Add Expense modal opens in Quick Select mode (5 Needs subcategories) then swaps to the manual form in place with "← Back to Quick Select". Delete handlers wrap `window.confirm("Are you sure you want to delete this …?")` with the live app's exact wording; bulk delete pluralizes.
+- **Rationale:** Structure parity is behavioral, not just visual — modal-vs-sheet changes focus flow, overlay affordance, and automation semantics; native confirms reproduce the live app's interruptive delete UX exactly.
+- **Consequences:** (+) Verified E2E: FAB → Quick Select → manual → toast; confirm dialogs block correctly with exact texts. (−) Native `confirm()` is unstyleable (accepted — it is the source behavior); headless automation must stub/accept dialogs (documented in the verification workflow).
+- **Alternatives Rejected:** Keeping Sheets (visible structural mismatch); styled AlertDialog replaces confirm (nicer, but breaks fidelity).
+
+**ADR-013: CSS-only staggered entrance animations (round 3)**
+
+- **Context:** The live app animates every section entrance with framer-motion (staggered fade/slide). Adding framer-motion for parity would cost a dependency + bundle weight for a decorative effect.
+- **Decision:** `.fade-in-up` keyframe class + `.stagger-1..5` delay utilities in `globals.css`, applied to section wrappers; wrapped in `@media (prefers-reduced-motion: reduce)` to disable animation entirely.
+- **Rationale:** Visually equivalent entrance for a fraction of the cost; reduced-motion accessibility is built in (closing the round-2 backlog item).
+- **Consequences:** (+) Zero JS animation cost; reduced-motion safe. (−) Not spring-physics-identical to framer-motion (acceptable — entrance feel is matched, not physics).
+- **Alternatives Rejected:** framer-motion dependency (bundle + complexity); no animation (visible parity gap).
 
 ---
 
@@ -239,15 +263,17 @@ financial-dashboard/
 │       ├── expense-filters.ts          ← filter/sort/badge-count logic for the expenses list (pure)
 │       ├── date-format.ts              ← the 5 settings-aware date formats (pure)
 │       ├── import-export.ts            ← Finara export normalization + flexible date parsing (pure)
+│       ├── ui-maps.ts                  ← live-verified visual maps: sector hexes, goal emoji, badges, icons (pure)
 │       ├── api.ts                      ← ApiResult envelope + validation guards (server)
 │       ├── analytics.ts                ← getDashboard/getAnalytics aggregations (server)
 │       ├── seed.ts                     ← idempotent, lock-guarded demo data (server)
 │       ├── db.ts                       ← Prisma client singleton (server)
-│       └── __tests__/                  ← Vitest specs (69 tests) for every pure module
+│       └── __tests__/                  ← Vitest specs (76 tests) for every pure module
 ├── prisma/schema.prisma                ← 7 models, Int *Minor money columns
 ├── db/                                 ← SQLite runtime storage (gitignored, .gitkeep)
 ├── docs/                               ← SSH wrapper + push runbook + reference image + plans/
 ├── vitest.config.ts                    ← Vitest runner (node env, @ alias)
+├── public/finara-logo.png              ← login logo asset (source app)
 ├── .env.example                        ← DATABASE_URL only
 ├── AGENTS.md / CLAUDE.md / README.md   ← agent + human documentation
 └── (eslint.config.mjs, tsconfig.json, tailwind.config.ts [legacy], postcss.config.mjs, components.json)
@@ -420,29 +446,31 @@ DTOs in `src/lib/types.ts` are the wire contract: dates serialize as ISO strings
 
 ### 5.1 Typographic System
 
-Inter (400/500/600/700/800) via `next/font/google`, exposed as `--font-inter`. Hierarchy: page titles `text-2xl/3xl bold`, KPI values `text-2xl bold tabular-nums`, labels `text-sm medium slate-500`, captions `text-xs slate-400`. All money uses tabular numerals.
+Inter (400/500/600/700/800) via `next/font/google`, exposed as `--font-inter`. Hierarchy (source-exact): page titles `text-3xl lg:text-4xl font-bold text-primary-navy dark:text-white`, KPI values `text-2xl/3xl bold tabular-nums`, labels `text-sm medium neutral-600`, captions `text-xs neutral-500`. All money uses tabular numerals.
 
 ### 5.2 Color Tokens
 
-Defined once in `src/app/globals.css` (`@theme inline` + `:root` oklch literals — Tailwind v4 drops `var()` chains inside `@theme`, so shadcn semantic tokens are literal values, kept in sync with the palette block):
+Two layers coexist in `src/app/globals.css`: the shadcn semantic tokens (oklch literals in `@theme inline`, consumed by Radix primitives) and the **Finara source tokens** (CSS variables + utility classes, captured from the live stylesheet — ADR-011):
 
-| Token | Approx. hex | Usage | Contrast |
-|-------|-------------|-------|----------|
-| primary | #10B981 (emerald-500) | Primary buttons, active-nav accent, sync pill | 2.5:1 on white (large/UI elements only) |
-| background | #F1F5F9 (slate-100) | App canvas | — |
-| card | #FFFFFF | Card surfaces | 21:1 body text (slate-900) |
-| foreground | #0F172A (slate-900) | Primary text | 16:1 on white |
-| sidebar | #1E293B (slate-800) | Navigation chrome | white text 12.6:1 |
-| Income / Expenses / Net / Savings accents | emerald-600 / red-500 / amber-500 / violet-500 | KPI icon tiles, trends | — |
-| Gradient cards | orange→orange-600 · cyan→teal-600 · blue→indigo-600 · purple→fuchsia-600 | Dashboard feature cards | white text ≥ 4.5:1 on gradients |
+| Token | Value | Usage | Contrast |
+|-------|-------|-------|----------|
+| `--primary-sage` | #059669 (emerald-600) | Primary buttons, FAB, budget fills, active-nav accent | 3.1:1 on white (large/UI elements) |
+| `--primary-navy` | #1E293B (slate-800) | Headings, sidebar gradient base | white text 12.6:1 |
+| Page shell | `from-slate-50 to-blue-50` / dark `gray-900→gray-800` | App canvas gradient | — |
+| Card surface | `bg-white/80 dark:bg-gray-800/80` + `backdrop-blur-sm shadow-lg` (+ `.card-hover` lift) | All cards | 21:1 body text |
+| Income / Expenses / Net / Savings accents | emerald / red / blue / purple — each `500→600` gradients | KPI tiles, hero cards, feature cards | white text ≥ 4.5:1 on gradients |
+| Feature gradients | orange / cyan / blue / purple `500→600` | Dashboard action tiles | white ≥ 4.5:1 |
+| Sector palette | 9 fixed hexes in `src/lib/ui-maps.ts` (per sector NAME) | Sector dot list + donut | — |
+
+Dark mode swaps to the source app's gray ramp (gray-800/700/600 overrides in `.dark`), not slate.
 
 ### 5.3 Component Primitives
 
-shadcn/ui (new-york style, Radix-based) for dialogs, selects, switches, tabs, tables, toasts. Finara composites in `ui-bits.tsx`: `StatCard`, `GradientCard`, `EmptyState`, `SectionCard`, `TrendPill`, `LoadingRows`, `ErrorNote`, `SurplusBadge`. Long lists get `max-h-* overflow-y-auto` with the `finara-scroll` custom scrollbar.
+shadcn/ui (new-york style, Radix-based) for dialogs, selects, switches, tabs, tables, toasts. Finara composites in `ui-bits.tsx`: `StatCard` (always-emerald trend chip; no chip on Savings Progress), `GradientCard` (w-16 icon circles, exact gradients), `SectionCard` (source card surface), `ViewHeader`, `EmptyState`, `LoadingRows`, `ErrorNote`, `SurplusBadge`. Long lists get `max-h-* overflow-y-auto` with the `finara-scroll` custom scrollbar. All dialogs are centered modals (`max-w-2xl`; AI Coach `h-[80vh]`) — ADR-012.
 
 ### 5.4 Motion
 
-Subtle transitions only: card hover `-translate-y-0.5`, dialog scale/fade from `tw-animate-css`, chart mount animations from Recharts defaults. No global reduced-motion override yet (backlog, §10).
+CSS-only staggered entrance animations (`.fade-in-up` + `.stagger-1..5`, ADR-013), disabled under `prefers-reduced-motion`. Card hover uses `.card-hover` (translate + shadow lift); dialog scale/fade from `tw-animate-css`; chart mount animations from Recharts defaults.
 
 ---
 
@@ -488,24 +516,25 @@ Subtle transitions only: card hover `-translate-y-0.5`, dialog scale/fade from `
 |----------|-------|-----------|----------|
 | Lint gate | 1 suite | ESLint 9 + React Compiler rules | repo root |
 | Type gate | 1 suite | `tsc --noEmit` (strict) | repo root |
-| Unit suite | 69 tests / 6 files | Vitest 5 (node env) | `src/lib/__tests__/` |
-| Browser verification | ~30 golden-path checks | agent-browser session per push round | n/a |
+| Unit suite | 76 tests / 7 files | Vitest 5 (node env) | `src/lib/__tests__/` |
+| Browser verification | ~40 golden-path checks | agent-browser session per push round | n/a |
+| Visual parity check | theme-matched VLM side-by-side per view | z-ai vision | evidence archive |
 
-Unit coverage: `money` (13 — minor units, formats, monthly-equivalent incl. annual), `expense-filters` (17 — presets, search, sort, badge count), `dashboard-kpis` (14 — goal-progress savings, placeholder-aware trends, largest-expense bucket, mixed recent activity), `categories` (12 — taxonomy sets pinned to the source app), `date-format` (7), `import-export` (6 — export round-trip, per-entity row errors, PascalCase keys).
+Unit coverage: `money` (13 — minor units, formats, monthly-equivalent incl. annual), `expense-filters` (17 — presets, search, sort, badge count), `dashboard-kpis` (14 — goal-progress savings, placeholder-aware trends, largest-expense bucket, mixed recent activity), `categories` (12 — taxonomy sets pinned to the source app), `date-format` (7), `import-export` (6 — export round-trip, per-entity row errors, PascalCase keys), `ui-maps` (7 — sector hexes, goal emoji, priority badges, dots/badges, account icons pinned to the live DOM).
 
 ### 7.2 Verified at build time (evidence-backed)
 
-Login → dashboard; all nine views render live data; add-expense (quick-select → quick amounts → submit → list refresh); expense edit dialog (prefill → save → persisted); filters panel (badge "2" default, presets, apply); bulk select → delete; pagination walk; income/goal/account/investment add + edit; CSV import 3-step flow (upload → Upload and Extract → review → import, DB verified); Finara export file round-trip via Settings (account + goal + expense restored); AI coach chat returns grounded figures; AI insights render with fallback; GDPR export downloads valid JSON; dark-mode toggle via user menu + mobile button, persists across reload; mobile hamburger nav; zero console errors on fresh load; 5-way concurrent seed burst with zero duplication; production `next build` exits 0.
+Login → dashboard; all nine views render live data in light AND dark mode (screenshots archived per round); FAB click → Add Expense centered modal in Quick Select mode → quick-select prefill → quick amount → submit → toast + list refresh; expense edit dialog (prefill → save → persisted); native confirm() delete with the exact live text (accept → row removed); income add/edit/delete; goal create + Add Progress + delete; account and investment CRUD with confirm deletes; filters panel (badge "2" default, category apply → filtered count, Clear All → reset); pagination (page 2 active state); AI coach chat returns grounded figures; AI insights render with fallback; GDPR export downloads valid JSON; dark-mode toggle via user menu + mobile button, persists across reload; mobile viewport + full-screen drawer navigation; zero console errors on fresh load; 5-way concurrent seed burst with zero duplication; production `next build` exits 0; theme-matched VLM side-by-side comparisons score 85–95 across views (data/scroll differences excluded by design).
 
 ### 7.3 Coverage Thresholds
 
-Vitest covers the pure domain layer (`src/lib` behavior modules) with 69 tests; thresholds are not enforced numerically yet — the rule is "every behavior change lands with its failing test first" (ADR-009). Playwright E2E over the golden paths is the planned next layer (§10).
+Vitest covers the pure domain layer (`src/lib` behavior modules) with 76 tests; thresholds are not enforced numerically yet — the rule is "every behavior change lands with its failing test first" (ADR-009). Playwright E2E over the golden paths is the planned next layer (§10).
 
 ### 7.4 Pre-Push Checklist
 
 - [ ] `bun run lint` exits 0
 - [ ] `bun run typecheck` exits 0
-- [ ] `bun run test` — 69 tests, 0 failures
+- [ ] `bun run test` — 76 tests, 0 failures
 - [ ] `bun run build` exits 0
 - [ ] Touched flow exercised in a browser (golden path) with zero console errors
 - [ ] No secrets staged (`git ls-files | grep -E "\.env$|\.key$|ssh-key"` is empty)
@@ -585,11 +614,15 @@ Branch `main` only (this repo's contract). Conventional Commits, atomic scope (`
 | MEDIUM | Analytics income trend is flat (monthly normalization applied to all months) | Trend chart understates historical income variation | Open — by design until per-month income events exist |
 | MEDIUM | Playwright E2E layer absent | Browser golden paths re-run manually each round | Open — planned (Vitest layer shipped 2026-09-15) |
 | LOW | `tailwind.config.ts` is unused legacy scaffold | Confusing dead file | Open — safe to delete with a docs pass |
-| LOW | No `prefers-reduced-motion` override | Accessibility polish | Open |
 | LOW | One-time income sources excluded from monthly totals | KPI definition choice, documented | By design |
 | LOW | Source-app trend placeholders replicated as fallbacks only | Deliberate parity trade-off — real MoM math wins when history exists | By design (ADR-009) |
+| LOW | Analytics Income tab renders empty (all states) | Deliberate replication of a verified source-app quirk | By design (documented in `analytics-view.tsx`) |
+| LOW | Trend chips always render emerald TrendingUp, even for negative MoM | Deliberate replication of a verified source quirk | By design |
+| LOW | Toast library differs from source's sonner styling | Minor visual difference in notifications | Open — swap only if materially different |
 
 Resolved in the 2026-09-15 parity remediation (round 2): taxonomy drift in six dialogs, missing dark mode, missing expenses filters/bulk/edit/pagination, missing income/goal/account/investment edit endpoints, KPI semantics (savings-goal progress, placeholder trends), windowed analytics averages, settings export-file restore, test-runner absence (69-test Vitest suite). Plan and audit trail: `docs/plans/2026-09-15-parity-remediation-round2.md`.
+
+Resolved in the 2026-09-15 pixel-parity remediation (round 3): design-system drift (flat canvas → gradient shell, shadow-sm → glass cards, emerald-500 → sage tokens, slate → gray dark ramp), Sheet → centered modal conversion, missing FAB, wrong sidebar icons/logo, dashboard layout (AI Insights position, Quick Actions anatomy, budget dot rows, arrow-icon activity rows), income hero gradient, expenses summary cards + segmented tabs, accounts type icons + balance layout, investments gradient KPIs + sector dot list, goals emoji map + priority badges, analytics controls + empty income tab, import drop area, settings info boxes + tiles, login light theme + logo asset, missing native confirm() deletes, missing entrance animations, `prefers-reduced-motion` support (was a round-2 backlog item), production build script fix. Plan and audit trail: `docs/plans/2026-09-15-parity-remediation-round3.md`.
 
 ---
 
@@ -597,26 +630,31 @@ Resolved in the 2026-09-15 parity remediation (round 2): taxonomy drift in six d
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `src/components/finara/import-view.tsx` | ~397 | 3-step CSV import with client-side parsing + category guessing |
-| `src/components/finara/add-transaction-dialog.tsx` | ~378 | Expense/income dialog: quick-select grid, quick amounts, validation |
-| `src/components/finara/investments-view.tsx` | ~359 | Holdings table, KPIs, sector donut, add-holding dialog |
-| `src/components/finara/analytics-view.tsx` | ~340 | Four analytics tabs with Recharts + CSV export |
-| `src/components/finara/dashboard-view.tsx` | ~331 | KPI cards, gradient cards, budget overview, AI insights |
-| `src/components/finara/goals-view.tsx` | ~308 | Goal cards, progress bars, contributions, create dialog |
+| `src/components/finara/add-transaction-dialog.tsx` | ~548 | Centered Add Expense/Income modal: Quick Select mode → manual form, quick amounts, validation (ADR-012) |
+| `src/components/finara/expenses-view.tsx` | ~487 | Summary gradient cards, segmented tabs, search/filters, rows, bulk ops, pagination, FAB |
+| `src/components/finara/investments-view.tsx` | ~475 | Gradient KPIs, holdings table, sector dot list (SECTOR_COLORS), add-holding dialog |
+| `src/components/finara/dashboard-view.tsx` | ~434 | KPI cards, action tiles, budget dot rows, arrow-icon activity, AI insights, quick actions, FAB |
+| `src/components/finara/import-view.tsx` | ~421 | 3-step CSV import with client-side parsing + category guessing |
+| `src/components/finara/goals-view.tsx` | ~421 | Purple-tile goal cards, emoji map, priority badges, progress, Add Progress dialog |
+| `src/components/finara/income-view.tsx` | ~349 | Emerald hero card, income source cards with monthly equivalents |
+| `src/components/finara/analytics-view.tsx` | ~326 | Segmented tabs, trend chart, category donuts, sector donut (empty Income tab — source quirk) |
+| `src/components/finara/sidebar.tsx` | ~299 | Gradient sidebar + mobile chrome (top bar, Synced badge, full-screen drawer) |
+| `src/components/finara/accounts-view.tsx` | ~285 | Type-icon account cards, balance block, import link |
+| `src/components/finara/settings-view.tsx` | ~285 | Preferences, notifications, GDPR export/import, data summary tiles |
 | `src/lib/analytics.ts` | ~276 | Server aggregations: `getDashboard` / `getAnalytics` |
-| `src/components/finara/ui-bits.tsx` | ~241 | Shared composites (StatCard, GradientCard, EmptyState, …) |
-| `src/components/finara/expenses-view.tsx` | ~233 | Expense summary, search/tabs, history list |
-| `src/components/finara/settings-view.tsx` | ~224 | Preferences, notifications, GDPR export/import panels |
+| `src/components/finara/ui-bits.tsx` | ~250 | Source-exact shared composites (StatCard, GradientCard, SectionCard, …) |
+| `src/components/finara/expense-filters-panel.tsx` | ~233 | Live-shaped filters panel (date/category/amount/sort + Clear/Cancel/Apply) |
+| `src/lib/categories.ts` | ~226 | 50/30/20 taxonomy single source of truth (delegates goal emoji to ui-maps) |
+| `src/components/finara/login-view.tsx` | ~214 | Light-theme login card with logo asset, demo credential gate |
 | `src/lib/seed.ts` | ~197 | Idempotent, lock-guarded demo seed (ADR-005) |
-| `src/components/finara/finara-app.tsx` | ~192 | SPA shell: session store, view switching, dialog wiring |
-| `src/components/finara/login-view.tsx` | ~196 | Demo credential gate mirroring the original sign-in |
-| `src/components/finara/ai-coach-dialog.tsx` | ~182 | Chat UI with quick actions + suggested questions |
-| `src/lib/types.ts` | ~141 | DTO contract for the whole client/server boundary |
-| `src/app/api/import/route.ts` | ~103 | Batch import with row-level validation and date parsing |
-| `src/lib/categories.ts` | ~101 | 50/30/20 taxonomy single source of truth |
-| `prisma/schema.prisma` | ~92 | 7 models, integer minor-unit money |
+| `src/components/finara/finara-app.tsx` | ~187 | SPA shell: session store, view switching, dialog wiring, gradient canvas |
+| `src/components/finara/ai-coach-dialog.tsx` | ~146 | Centered chat modal (h-[80vh]) with quick actions + grounded replies |
+| `src/lib/types.ts` | ~155 | DTO contract for the whole client/server boundary |
+| `src/app/api/import/route.ts` | ~119 | Batch import (CSV rows + finara-export mode) with row-level validation |
+| `prisma/schema.prisma` | ~96 | 7 models, integer minor-unit money |
+| `src/lib/ui-maps.ts` | ~75 | Live-verified visual maps: sector hexes, goal emoji, badges, icons (ADR-011) |
 | `src/lib/api.ts` | ~72 | ApiResult envelope + validation guards |
-| `src/lib/money.ts` | ~74 | Minor-units conversion, formatting, `monthlyEquivalent` |
+| `src/lib/money.ts` | ~78 | Minor-units conversion, formatting, `monthlyEquivalent` |
 
 ---
 

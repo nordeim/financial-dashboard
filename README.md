@@ -12,19 +12,19 @@ Finara solves the "where did my money go?" problem with a single, real-time surf
 
 | Feature | What it does |
 |---------|--------------|
-| 📊 **Financial Dashboard** | Monthly income/expenses/net KPIs with source-parity trend pills (real month-over-month with placeholder fallback), savings goal progress, largest expense category, active goals, budget overview, mixed recent activity, quick actions |
+| 📊 **Financial Dashboard** | Monthly income/expenses/net/balance KPIs with source-parity emerald trend chips, savings goal progress, largest expense category, active goals, 50/30/20 budget overview with colored-dot rows, arrow-icon recent activity, AI insights, bottom quick-action links, floating action button (FAB) |
 | 🌙 **Dark Mode** | User-menu toggle + mobile sun/moon button; persists via `localStorage` theme store; full dark palette across all 9 views, dialogs, and the login card |
-| 💸 **Expenses** | Emoji quick-select categories, quick-add amount chips, Needs/Wants/Savings tabs, search, collapsible Filters panel (date-range presets, category, min/max amount, sort), bulk select + bulk edit/delete, row edit dialog, 10-row pagination |
-| 💰 **Income Sources** | Per-source frequency (monthly/weekly/bi-weekly/annual) normalized to monthly equivalents, income categories (primary/secondary/passive/other), active toggle, edit dialog |
-| 🏦 **Accounts** | Checking/savings/credit-card/investment/other accounts with edit + delete and an Import Transactions link |
-| 📈 **Investments** | Holdings by type (stock/ETF/bond/crypto/mutual fund) with portfolio %, sector allocation donut, edit + delete |
-| 🎯 **Savings Goals** | Categories + priorities, progress bars, deadlines, one-click Add Progress |
+| 💸 **Expenses** | Emoji quick-select modal, quick-add amount chips, Needs/Wants/Savings segmented tabs, search, collapsible Filters panel (date-range presets, category, min/max amount, sort), bulk select + bulk edit/delete, row edit dialog, native `confirm()` deletes, 10-row pagination, FAB |
+| 💰 **Income Sources** | Emerald hero card with monthly total, per-source frequency (monthly/weekly/bi-weekly/annual) normalized to monthly equivalents, income categories (primary/secondary/passive/other), active toggle, edit dialog, native `confirm()` deletes |
+| 🏦 **Accounts** | Checking/savings/credit-card/investment/other accounts with live-exact type icons (banknote/landmark/building), balance block layout, edit + delete with native `confirm()`, and an Import Transactions link |
+| 📈 **Investments** | Holdings by type (stock/ETF/bond/crypto/mutual fund) with portfolio %, gradient portfolio-value/gain KPI cards, sector allocation as a fixed-color dot list (colors verified per sector name), edit + delete with native `confirm()` |
+| 🎯 **Savings Goals** | Purple-gradient tiles with live-exact category emoji (🛡️ ✈️ 🏠 🚗 🎓 🏖️ 🎯), priority badges (red/yellow/green), progress bars, deadlines, one-click Add Progress |
 | 📥 **CSV Import** | Source-parity 3-step flow: upload → Upload and Extract (with Extracting… state) → review with smart category guessing → import; live-shaped error card with Start New Import retry |
-| 🧭 **Analytics** | 3/6/12-month windows with From/To date pickers, windowed monthly averages, income vs expenses trend, category donuts, sector allocation |
+| 🧭 **Analytics** | 3/6/12-month windows with From/To date pickers, segmented 4-tab control (Overview/Expenses/Income/Investments), windowed monthly averages, income vs expenses trend, category donuts, sector allocation (Income tab renders empty, mirroring a verified source quirk) |
 | 🤖 **AI Coach & Insights** | Chat grounded in your live financial snapshot; dashboard insight cards with deterministic fallback |
 | 🔐 **GDPR Export & Restore** | One-click full JSON export; Settings page round-trips a Finara export file back into the database (finara-export import mode) |
-| 🧪 **Unit Tests** | Vitest suite (69 tests) covering money math, taxonomy, KPI computation, filters, date formats, and export normalization |
-| 🌙 **Responsive** | Sidebar on desktop, hamburger nav on mobile; WCAG-minded focus states and aria labels |
+| 🧪 **Unit Tests** | Vitest suite (76 tests) covering money math, taxonomy, KPI computation, filters, date formats, export normalization, and source-exact UI maps |
+| 🌙 **Responsive** | Sidebar on desktop, full-screen mobile drawer with Synced badge; WCAG-minded focus states and aria labels; staggered CSS entrance animations (`prefers-reduced-motion` safe) |
 
 ## Architecture
 
@@ -73,7 +73,7 @@ Requires **Bun ≥ 1.3** (or Node.js ≥ 20 with npm — commands below use `bun
 
 - `bun run lint` → exits 0, no output.
 - `bun run typecheck` → exits 0, no output.
-- `bun run test` → 69 tests passing (Vitest).
+- `bun run test` → 76 tests passing (Vitest).
 - First visit to any API route (e.g. the dashboard) auto-seeds a six-month demo history: 4 accounts, 4 income sources, ~96 expenses, 3 budgets, 3 goals, 8 holdings. Seeding is idempotent and concurrency-safe (DB-level unique-key lock + completion marker).
 
 ## Demo Credentials
@@ -92,7 +92,7 @@ financial-dashboard/
 │   ├── 📂 app/
 │   │   ├── 📄 page.tsx                    # Single-route SPA entry (login gate + 9 views)
 │   │   ├── 📄 layout.tsx                  # Inter font, metadata, toaster
-│   │   ├── 📄 globals.css                 # Tailwind v4 tokens (Finara palette)
+│   │   ├── 📄 globals.css                 # Tailwind v4 tokens + Finara source-exact design system
 │   │   └── 📂 api/                        # 12 REST route groups (see API Reference)
 │   ├── 📂 components/
 │   │   ├── 📂 finara/                     # App components (15): views, dialogs, shell
@@ -100,13 +100,14 @@ financial-dashboard/
 │   ├── 📂 hooks/                          # use-api (typed fetch), use-toast
 │   └── 📂 lib/                            # money, categories, types, analytics, seed, api,
 │                                          # dashboard-kpis, expense-filters, date-format,
-│                                          # import-export (pure domain modules, TDD)
-│                                          # + __tests__/ (Vitest, 69 tests)
+│                                          # import-export, ui-maps (pure domain modules, TDD)
+│                                          # + __tests__/ (Vitest, 76 tests)
 ├── 📂 prisma/
 │   └── 📄 schema.prisma                   # 7 models, money as integer minor units
 ├── 📂 db/                                 # SQLite runtime storage (gitignored)
 ├── 📂 docs/                               # Wrapper script, push runbook, reference image,
 │                                          # plans/ (remediation plans)
+├── 📂 public/                             # finara-logo.png (login logo asset)
 ├── 📄 vitest.config.ts                    # Vitest runner (node env, @ alias)
 ├── 📄 AGENTS.md                           # Agent instructions
 ├── 📄 CLAUDE.md                           # Claude Code project instructions
@@ -146,17 +147,25 @@ All routes return a uniform envelope: `{ "ok": true, "data": … }` or `{ "ok": 
 
 ## Design System
 
+Adopted from the source app's own stylesheet and DOM (round-3 live evidence):
+
 | Token | Value | Usage |
 |-------|-------|-------|
-| Primary | `#10B981` (emerald-500) | Buttons, active nav accent, positive trends |
-| Sidebar | `#1E293B` (slate-800) | Navigation chrome |
-| Income | emerald-600 | Income KPI/icon |
-| Expenses | red-500 | Expense KPI, negative trends |
-| Net balance | amber-500 | Net-balance KPI |
-| Savings | violet-500 | Savings KPI, goals |
-| Gradient cards | orange→orange-600, cyan→teal, blue→indigo, purple→fuchsia | Dashboard feature cards |
+| `--primary-sage` | `#059669` (emerald-600) | Primary buttons, FAB, active nav accent, budget fills |
+| `--primary-navy` | `#1E293B` (slate-800) | Headings, sidebar gradient base |
+| Sidebar | `sidebar-gradient` (vertical navy ramp) | Navigation chrome; active pill `bg-emerald-500/20` + emerald border |
+| Page background | `bg-gradient-to-br from-slate-50 to-blue-50` / `dark: gray-900→gray-800` | App shell |
+| Card surface | `bg-white/80 backdrop-blur-sm shadow-lg` (+ `.card-hover` lift) | All cards |
+| Income | emerald-500→600 gradients | KPI tile, income hero card |
+| Expenses | red-500→600 gradient | Expense total card, row amounts |
+| Net balance / blue | blue-500→600 gradient | Net KPI, portfolio value card |
+| Savings / purple | purple-500→600 gradient | Savings KPI, goal tiles |
+| Feature gradients | orange/cyan/blue/purple 500→600 | Dashboard action tiles |
+| Sector colors | 9 fixed per-sector hexes (`src/lib/ui-maps.ts`) | Investments sector dots/donut |
 
 Typography: **Inter** (400–800) via `next/font`; tabular numerals for all money values.
+All add/edit dialogs are **centered modals** (`max-w-2xl`); deletions use the browser's
+native `confirm()`. Entrance animations are CSS-only staggered fade-ups.
 
 ## Testing & Verification
 
@@ -165,11 +174,11 @@ The full gate (run before every push):
 ```bash
 bun run lint        # ESLint 9 — must exit 0
 bun run typecheck   # tsc --noEmit — must exit 0
-bun run test        # Vitest — 69 unit tests, must all pass
+bun run test        # Vitest — 76 unit tests, must all pass
 bun run build       # next build — must exit 0
 ```
 
-The Vitest suite covers the pure domain layer with TDD-maintained specs: money math (minor units, monthly-equivalent normalization incl. annual), taxonomy sets (categories, frequencies, currencies, sectors), dashboard KPI computation (goal-progress savings, placeholder-aware trends, largest-expense bucket), expense filter/sort/pagination logic, date formats, and Finara export normalization. Browser verification is performed end-to-end before each push round (login, all nine views, expense add/edit/bulk-delete, filters, income/goal/account/investment flows, CSV import, export restore, dark-mode toggle + persistence, mobile navigation, zero console errors). A formal Playwright E2E suite remains a backlog item — see Project_Architecture_Document.md §11.
+The Vitest suite covers the pure domain layer with TDD-maintained specs: money math (minor units, monthly-equivalent normalization incl. annual), taxonomy sets (categories, frequencies, currencies, sectors), dashboard KPI computation (goal-progress savings, placeholder-aware trends, largest-expense bucket), expense filter/sort/pagination logic, date formats, Finara export normalization, and the source-exact UI maps (sector hexes, goal emoji, badge/dot classes, account icons). Browser verification is performed end-to-end before each push round (login, all nine views in light + dark, FAB, quick-select + manual add/edit/confirm-delete, income/goal/account/investment CRUD, filters, pagination, AI coach, CSV import, export restore, dark-mode toggle + persistence, mobile drawer, zero console errors), followed by a VLM side-by-side screenshot comparison against the captured live app (scores archived in `audit/round3/verdicts-final/`). A formal Playwright E2E suite remains a backlog item — see Project_Architecture_Document.md §11.
 
 ## Security
 

@@ -13,7 +13,7 @@ Run from the repo root. Bun is the canonical package manager — never mix `npm`
 | `bun run build` / `bun run start` | Production build / serve (build before start) |
 | `bun run lint` | ESLint 9 flat config — must exit 0 |
 | `bun run typecheck` | `tsc --noEmit` — must exit 0 |
-| `bun run test` / `bun run test:watch` | Vitest unit suite (69 tests) / watch mode |
+| `bun run test` / `bun run test:watch` | Vitest unit suite (76 tests) / watch mode |
 | `bun run db:push` | Push `prisma/schema.prisma` to SQLite (creates `db/custom.db`) |
 | `bun run db:generate` | Regenerate the Prisma client after schema edits |
 | `bun run db:migrate` / `db:reset` | Dev migrations / drop+recreate (SQLite) |
@@ -31,6 +31,8 @@ Push contract: `main` only, via `python3 docs/ssh_git_wrapper_v3.py --key-file <
 - **Seed concurrency is DB-level.** `ensureSeeded()` takes a unique-key lock row (`Setting._seed_lock`), publishes `Setting._seeded` last, and losing callers poll for the marker. A module-global promise alone is NOT sufficient — Next dev route bundles can run separate module instances.
 - **Income normalization.** Monthly income = Σ `monthlyEquivalent(amountMinor, frequency)` (biweekly ×26/12, weekly ×52/12, annual ÷12; `quarterly`/`one-time` are legacy-data guards only — the seed no longer emits them). Apply this in every new totals path; a raw sum silently misreports biweekly salaries.
 - **Taxonomy source of truth is `src/lib/categories.ts`.** The sets match the live source app exactly (Needs/Wants/Savings subcategories incl. emojis; frequencies `monthly|weekly|biweekly|annual`; income categories; goal categories + priorities; investment types + 9 sectors; account types; 10 currencies; 5 date formats). `categories.test.ts` pins the sets — when the source app changes, update the constant + test together. Pre-remediation rows are normalized through the legacy subcategory map on write.
+- **UI maps source of truth is `src/lib/ui-maps.ts`.** Live-verified per-sector hex colors, goal-category emoji (🛡️ ✈️ 🏠 🚗 🎓 🏖️ 🎯), priority badge classes, account-type icons, 50/30/20 dots and category badge classes. Views must consume these maps — never fork a color/emoji/icon value into a component. `ui-maps.test.ts` pins every entry.
+- **Design-system class strings mirror the captured live DOM** (round-3 evidence archive, not in-repo): page shell `bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800`, cards `bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg` + `.card-hover`, sidebar `sidebar-gradient` + emerald-500/20 active pill, headings `text-3xl lg:text-4xl text-primary-navy`, primary buttons `bg-primary-sage`. `globals.css` carries the Finara CSS vars (`--primary-navy`, `--primary-sage`, …) and the gray-800/700/600 dark overrides. When restyling, copy the exact class string from the live DOM evidence — do not approximate.
 - **Dashboard KPI semantics (source parity).** Savings Progress = Σ goal current ÷ Σ goal target (NOT savings rate). Trend pills show real month-over-month when both months carry data; otherwise fall back to the source app's exact placeholders (+8.2% / −3.1% / −5.2%, or 12.5% net when only current-month income exists). Largest Expense Category shows the 50/30/20 bucket name. `computeDashboardKpis` in `src/lib/dashboard-kpis.ts` is the single implementation — never re-derive in a view.
 - **Analytics averages are windowed**: `avg = windowTotal ÷ periodMonths` (not all-time totals). `GET /api/analytics?months=3|6|12` computes the window server-side.
 - **Dark mode is a module-level external store** (`src/components/finara/theme.ts`) — same `useSyncExternalStore` discipline as the session gate: server snapshot `null`, client snapshot reads `localStorage["finara-theme"]`, writes flip `document.documentElement` class and persist. `<html suppressHydrationWarning>` in `layout.tsx` is required.
@@ -52,8 +54,13 @@ Push contract: `main` only, via `python3 docs/ssh_git_wrapper_v3.py --key-file <
 - Goal contributions clamp at the target (`PATCH /api/goals/[id]` with `contributeMinor`). Goals carry `category` + `priority` (high/medium/low).
 - Income sources carry `category ∈ {primary, secondary, passive, other}` and `active` (the source app's Active Income Source switch).
 - CSV import caps at 2000 rows, parses `MM/DD/YYYY`, `DD.MM.YYYY`, `YYYYMMDD`, and ISO dates, guesses category from description keywords, and reports row-level skips without aborting the batch. `POST /api/import` also accepts `mode: "finara-export"` — a Finara JSON export file normalized by `src/lib/import-export.ts` (accepts camelCase and PascalCase entity keys; row-level errors never abort the batch).
+- **All dialogs are centered modals** (`shadcn Dialog`, content `max-w-2xl max-h-[90vh]`), including Add Transaction, edit dialogs, and the AI Coach (`h-[80vh]`). The Add Expense modal opens in **Quick Select mode first** (5 Needs subcategory buttons), then swaps to the manual form in the same dialog with "← Back to Quick Select". Do not convert these back to side Sheets — the live app uses centered modals.
+- **Deletions use native `window.confirm()`** with the live app's exact texts: "Are you sure you want to delete this expense/income source/goal/account/investment?" (bulk delete pluralizes). Never replace with a custom confirm dialog.
+- **Analytics Income tab renders empty by design** — the live app shows no content in both empty and data states (verified quirk, documented in `analytics-view.tsx`). Do not "fix" it.
+- Dashboard layout: `grid lg:grid-cols-3` — Budget Overview `col-span-2`, right column stacks Recent Activity + AI Insights; Quick Actions LAST (h-16 flex-col link buttons); FAB `fixed bottom-6 right-6` on Dashboard + Expenses. KPI trend chips always render `TrendingUp` + emerald (live quirk — real MoM values still flow through).
 - Dashboard "month to date" filters use `date <= now` — future-dated rows are excluded (the seed dates today's entries at 01:00 for this reason).
 - Expenses list UX mirrors the source app: client-side filtering via `applyExpenseFilters` (date-range presets + custom, category, min/max, search, sort), 10-row pagination, bulk select → bulk category edit / delete, per-row edit dialog. The Filters badge replicates the source quirk of counting the two default amount inputs as active (shows "2" untouched).
+- Entrance animations are CSS-only staggered fade-ups (`.fade-in-up` + `.stagger-N` in `globals.css`), disabled under `prefers-reduced-motion`. No framer-motion dependency — do not add one.
 
 ## Conventions that differ from defaults
 
@@ -72,4 +79,5 @@ Push contract: `main` only, via `python3 docs/ssh_git_wrapper_v3.py --key-file <
 - `CLAUDE.md` — Claude Code project instructions (Meticulous Approach workflow).
 - `docs/how-to-git-push-using-ssh-wrapper_SKILL.md` — push runbook for the SSH wrapper.
 - `docs/Finara_Dashboard.png` — visual reference for the original dashboard.
-- `docs/plans/2026-09-15-parity-remediation-round2.md` — the live-site parity audit + remediation plan this codebase implements.
+- `docs/plans/2026-09-15-parity-remediation-round2.md` — round-2 live-site parity audit + remediation plan.
+- `docs/plans/2026-09-15-parity-remediation-round3.md` — round-3 pixel-parity plan (design-system adoption, centered modals, ui-maps) this codebase implements.
