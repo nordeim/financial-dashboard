@@ -1,12 +1,20 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
-/** Standard page header block used by every view. */
+/**
+ * Shared Finara UI primitives restyled to the source app's exact surface
+ * language (verified via live DOM capture 2026-09-15 — see
+ * docs/plans/2026-09-15-parity-remediation-round3.md).
+ */
+
+/** Source-exact card surface: translucent white, blur, no border, soft shadow. */
+export const CARD_SURFACE = "rounded-xl border-0 bg-white/80 text-card-foreground shadow-lg backdrop-blur-sm dark:bg-gray-800/80";
+
+/** Standard page header block used by every view (live-exact). */
 export function ViewHeader({
   title,
   subtitle,
@@ -17,71 +25,56 @@ export function ViewHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mb-8 flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-slate-50">{title}</h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
+        <h1 className="mb-2 text-3xl font-bold text-primary-navy lg:text-4xl dark:text-white">{title}</h1>
+        <p className="text-neutral-600 dark:text-neutral-400">{subtitle}</p>
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </div>
   );
 }
 
-/** Percentage trend chip with directional icon. */
-export function TrendPill({ value, invert = false }: { value: number | null; invert?: boolean }) {
+/**
+ * KPI trend chip — mirrors the live app exactly: ALWAYS a TrendingUp glyph
+ * in emerald (the source renders the same chip for positive and negative
+ * placeholder values alike; e.g. "-3.1%" still shows an up-arrow in green).
+ */
+export function TrendPill({ value }: { value: number | null }) {
   if (value === null || !Number.isFinite(value)) {
-    return (
-      <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400 dark:text-slate-500">
-        <Minus className="h-3.5 w-3.5" aria-hidden /> —
-      </span>
-    );
+    return null;
   }
   const rounded = Math.round(value * 10) / 10;
-  const positive = rounded >= 0;
-  const good = invert ? !positive : positive;
-  const Icon = positive ? TrendingUp : TrendingDown;
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 text-xs font-semibold",
-        good ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400",
-      )}
-    >
-      <Icon className="h-3.5 w-3.5" aria-hidden />
-      {positive ? "+" : ""}
-      {rounded.toFixed(1)}%
+    <span className="flex items-center gap-1">
+      <TrendingUp className="h-4 w-4 text-emerald-500" aria-hidden />
+      <span className="text-sm font-medium text-emerald-500">{rounded.toFixed(1)}%</span>
     </span>
   );
 }
 
-/** KPI stat card with icon tile, label, value and optional trend. */
+/** KPI stat card with gradient icon tile, label, value and live trend chip. */
 export function StatCard({
   label,
   value,
   icon: Icon,
   iconClass,
   trend,
-  invertTrend,
 }: {
   label: string;
   value: string;
   icon: LucideIcon;
   iconClass: string;
   trend?: number | null;
-  invertTrend?: boolean;
 }) {
   return (
-    <Card className="border-none shadow-sm dark:border dark:border-slate-700 dark:bg-slate-800">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
-            <p className="mt-2 truncate text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-50">{value}</p>
-            {trend !== undefined ? (
-              <div className="mt-2">
-                <TrendPill value={trend} invert={invertTrend} />
-              </div>
-            ) : null}
+    <Card className={cn(CARD_SURFACE, "card-hover")}>
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between">
+          <div className="min-w-0 flex-1">
+            <p className="mb-1 text-sm font-medium text-neutral-600 dark:text-neutral-400">{label}</p>
+            <p className="mb-3 text-2xl font-bold text-neutral-900 dark:text-white">{value}</p>
+            {trend !== undefined ? <TrendPill value={trend} /> : null}
           </div>
           <div className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-xl", iconClass)}>
             <Icon className="h-6 w-6 text-white" aria-hidden />
@@ -92,12 +85,11 @@ export function StatCard({
   );
 }
 
-/** Colored gradient feature card used on the dashboard second row. */
+/** Colored gradient feature tile (dashboard action row) — live-exact anatomy. */
 export function GradientCard({
   title,
   subtitle,
   value,
-  caption,
   icon: Icon,
   gradient,
   onClick,
@@ -106,22 +98,22 @@ export function GradientCard({
   title: string;
   subtitle: string;
   value?: string;
-  caption?: string;
   icon: LucideIcon;
   gradient: string;
   onClick?: () => void;
   ariaLabel?: string;
 }) {
-  const content = (
-    <>
-      <div className="relative z-10 flex flex-col gap-1">
-        <p className="text-sm font-semibold text-white/90">{title}</p>
-        {value ? <p className="text-2xl font-bold text-white">{value}</p> : null}
-        <p className="text-xs text-white/75">{subtitle}</p>
-        {caption ? <p className="mt-1 text-xs text-white/70">{caption}</p> : null}
+  const inner = (
+    <div className="flex h-full items-center justify-between">
+      <div>
+        <p className="mb-1 text-sm font-medium text-white/80">{title}</p>
+        <p className="text-2xl font-bold text-white capitalize">{value}</p>
+        <p className="text-lg text-white/80">{subtitle}</p>
       </div>
-      <Icon className="absolute right-4 top-1/2 h-12 w-12 -translate-y-1/2 text-white/30" aria-hidden />
-    </>
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20">
+        <Icon className="h-8 w-8 text-white" aria-hidden />
+      </div>
+    </div>
   );
   if (onClick) {
     return (
@@ -130,19 +122,15 @@ export function GradientCard({
         onClick={onClick}
         aria-label={ariaLabel ?? `${title} ${subtitle}`}
         className={cn(
-          "relative flex min-h-[140px] w-full flex-col justify-center overflow-hidden rounded-2xl p-5 text-left shadow-md transition-transform focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white hover:-translate-y-0.5",
+          "card-hover w-full rounded-2xl p-6 text-left text-white shadow-lg transition-transform focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white",
           gradient,
         )}
       >
-        {content}
+        {inner}
       </button>
     );
   }
-  return (
-    <div className={cn("relative flex min-h-[140px] flex-col justify-center overflow-hidden rounded-2xl p-5", gradient)}>
-      {content}
-    </div>
-  );
+  return <div className={cn("w-full rounded-2xl p-6 text-white shadow-lg", gradient)}>{inner}</div>;
 }
 
 /** Empty state with icon, heading, copy and optional CTA. */
@@ -159,59 +147,70 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-xl px-6 py-12 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700">
-        <Icon className="h-7 w-7 text-slate-400 dark:text-slate-400" aria-hidden />
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 dark:bg-gray-700">
+        <Icon className="h-7 w-7 text-slate-400" aria-hidden />
       </div>
-      <h3 className="text-base font-semibold text-slate-900 dark:text-slate-50">{title}</h3>
-      <p className="max-w-sm text-sm text-slate-500 dark:text-slate-400">{body}</p>
+      <h3 className="text-base font-semibold text-neutral-900 dark:text-white">{title}</h3>
+      <p className="max-w-sm text-sm text-neutral-500 dark:text-neutral-400">{body}</p>
       {action}
     </div>
   );
 }
 
-/** Section card header with optional trailing badge/content. */
+/** Section card on the source card surface. Two live header variants:
+ * feature cards (Budget Overview) use a text-xl bold title; list cards use a
+ * font-semibold tracking-tight title with an optional leading icon. */
 export function SectionCard({
   title,
+  icon: Icon,
   badge,
   children,
   actions,
   className,
+  contentClassName,
 }: {
-  title: string;
+  title: React.ReactNode;
+  icon?: LucideIcon;
   badge?: React.ReactNode;
   children: React.ReactNode;
   actions?: React.ReactNode;
   className?: string;
+  contentClassName?: string;
 }) {
   return (
-    <Card className={cn("border-none shadow-sm dark:border dark:border-slate-700 dark:bg-slate-800", className)}>
-      <CardContent className="p-5">
+    <Card className={cn(CARD_SURFACE, className)}>
+      <CardContent className="p-6">
         <div className="mb-4 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">{title}</h2>
+            {Icon ? <Icon className="h-5 w-5 text-primary-navy dark:text-white" aria-hidden /> : null}
+            <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+              {title}
+            </h2>
             {badge}
           </div>
           {actions}
         </div>
-        {children}
+        <div className={contentClassName}>{children}</div>
       </CardContent>
     </Card>
   );
 }
 
+/** Budget surplus pill (live: emerald-100 with trending-up glyph). */
 export function SurplusBadge({ amountMinor }: { amountMinor: number }) {
   const positive = amountMinor >= 0;
   return (
-    <Badge
-      variant="outline"
-      className={
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-md border border-transparent px-2.5 py-0.5 text-xs font-semibold shadow transition-colors",
         positive
-          ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
-          : "border-red-200 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-950 dark:text-red-400"
-      }
+          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
+          : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+      )}
     >
-      {positive ? "surplus" : "deficit"} · {formatSigned(positive ? amountMinor : -amountMinor)}
-    </Badge>
+      <TrendingUp className="h-3 w-3" aria-hidden />
+      {formatSigned(positive ? amountMinor : -amountMinor)} {positive ? "surplus" : "deficit"}
+    </span>
   );
 }
 
@@ -224,7 +223,7 @@ export function LoadingRows({ rows = 3 }: { rows?: number }) {
   return (
     <div className="space-y-3" role="status" aria-label="Loading content">
       {Array.from({ length: rows }).map((_, index) => (
-        <div key={index} className="h-16 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" />
+        <div key={index} className="h-16 animate-pulse rounded-xl bg-slate-100 dark:bg-gray-700/50" />
       ))}
     </div>
   );
@@ -233,7 +232,7 @@ export function LoadingRows({ rows = 3 }: { rows?: number }) {
 export function ErrorNote({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
     <div
-      className="flex flex-col items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-6 text-center dark:border-red-900 dark:bg-red-950/40"
+      className="flex flex-col items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-6 text-center dark:border-red-800 dark:bg-red-900/20"
       role="alert"
     >
       <p className="text-sm font-medium text-red-700 dark:text-red-300">{message}</p>
@@ -241,7 +240,7 @@ export function ErrorNote({ message, onRetry }: { message: string; onRetry?: () 
         <button
           type="button"
           onClick={onRetry}
-          className="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-slate-800 dark:text-red-400 dark:hover:bg-slate-700"
+          className="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-gray-800 dark:text-red-400 dark:hover:bg-gray-700"
         >
           Try again
         </button>

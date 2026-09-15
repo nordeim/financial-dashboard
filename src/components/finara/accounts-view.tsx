@@ -6,14 +6,16 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Landmark, Pen, Plus, Trash2, Upload } from "lucide-react";
+import { Loader2, Landmark, Pen, Plus, Trash2 } from "lucide-react";
 import { mutate, useQuery } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney, toMinorUnits } from "@/lib/money";
 import { ACCOUNT_TYPES, accountTypeLabel } from "@/lib/categories";
+import { ACCOUNT_TYPE_ICONS } from "@/lib/ui-maps";
 import { formatDate } from "@/lib/date-format";
-import { EmptyState, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
+import { CARD_SURFACE, EmptyState, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
 import type { AccountDto } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 interface AccountFormState {
   name: string;
@@ -89,6 +91,8 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
   };
 
   const deleteAccount = async (account: AccountDto) => {
+    // Source parity: the live app confirms deletions with a native dialog.
+    if (!window.confirm("Are you sure you want to delete this account?")) return;
     const result = await mutate(`/api/accounts/${account.id}`, "DELETE");
     if (!result.ok) {
       toast({ title: "Could not remove account", description: result.error, variant: "destructive" });
@@ -99,13 +103,13 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <ViewHeader
         title="My Accounts"
         subtitle="Manage your connected bank accounts"
         actions={
-          <Button onClick={openCreate} className="bg-emerald-500 hover:bg-emerald-600">
-            <Plus className="mr-1 h-4 w-4" aria-hidden /> Add Account
+          <Button onClick={openCreate} className="h-9 bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
+            <Plus className="h-4 w-4" aria-hidden /> Add Account
           </Button>
         }
       />
@@ -115,84 +119,86 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
       ) : query.loading && !query.data ? (
         <LoadingRows rows={3} />
       ) : accounts.length === 0 ? (
-        <div className="rounded-2xl bg-white shadow-sm dark:bg-slate-800 dark:ring-1 dark:ring-slate-700">
+        <div className={cn(CARD_SURFACE, "p-6")}>
           <EmptyState
             icon={Landmark}
             title="No accounts yet"
             body="Add a bank account to start tracking your finances."
             action={
-              <Button onClick={openCreate} className="bg-emerald-500 hover:bg-emerald-600">
+              <Button onClick={openCreate} className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
                 <Plus className="mr-1 h-4 w-4" aria-hidden /> Add your first account
               </Button>
             }
           />
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {accounts.map((account) => (
-            <div
-              key={account.id}
-              className="rounded-2xl bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:bg-slate-800 dark:ring-1 dark:ring-slate-700"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h3 className="truncate text-base font-semibold text-slate-900 dark:text-slate-50">{account.name}</h3>
-                  <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{account.institution}</p>
-                  <p className="mt-0.5 text-xs lowercase text-slate-400 dark:text-slate-500">
-                    {accountTypeLabel(account.type).toLowerCase()}
+        <div className="fade-in-up grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {accounts.map((account) => {
+            const TypeIcon = ACCOUNT_TYPE_ICONS[account.type] ?? Landmark;
+            return (
+              <div key={account.id} className={cn(CARD_SURFACE, "card-hover flex h-full flex-col")}>
+                <div className="flex flex-row items-start justify-between space-y-1.5 p-6">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300">
+                      <TypeIcon className="h-6 w-6" aria-hidden />
+                    </div>
+                    <div>
+                      <div className="text-lg font-semibold tracking-tight text-neutral-900 dark:text-white">{account.name}</div>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">{account.institution}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-neutral-400 hover:text-blue-600"
+                      onClick={() => openEdit(account)}
+                      aria-label={`Edit ${account.name}`}
+                    >
+                      <Pen className="h-4 w-4" aria-hidden />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-neutral-400 hover:text-red-600"
+                      onClick={() => void deleteAccount(account)}
+                      aria-label={`Remove ${account.name}`}
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden />
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex flex-grow flex-col justify-end p-6 pt-0">
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400">Balance</p>
+                  <p
+                    className={cn(
+                      "text-3xl font-bold",
+                      account.balanceMinor < 0 ? "text-red-600 dark:text-red-400" : "text-neutral-800 dark:text-neutral-100",
+                    )}
+                  >
+                    {formatMoney(account.balanceMinor)}
                   </p>
-                </div>
-                <div className="flex shrink-0 items-center gap-1">
+                  <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+                    Last updated: {formatDate(account.lastSyncedAt, "MM/dd/yyyy")}
+                  </p>
                   <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-                    onClick={() => openEdit(account)}
-                    aria-label={`Edit ${account.name}`}
+                    variant="outline"
+                    className="mt-4 w-full"
+                    onClick={() => {
+                      onNavigate?.("import");
+                    }}
                   >
-                    <Pen className="h-4 w-4" aria-hidden />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 text-slate-400 hover:text-red-500 dark:hover:text-red-400"
-                    onClick={() => void deleteAccount(account)}
-                    aria-label={`Remove ${account.name}`}
-                  >
-                    <Trash2 className="h-4 w-4" aria-hidden />
+                    Import Transactions
                   </Button>
                 </div>
               </div>
-              <div className="mt-4">
-                <p className="text-xs font-medium text-slate-400 dark:text-slate-500">Balance</p>
-                <p
-                  className={`mt-1 text-2xl font-bold tabular-nums ${
-                    account.balanceMinor < 0 ? "text-red-600 dark:text-red-400" : "text-slate-900 dark:text-slate-50"
-                  }`}
-                >
-                  {formatMoney(account.balanceMinor)}
-                </p>
-                <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-                  Last updated: {formatDate(account.lastSyncedAt, "MM/dd/yyyy")}
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-4 w-full dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                onClick={() => {
-                  onNavigate?.("import");
-                }}
-              >
-                <Upload className="mr-1 h-4 w-4" aria-hidden /> Import Transactions
-              </Button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg dark:bg-slate-900 dark:text-slate-100">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit Account" : "Add Account"}</DialogTitle>
             <DialogDescription>
@@ -209,14 +215,14 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
                 placeholder="e.g. Everyday Checking"
                 required
                 maxLength={80}
-                className="dark:bg-slate-800"
+               
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="account-type">Account Type</Label>
                 <Select value={form.type} onValueChange={(value) => setForm((current) => ({ ...current, type: value }))}>
-                  <SelectTrigger id="account-type" className="dark:bg-slate-800">
+                  <SelectTrigger id="account-type">
                     <SelectValue>{accountTypeLabel(form.type)}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -236,7 +242,7 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
                   onChange={(event) => setForm((current) => ({ ...current, institution: event.target.value }))}
                   placeholder="e.g. Chase"
                   maxLength={80}
-                  className="dark:bg-slate-800"
+                 
                 />
               </div>
             </div>
@@ -252,14 +258,14 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
                 onChange={(event) => setForm((current) => ({ ...current, balance: event.target.value }))}
                 placeholder="0.00"
                 required
-                className="dark:bg-slate-800"
+               
               />
             </div>
             <div className="flex justify-end gap-2 pt-1">
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="dark:border-slate-700">
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-emerald-500 hover:bg-emerald-600" disabled={submitting}>
+              <Button type="submit" className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90" disabled={submitting}>
                 {submitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden /> Saving…

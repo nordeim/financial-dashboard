@@ -3,42 +3,41 @@
 import Link from "next/link";
 import { useCallback, useSyncExternalStore } from "react";
 import {
-  BarChart3,
-  CheckCircle2,
+  ChartPie,
+  DollarSign,
+  Download,
   Landmark,
-  LineChart,
+  LayoutDashboard,
   LogOut,
   Menu,
   Moon,
-  PiggyBank,
   Settings,
-  Sparkles,
   Sun,
+  Target,
   TrendingDown,
   TrendingUp,
-  Upload,
   Wallet,
+  Wifi,
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { getServerTheme, getThemeSnapshot, subscribeTheme, toggleTheme, type Theme } from "@/components/finara/theme";
 
+// Source-exact nav items (icons verified against the live sidebar DOM 2026-09-15).
 export const NAV_ITEMS = [
-  { id: "dashboard", label: "Dashboard", icon: LineChart },
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "income", label: "Income", icon: TrendingUp },
   { id: "expenses", label: "Expenses", icon: TrendingDown },
   { id: "accounts", label: "Accounts", icon: Landmark },
-  { id: "investments", label: "Investments", icon: BarChart3 },
-  { id: "import", label: "Import", icon: Upload },
-  { id: "analytics", label: "Analytics", icon: Sparkles },
-  { id: "goals", label: "Goals", icon: PiggyBank },
+  { id: "investments", label: "Investments", icon: Wallet },
+  { id: "import", label: "Import", icon: Download },
+  { id: "analytics", label: "Analytics", icon: ChartPie },
+  { id: "goals", label: "Goals", icon: Target },
   { id: "settings", label: "Settings", icon: Settings },
 ] as const;
 
@@ -48,17 +47,49 @@ function useTheme(): Theme | null {
   return useSyncExternalStore(subscribeTheme, getThemeSnapshot, getServerTheme);
 }
 
-/** User avatar + dropdown: My Account / Dark Mode / Sign Out (source parity). */
+/** Brand block: glassy emerald dollar-sign tile + wordmark (live-exact). */
+function BrandMark({ compact = false }: { compact?: boolean }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div
+        className={cn(
+          "flex items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/20 backdrop-blur-sm",
+          compact ? "h-8 w-8" : "h-10 w-10",
+        )}
+      >
+        <DollarSign className={cn("text-emerald-400", compact ? "h-5 w-5" : "h-6 w-6")} aria-hidden />
+      </div>
+      {compact ? (
+        <h2 className="text-lg font-bold text-primary-navy dark:text-white">Finara</h2>
+      ) : (
+        <div>
+          <h2 className="text-xl font-bold text-white">Finara</h2>
+          <p className="text-xs text-slate-400">Smart Finance Tracker</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** "Synced" status badge with wifi glyph (live-exact outline style). */
+function SyncedBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-md border border-green-300 px-2.5 py-0.5 text-xs font-semibold text-green-600 dark:border-green-600 dark:text-green-400">
+      <Wifi className="h-3 w-3" aria-hidden />
+      Synced
+    </span>
+  );
+}
+
+/** User avatar + dropdown: Dark Mode / Sign Out (live-exact surface). */
 function UserMenu({
   userName,
   userEmail,
   onSignOut,
-  variant = "sidebar",
 }: {
   userName: string;
   userEmail: string;
   onSignOut: () => void;
-  variant?: "sidebar" | "header";
 }) {
   const theme = useTheme();
   const isDark = theme === "dark";
@@ -67,24 +98,21 @@ function UserMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className={cn(
-          "flex w-full items-center gap-3 rounded-lg text-left transition-colors",
-          variant === "sidebar"
-            ? "px-2 py-2 text-slate-200 hover:bg-white/5"
-            : "px-1.5 py-1 text-slate-300 hover:bg-white/10",
-        )}
+        className="flex h-9 w-full items-center gap-3 rounded-xl bg-white/10 p-3 text-left backdrop-blur-sm transition-colors hover:bg-accent dark:bg-gray-800/50"
         aria-label={`${userName} ${userEmail}`}
       >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-sm font-semibold text-white">
-          {initial}
+        <span className="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-full bg-muted">
+          <span className="flex h-full w-full items-center justify-center rounded-full bg-muted text-sm font-semibold text-slate-600 dark:text-slate-200">
+            {initial}
+          </span>
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13px] font-medium text-white">{userName}</span>
-          <span className="block truncate text-[11px] text-slate-400">{userEmail}</span>
+          <span className="block truncate text-sm font-medium text-white dark:text-gray-200">{userName}</span>
+          <span className="block truncate text-xs text-slate-400 dark:text-gray-400">{userEmail}</span>
         </span>
         <svg
           viewBox="0 0 24 24"
-          className="h-4 w-4 shrink-0 text-slate-500"
+          className="h-4 w-4 shrink-0 text-slate-400"
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
@@ -95,8 +123,6 @@ function UserMenu({
         </svg>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" side="top" className="w-52">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
-        <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => toggleTheme()} className="gap-2">
           {isDark ? <Sun className="h-4 w-4" aria-hidden /> : <Moon className="h-4 w-4" aria-hidden />}
           {isDark ? "Light Mode" : "Dark Mode"}
@@ -124,19 +150,13 @@ export function Sidebar({
   onSignOut: () => void;
 }) {
   return (
-    <aside className="hidden w-64 shrink-0 flex-col bg-slate-800 lg:flex dark:bg-slate-900">
-      <div className="flex h-full flex-col">
-        <nav aria-label="Main navigation" className="flex-1 overflow-y-auto px-3 py-4">
-          <div className="mb-6 flex items-center gap-3 px-3 pt-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500 shadow-md">
-              <Wallet className="h-5 w-5 text-white" aria-hidden />
-            </div>
-            <div>
-              <p className="text-base font-bold text-white">Finara</p>
-              <p className="text-[11px] text-slate-400">Smart Finance Tracker</p>
-            </div>
-          </div>
-          <ul className="space-y-1">
+    <aside className="hidden w-64 shrink-0 flex-col lg:flex">
+      <div className="sidebar-gradient flex min-h-0 flex-1 flex-col">
+        <div className="flex h-16 items-center border-b border-slate-700/30 px-6">
+          <BrandMark />
+        </div>
+        <nav aria-label="Main navigation" className="flex-1 space-y-2 overflow-y-auto px-4 py-6">
+          <ul className="space-y-2">
             {NAV_ITEMS.map((item) => {
               const isActive = item.id === active;
               return (
@@ -148,26 +168,26 @@ export function Sidebar({
                       onNavigate(item.id);
                     }}
                     aria-current={isActive ? "page" : undefined}
-                    className={cn(
-                      "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                      isActive
-                        ? "bg-emerald-500/15 text-emerald-300 shadow-[inset_3px_0_0_0_theme(colors.emerald.500)]"
-                        : "text-slate-400 hover:bg-white/5 hover:text-slate-200",
-                    )}
                   >
-                    <item.icon className="h-5 w-5 shrink-0" aria-hidden />
-                    {item.label}
+                    <span
+                      className={cn(
+                        "flex items-center gap-3 rounded-xl px-4 py-3 font-medium transition-all duration-200",
+                        isActive
+                          ? "border border-emerald-400/30 bg-emerald-500/20 text-white shadow-lg backdrop-blur-sm"
+                          : "text-slate-300 hover:bg-white/10 hover:text-white",
+                      )}
+                    >
+                      <item.icon className="h-5 w-5 shrink-0" aria-hidden />
+                      {item.label}
+                    </span>
                   </Link>
                 </li>
               );
             })}
           </ul>
         </nav>
-        <div className="space-y-3 border-t border-white/10 px-3 py-4">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-[11px] font-semibold text-emerald-400">
-            <CheckCircle2 className="h-3 w-3" aria-hidden />
-            Synced
-          </span>
+        <div className="space-y-3 border-t border-slate-700/30 p-4">
+          <SyncedBadge />
           <UserMenu userName={userName} userEmail={userEmail} onSignOut={onSignOut} />
         </div>
       </div>
@@ -203,72 +223,74 @@ export function MobileTopNav({
 
   return (
     <div className="lg:hidden">
-      <div className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-700 bg-slate-800 px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500">
-            <Wallet className="h-4 w-4 text-white" aria-hidden />
+      <div className="fixed inset-x-0 top-0 z-50 border-b border-neutral-200 bg-white/95 backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/95">
+        <div className="flex h-16 items-center justify-between px-4">
+          <BrandMark compact />
+          <div className="flex items-center gap-2">
+            <SyncedBadge />
+            <button
+              type="button"
+              onClick={() => toggleTheme()}
+              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-gray-800"
+            >
+              {isDark ? <Sun className="h-5 w-5" aria-hidden /> : <Moon className="h-5 w-5" aria-hidden />}
+            </button>
+            <button
+              type="button"
+              onClick={onToggleMenu}
+              aria-expanded={menuOpen}
+              aria-controls="mobile-nav-menu"
+              aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-gray-800"
+            >
+              <Menu className="h-5 w-5" aria-hidden />
+            </button>
           </div>
-          <div>
-            <p className="text-sm font-bold text-white">Finara</p>
-          </div>
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-            <CheckCircle2 className="h-3 w-3" aria-hidden />
-            Synced
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => toggleTheme()}
-            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
-          >
-            {isDark ? <Sun className="h-5 w-5" aria-hidden /> : <Moon className="h-5 w-5" aria-hidden />}
-          </button>
-          <button
-            type="button"
-            onClick={onToggleMenu}
-            aria-expanded={menuOpen}
-            aria-controls="mobile-nav-menu"
-            aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
-          >
-            <Menu className="h-6 w-6" aria-hidden />
-          </button>
         </div>
       </div>
+      {/* pt-20 clears the fixed top bar (live: flex flex-col h-full pt-20). */}
+      <div className="h-16" aria-hidden />
       {menuOpen ? (
         <nav
           id="mobile-nav-menu"
           aria-label="Main navigation"
-          className="absolute inset-x-0 top-[57px] z-20 border-b border-slate-700 bg-slate-800 px-3 py-3 shadow-lg lg:hidden dark:border-slate-800 dark:bg-slate-900"
+          className="fixed inset-0 z-40 bg-slate-800 dark:bg-gray-900 lg:hidden"
         >
-          <ul className="grid grid-cols-2 gap-1">
-            {NAV_ITEMS.map((item) => {
-              const isActive = item.id === active;
-              return (
-                <li key={item.id}>
-                  <Link
-                    href="/"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      handleNavigate(item.id);
-                    }}
-                    aria-current={isActive ? "page" : undefined}
-                    className={cn(
-                      "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                      isActive ? "bg-emerald-500/15 text-emerald-300" : "text-slate-400 hover:bg-white/5 hover:text-slate-200",
-                    )}
-                  >
-                    <item.icon className="h-4 w-4 shrink-0" aria-hidden />
-                    {item.label}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-          <div className="mt-3 border-t border-white/10 pt-3">
-            <UserMenu userName={userName} userEmail={userEmail} onSignOut={onSignOut} variant="header" />
+          <div className="flex h-full flex-col pt-20">
+            <ul className="flex-1 space-y-2 px-4 py-6">
+              {NAV_ITEMS.map((item) => {
+                const isActive = item.id === active;
+                return (
+                  <li key={item.id}>
+                    <Link
+                      href="/"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        handleNavigate(item.id);
+                      }}
+                      aria-current={isActive ? "page" : undefined}
+                    >
+                      <span
+                        className={cn(
+                          "flex items-center gap-3 rounded-xl px-4 py-4 font-medium transition-all duration-200",
+                          isActive
+                            ? "border border-emerald-400/30 bg-emerald-500/20 text-white shadow-lg backdrop-blur-sm"
+                            : "text-slate-300 hover:bg-white/10 hover:text-white",
+                        )}
+                      >
+                        <item.icon className="h-6 w-6 shrink-0" aria-hidden />
+                        <span className="text-lg">{item.label}</span>
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="space-y-3 border-t border-slate-700/30 p-4">
+              <SyncedBadge />
+              <UserMenu userName={userName} userEmail={userEmail} onSignOut={onSignOut} />
+            </div>
           </div>
         </nav>
       ) : null}

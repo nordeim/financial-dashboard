@@ -2,14 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, RefreshCw, TrendingDown, TrendingUp } from "lucide-react";
+import { ChartColumn, ChartPie, Download, RefreshCw, TrendingUp } from "lucide-react";
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -27,12 +23,18 @@ import {
 import { useQuery } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney, formatMoneyCompact } from "@/lib/money";
-import { subcategoryEmoji } from "@/lib/categories";
-import { ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
+import { SECTOR_COLORS } from "@/lib/ui-maps";
+import { CARD_SURFACE, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
 import { Input } from "@/components/ui/input";
 import type { AnalyticsDto } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 const CHART_COLORS = ["#10B981", "#3B82F6", "#8B5CF6", "#F59E0B", "#EF4444", "#06B6D4", "#EC4899", "#64748B", "#84CC16"];
+
+/** Normalize a live sector label ("Real Estate") to its ui-maps key ("real-estate"). */
+function sectorKey(sector: string): string {
+  return sector.toLowerCase().replace(/\s+/g, "-");
+}
 
 type Period = "3" | "6" | "12";
 
@@ -77,8 +79,6 @@ export function AnalyticsView() {
 
   const topCategories = useMemo(() => query.data?.expenses.topCategories ?? [], [query.data]);
 
-  const incomeBySource = useMemo(() => query.data?.income.bySource ?? [], [query.data]);
-
   const sectorData = useMemo(
     () => (query.data?.investments.sectorAllocation ?? []).map((entry) => ({ name: entry.sector, valueMinor: entry.valueMinor, percent: entry.percent })),
     [query.data],
@@ -106,26 +106,30 @@ export function AnalyticsView() {
   const tooltipStyle = { borderRadius: 12, border: "1px solid #E2E8F0", fontSize: 12 };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <ViewHeader
         title="Analytics & Reports"
         subtitle="Real-time insights into your financial performance"
         actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Input
-              type="date"
-              aria-label="From date"
-              value={fromDate}
-              onChange={(event) => setFromDate(event.target.value)}
-              className="w-36 dark:border-slate-700 dark:bg-slate-900"
-            />
-            <Input
-              type="date"
-              aria-label="To date"
-              value={toDate}
-              onChange={(event) => setToDate(event.target.value)}
-              className="w-36 dark:border-slate-700 dark:bg-slate-900"
-            />
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                aria-label="Start date"
+                placeholder="Start date"
+                value={fromDate}
+                onChange={(event) => setFromDate(event.target.value)}
+                className="h-9 w-auto"
+              />
+              <Input
+                type="date"
+                aria-label="End date"
+                placeholder="End date"
+                value={toDate}
+                onChange={(event) => setToDate(event.target.value)}
+                className="h-9 w-auto"
+              />
+            </div>
             <Select value={period} onValueChange={(value) => setPeriod(value as Period)}>
               <SelectTrigger className="w-32" aria-label="Reporting period">
                 <SelectValue />
@@ -136,11 +140,11 @@ export function AnalyticsView() {
                 <SelectItem value="12">1 Year</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" onClick={() => query.refresh()} className="dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
-              <RefreshCw className="mr-1 h-4 w-4" aria-hidden /> Refresh
+            <Button variant="outline" onClick={() => query.refresh()} className="h-9 gap-2">
+              <RefreshCw className="h-4 w-4" aria-hidden /> Refresh
             </Button>
-            <Button variant="outline" onClick={exportCsv} className="dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
-              <Download className="mr-1 h-4 w-4" aria-hidden /> Export
+            <Button variant="outline" onClick={exportCsv} className="h-9 gap-2">
+              <Download className="h-4 w-4" aria-hidden /> Export
             </Button>
           </div>
         }
@@ -151,31 +155,25 @@ export function AnalyticsView() {
       ) : !query.data ? (
         <LoadingRows rows={5} />
       ) : (
-        <Tabs defaultValue="overview">
-          <TabsList className="w-full justify-start overflow-x-auto sm:w-auto">
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="expenses">Expenses</TabsTrigger>
             <TabsTrigger value="income">Income</TabsTrigger>
             <TabsTrigger value="investments">Investments</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="mt-4 space-y-4">
-            <Card className="border-none shadow-sm dark:border dark:border-slate-700 dark:bg-slate-800">
-              <CardContent className="p-5">
-                <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-50">Income vs Expenses Trend</h2>
-                <div className="h-72">
+          <TabsContent value="overview" className="space-y-8">
+            <div className={cn(CARD_SURFACE, "fade-in-up")}>
+              <div className="flex flex-col space-y-1.5 p-6">
+                <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                  <TrendingUp className="h-5 w-5" aria-hidden /> Income vs Expenses Trend
+                </h2>
+              </div>
+              <div className="p-6 pt-0">
+                <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={dateRangeTrend} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10B981" stopOpacity={0.25} />
-                          <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
-                        </linearGradient>
-                        <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#EF4444" stopOpacity={0.25} />
-                          <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
+                    <LineChart data={dateRangeTrend} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
                       <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#64748B" }} tickLine={false} axisLine={false} />
                       <YAxis
@@ -183,193 +181,142 @@ export function AnalyticsView() {
                         tickLine={false}
                         axisLine={false}
                         tickFormatter={(value: number) => formatMoney(value)}
-                        width={76}
+                        width={84}
                       />
-                      <Tooltip
-                        formatter={(value: number | string) => formatMoney(Number(value))}
-                        contentStyle={tooltipStyle}
-                      />
+                      <Tooltip formatter={(value: number | string) => formatMoney(Number(value))} contentStyle={tooltipStyle} />
                       <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
-                      <Area type="monotone" dataKey="incomeMinor" name="Income" stroke="#10B981" strokeWidth={2} fill="url(#incomeGradient)" />
-                      <Area type="monotone" dataKey="expensesMinor" name="Expenses" stroke="#EF4444" strokeWidth={2} fill="url(#expenseGradient)" />
-                      <Line type="monotone" dataKey="netMinor" name="Net Savings" stroke="#3B82F6" strokeWidth={2} dot={false} />
-                    </AreaChart>
+                      <Line type="monotone" dataKey="incomeMinor" name="Income" stroke="#10B981" strokeWidth={2} dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="expensesMinor" name="Expenses" stroke="#EF4444" strokeWidth={2} dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="netMinor" name="Net Savings" stroke="#3B82F6" strokeWidth={2} dot={{ r: 3 }} />
+                    </LineChart>
                   </ResponsiveContainer>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <Card className="border-none shadow-sm dark:border dark:border-slate-700 dark:bg-slate-800">
-                <CardContent className="p-5">
-                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Avg Monthly Income</p>
-                  <p className="mt-2 text-2xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">{formatMoney(query.data.overview.avgIncomeMinor)}</p>
-                </CardContent>
-              </Card>
-              <Card className="border-none shadow-sm dark:border dark:border-slate-700 dark:bg-slate-800">
-                <CardContent className="p-5">
-                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Avg Monthly Expenses</p>
-                  <p className="mt-2 text-2xl font-bold tabular-nums text-red-500 dark:text-red-400">{formatMoney(query.data.overview.avgExpensesMinor)}</p>
-                </CardContent>
-              </Card>
-              <Card className="border-none shadow-sm dark:border dark:border-slate-700 dark:bg-slate-800">
-                <CardContent className="p-5">
-                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Avg Monthly Savings</p>
-                  <p className="mt-2 text-2xl font-bold tabular-nums text-blue-600 dark:text-blue-400">{formatMoney(query.data.overview.avgSavingsMinor)}</p>
-                </CardContent>
-              </Card>
+            <div className="fade-in-up stagger-1 grid grid-cols-1 gap-6 md:grid-cols-3">
+              <div className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 text-white shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="mb-1 text-sm font-medium text-emerald-100">Avg Monthly Income</p>
+                    <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgIncomeMinor)}</p>
+                  </div>
+                  <TrendingUp className="h-8 w-8 text-emerald-200" aria-hidden />
+                </div>
+              </div>
+              <div className="rounded-xl bg-gradient-to-r from-red-500 to-red-600 p-6 text-white shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="mb-1 text-sm font-medium text-red-100">Avg Monthly Expenses</p>
+                    <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgExpensesMinor)}</p>
+                  </div>
+                  <TrendingUp className="h-8 w-8 text-red-200" aria-hidden />
+                </div>
+              </div>
+              <div className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="mb-1 text-sm font-medium text-blue-100">Avg Monthly Savings</p>
+                    <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgSavingsMinor)}</p>
+                  </div>
+                  <TrendingUp className="h-8 w-8 text-blue-200" aria-hidden />
+                </div>
+              </div>
             </div>
           </TabsContent>
 
-          <TabsContent value="expenses" className="mt-4 space-y-4">
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-              <Card className="border-none shadow-sm">
-                <CardContent className="p-5">
-                  <h2 className="mb-4 text-lg font-semibold text-slate-900">Spending by Category</h2>
-                  <div className="h-72">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={expensesBySubcategory} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#64748B" }} tickLine={false} axisLine={false} interval={0} angle={-20} textAnchor="end" height={56} />
-                        <YAxis
-                          tick={{ fontSize: 12, fill: "#64748B" }}
-                          tickLine={false}
-                          axisLine={false}
-                          tickFormatter={(value: number) => formatMoneyCompact(value)}
-                          width={56}
-                        />
-                        <Tooltip formatter={(value: number | string) => formatMoney(Number(value))} contentStyle={tooltipStyle} />
-                        <Bar dataKey="amountMinor" name="Spending" radius={[6, 6, 0, 0]}>
-                          {expensesBySubcategory.map((entry, index) => (
-                            <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
+          <TabsContent value="expenses" className="space-y-8">
+            <div className={cn(CARD_SURFACE, "fade-in-up")}>
+              <div className="flex flex-col space-y-1.5 p-6">
+                <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                  <ChartPie className="h-5 w-5" aria-hidden /> Spending by Category
+                </h2>
+              </div>
+              <div className="p-6 pt-0">
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={expensesBySubcategory}
+                        dataKey="amountMinor"
+                        nameKey="name"
+                        innerRadius={60}
+                        outerRadius={95}
+                        paddingAngle={2}
+                        strokeWidth={0}
+                      >
+                        {expensesBySubcategory.map((entry) => (
+                          <Cell key={entry.name} fill={CHART_COLORS[expensesBySubcategory.indexOf(entry) % CHART_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: number | string) => formatMoney(Number(value))} contentStyle={tooltipStyle} />
+                      <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
 
-              <Card className="border-none shadow-sm">
-                <CardContent className="p-5">
-                  <h2 className="mb-4 text-lg font-semibold text-slate-900">Top Spending Categories</h2>
-                  <div className="h-72">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={topCategories}
-                          dataKey="amountMinor"
-                          nameKey="label"
-                          innerRadius={60}
-                          outerRadius={95}
-                          paddingAngle={2}
-                          strokeWidth={0}
-                        >
-                          {topCategories.map((entry, index) => (
-                            <Cell key={entry.label} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value: number | string) => formatMoney(Number(value))} contentStyle={tooltipStyle} />
-                        <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
+            <div className={cn(CARD_SURFACE, "fade-in-up stagger-1")}>
+              <div className="flex flex-col space-y-1.5 p-6">
+                <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                  <ChartColumn className="h-5 w-5" aria-hidden /> Top Spending Categories
+                </h2>
+              </div>
+              <div className="p-6 pt-0">
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={topCategories} layout="vertical" margin={{ top: 8, right: 16, left: 8, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
+                      <XAxis
+                        type="number"
+                        tick={{ fontSize: 12, fill: "#64748B" }}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(value: number) => formatMoneyCompact(value)}
+                      />
+                      <YAxis type="category" dataKey="label" tick={{ fontSize: 11, fill: "#64748B" }} tickLine={false} axisLine={false} width={140} />
+                      <Tooltip formatter={(value: number | string) => formatMoney(Number(value))} contentStyle={tooltipStyle} />
+                      <Bar dataKey="amountMinor" name="Spending" radius={[0, 6, 6, 0]}>
+                        {topCategories.map((entry, index) => (
+                          <Cell key={entry.label} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
             </div>
           </TabsContent>
 
-          <TabsContent value="income" className="mt-4 space-y-4">
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-              <Card className="border-none shadow-sm">
-                <CardContent className="p-5">
-                  <h2 className="mb-4 text-lg font-semibold text-slate-900">Income by Source</h2>
-                  <div className="h-72">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={incomeBySource} layout="vertical" margin={{ top: 8, right: 16, left: 8, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
-                        <XAxis type="number" tick={{ fontSize: 12, fill: "#64748B" }} tickLine={false} axisLine={false} tickFormatter={(value: number) => formatMoneyCompact(value)} />
-                        <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "#64748B" }} tickLine={false} axisLine={false} width={140} />
-                        <Tooltip formatter={(value: number | string) => formatMoney(Number(value))} contentStyle={tooltipStyle} />
-                        <Bar dataKey="amountMinor" name="Monthly income" fill="#10B981" radius={[0, 6, 6, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
+          {/* Source parity quirk (live-verified 2026-09-15): the source app's
+              Income analytics tab renders no content in both empty and data
+              states. We intentionally mirror that behavior — see the round-3
+              remediation plan, finding A.13. */}
+          <TabsContent value="income" className="space-y-8" />
 
-              <Card className="border-none shadow-sm">
-                <CardContent className="p-5">
-                  <h2 className="mb-4 text-lg font-semibold text-slate-900">Monthly Income Trend</h2>
-                  <div className="h-72">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={query.data.income.monthlyTrend} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-                        <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#64748B" }} tickLine={false} axisLine={false} />
-                        <YAxis tick={{ fontSize: 12, fill: "#64748B" }} tickLine={false} axisLine={false} tickFormatter={(value: number) => formatMoneyCompact(value)} width={56} />
-                        <Tooltip formatter={(value: number | string) => formatMoney(Number(value))} contentStyle={tooltipStyle} />
-                        <Line type="monotone" dataKey="incomeMinor" name="Income" stroke="#10B981" strokeWidth={2.5} dot={{ r: 3 }} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="investments" className="mt-4 space-y-4">
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-              <Card className="border-none shadow-sm">
-                <CardContent className="p-5">
-                  <h2 className="mb-4 text-lg font-semibold text-slate-900">Sector Allocation</h2>
-                  <div className="h-72">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={sectorData} dataKey="valueMinor" nameKey="name" innerRadius={60} outerRadius={95} paddingAngle={2} strokeWidth={0}>
-                          {sectorData.map((entry, index) => (
-                            <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value: number | string) => formatMoney(Number(value))} contentStyle={tooltipStyle} />
-                        <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-none shadow-sm">
-                <CardContent className="p-5">
-                  <h2 className="mb-4 text-lg font-semibold text-slate-900">Holdings Performance</h2>
-                  <div className="h-72 overflow-y-auto pr-1 finara-scroll">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Symbol</TableHead>
-                          <TableHead className="text-right">Value</TableHead>
-                          <TableHead className="text-right">Return</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {query.data.investments.holdings.map((holding) => {
-                          const value = Math.round(holding.shares * holding.currentPriceMinor);
-                          const gain = value - Math.round(holding.shares * holding.avgPriceMinor);
-                          const gainPct = Math.round(holding.shares * holding.avgPriceMinor) > 0 ? (gain / Math.round(holding.shares * holding.avgPriceMinor)) * 100 : 0;
-                          return (
-                            <TableRow key={holding.id}>
-                              <TableCell className="font-semibold text-slate-900">{holding.symbol}</TableCell>
-                              <TableCell className="text-right tabular-nums">{formatMoney(value)}</TableCell>
-                              <TableCell className={`text-right tabular-nums ${gain >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-                                {gainPct.toFixed(1)}%
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
+          <TabsContent value="investments" className="space-y-8">
+            <div className={cn(CARD_SURFACE, "fade-in-up")}>
+              <div className="flex flex-col space-y-1.5 p-6">
+                <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                  <ChartPie className="h-5 w-5" aria-hidden /> Portfolio Allocation by Sector
+                </h2>
+              </div>
+              <div className="p-6 pt-0">
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={sectorData} dataKey="valueMinor" nameKey="name" innerRadius={60} outerRadius={95} paddingAngle={2} strokeWidth={0}>
+                        {sectorData.map((entry) => (
+                          <Cell key={entry.name} fill={SECTOR_COLORS[sectorKey(entry.name)] ?? "#6B7280"} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: number | string) => formatMoney(Number(value))} contentStyle={tooltipStyle} />
+                      <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
             </div>
           </TabsContent>
         </Tabs>

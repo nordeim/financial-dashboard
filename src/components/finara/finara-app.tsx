@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState, useSyncExternalStore } from "react";
+import { cn } from "@/lib/utils";
 import { MobileTopNav, Sidebar, type ViewId } from "@/components/finara/sidebar";
 import { LoginView } from "@/components/finara/login-view";
 import { DashboardView } from "@/components/finara/dashboard-view";
@@ -16,6 +17,19 @@ import { AddTransactionDialog, type TransactionKind } from "@/components/finara/
 import { AiCoachDialog } from "@/components/finara/ai-coach-dialog";
 
 const SESSION_KEY = "finara-demo-session";
+
+/** Per-view max-width containers (source-exact, live-verified 2026-09-15). */
+const VIEW_CONTAINER: Record<ViewId, string> = {
+  dashboard: "mx-auto w-full max-w-7xl",
+  income: "mx-auto w-full max-w-6xl",
+  expenses: "mx-auto w-full max-w-7xl",
+  accounts: "mx-auto w-full max-w-6xl",
+  investments: "mx-auto w-full max-w-7xl",
+  import: "mx-auto w-full max-w-6xl",
+  analytics: "mx-auto w-full max-w-7xl",
+  goals: "mx-auto w-full max-w-6xl",
+  settings: "mx-auto w-full max-w-4xl",
+};
 
 interface Session {
   email: string;
@@ -116,7 +130,7 @@ export function FinaraApp() {
   }
 
   return (
-    <div className="relative flex min-h-screen bg-slate-100 dark:bg-zinc-950">
+    <div className="relative flex min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 transition-colors duration-300 dark:from-gray-900 dark:to-gray-800">
       <Sidebar
         active={view}
         onNavigate={navigate}
@@ -136,7 +150,8 @@ export function FinaraApp() {
           onSignOut={handleSignOut}
         />
 
-        <main id="main-content" className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        {/* Source-exact page shell: padded gradient canvas + per-view max-width. */}
+        <main id="main-content" className={cn("flex-1 p-4 lg:p-8", VIEW_CONTAINER[view])}>
           {view === "dashboard" ? (
             <DashboardView
               onNavigate={navigate}

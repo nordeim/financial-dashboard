@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Brain, Loader2, Send } from "lucide-react";
+import { Bot, Loader2, Send } from "lucide-react";
 import { mutate } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import type { AiChatMessage } from "@/lib/types";
@@ -61,29 +61,30 @@ export function AiCoachDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[85vh] max-w-lg flex-col sm:max-w-xl dark:bg-slate-900 dark:text-slate-100">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100 dark:bg-violet-900">
-              <Brain className="h-5 w-5 text-violet-600 dark:text-violet-400" aria-hidden />
-            </span>
+      {/* Live-exact: centered max-w-2xl, h-[80vh], bot-icon header. */}
+      <DialogContent className="flex h-[80vh] max-w-2xl flex-col">
+        <DialogHeader className="shrink-0">
+          <DialogTitle className="flex items-center gap-2 text-primary-navy dark:text-white">
+            <Bot className="h-5 w-5" aria-hidden />
             AI Financial Coach
           </DialogTitle>
           <DialogDescription>Ask anything about your finances — answers use your live data.</DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 rounded-xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
-          <div ref={scrollRef} className="space-y-3 pr-2">
+        <ScrollArea className="flex-1">
+          <div ref={scrollRef} className="space-y-4 pb-4">
             {messages.map((message, index) => (
-              <div
-                key={index}
-                className={message.role === "user" ? "flex justify-end" : "flex justify-start"}
-              >
+              <div key={index} className={message.role === "user" ? "flex justify-end gap-3" : "flex justify-start gap-3"}>
+                {message.role === "assistant" ? (
+                  <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
+                    <div className="h-1.5 w-1.5 rounded-full bg-slate-400 dark:bg-slate-500" aria-hidden />
+                  </div>
+                ) : null}
                 <div
                   className={
                     message.role === "user"
-                      ? "max-w-[85%] rounded-2xl rounded-br-sm bg-emerald-500 px-3.5 py-2.5 text-sm text-white shadow-sm"
-                      : "max-w-[85%] rounded-2xl rounded-bl-sm bg-white px-3.5 py-2.5 text-sm text-slate-700 shadow-sm dark:bg-slate-900 dark:text-slate-200"
+                      ? "max-w-[85%] rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm text-white shadow-sm"
+                      : "max-w-[85%] rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300"
                   }
                 >
                   {message.content}
@@ -91,10 +92,12 @@ export function AiCoachDialog({
               </div>
             ))}
             {sending ? (
-              <div className="flex justify-start">
-                <div className="flex items-center gap-2 rounded-2xl rounded-bl-sm bg-white px-3.5 py-2.5 shadow-sm dark:bg-slate-900">
-                  <Loader2 className="h-4 w-4 animate-spin text-violet-500" aria-hidden />
-                  <span className="text-sm text-slate-400">AI is thinking...</span>
+              <div className="flex justify-start gap-3">
+                <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
+                  <div className="h-1.5 w-1.5 rounded-full bg-slate-400 dark:bg-slate-500" aria-hidden />
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-400 dark:border-slate-600 dark:bg-slate-700">
+                  AI is thinking...
                 </div>
               </div>
             ) : null}
@@ -120,7 +123,7 @@ export function AiCoachDialog({
         ) : null}
 
         <form
-          className="flex items-center gap-2"
+          className="mt-4 mb-4 flex items-center gap-2"
           onSubmit={(event) => {
             event.preventDefault();
             void send(draft);
@@ -132,9 +135,8 @@ export function AiCoachDialog({
             placeholder="Ask me about your finances..."
             aria-label="Ask the AI coach about your finances"
             maxLength={500}
-            className="dark:bg-slate-800"
           />
-          <Button type="submit" size="icon" className="bg-emerald-500 hover:bg-emerald-600" disabled={!draft.trim() || sending} aria-label="Send message">
+          <Button type="submit" size="icon" className="bg-primary-sage text-white shadow hover:bg-primary-sage/90" disabled={!draft.trim() || sending} aria-label="Send message">
             {sending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Send className="h-4 w-4" aria-hidden />}
           </Button>
         </form>

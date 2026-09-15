@@ -2,19 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Pen, Plus, Trash2, TrendingUp } from "lucide-react";
+import { DollarSign, Loader2, Pen, Plus, Trash2, TrendingUp } from "lucide-react";
 import { mutate, useQuery } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney, monthlyEquivalent, toMinorUnits } from "@/lib/money";
 import { FREQUENCY_LABELS, INCOME_CATEGORIES, INCOME_FREQUENCIES, incomeCategoryLabel } from "@/lib/categories";
-import { EmptyState, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
+import { CARD_SURFACE, EmptyState, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
 import type { IncomeSourceDto } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 const INCOME_QUICK_AMOUNTS = [1, 5, 10, 50, 100, 500];
 
@@ -98,6 +98,8 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
   };
 
   const deleteSource = async (source: IncomeSourceDto) => {
+    // Source parity: the live app confirms deletions with a native dialog.
+    if (!window.confirm(`Are you sure you want to delete this income source?`)) return;
     const result = await mutate(`/api/income/${source.id}`, "DELETE");
     if (!result.ok) {
       toast({ title: "Could not delete income source", description: result.error, variant: "destructive" });
@@ -108,13 +110,13 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <ViewHeader
         title="Income Sources"
         subtitle="Track and manage all your income streams"
         actions={
-          <Button onClick={onAddIncome} className="bg-emerald-500 hover:bg-emerald-600">
-            <Plus className="mr-1 h-4 w-4" aria-hidden /> Add Income Source
+          <Button onClick={onAddIncome} className="h-9 bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
+            <Plus className="h-4 w-4" aria-hidden /> Add Income Source
           </Button>
         }
       />
@@ -125,71 +127,60 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
         <LoadingRows rows={4} />
       ) : (
         <>
-          <Card className="border-none shadow-sm dark:border dark:border-slate-700 dark:bg-slate-800">
-            <CardContent className="p-5">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Monthly Income</p>
-              <p className="mt-2 text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-50">
-                {formatMoney(monthlyTotal)}
-              </p>
-              <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-                From {sources.filter((source) => source.active).length} active source
-                {sources.filter((source) => source.active).length === 1 ? "" : "s"}
-              </p>
-            </CardContent>
-          </Card>
+          {/* Hero total card (live: emerald gradient, text-4xl, w-20 icon circle) */}
+          <div className="fade-in-up mb-8">
+            <div className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 p-8 text-white shadow-xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="mb-2 text-lg font-medium text-emerald-100">Total Monthly Income</p>
+                  <p className="text-4xl font-bold">{formatMoney(monthlyTotal)}</p>
+                  <p className="mt-2 text-sm text-emerald-100">
+                    From {sources.filter((source) => source.active).length} active source
+                    {sources.filter((source) => source.active).length === 1 ? "" : "s"}
+                  </p>
+                </div>
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/20">
+                  <TrendingUp className="h-10 w-10" aria-hidden />
+                </div>
+              </div>
+            </div>
+          </div>
 
           {sources.length === 0 ? (
-            <Card className="border-none shadow-sm dark:border dark:border-slate-700 dark:bg-slate-800">
-              <CardContent className="p-5">
-                <EmptyState
-                  icon={TrendingUp}
-                  title="No Income Sources Yet"
-                  body="Start by adding your income sources to track your financial progress"
-                  action={
-                    <Button onClick={onAddIncome} className="bg-emerald-500 hover:bg-emerald-600">
-                      <Plus className="mr-1 h-4 w-4" aria-hidden /> Add Your First Income Source
-                    </Button>
-                  }
-                />
-              </CardContent>
-            </Card>
+            <div className={cn(CARD_SURFACE, "p-6")}>
+              <EmptyState
+                icon={TrendingUp}
+                title="No Income Sources Yet"
+                body="Start by adding your income sources to track your financial progress"
+                action={
+                  <Button onClick={onAddIncome} className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
+                    <Plus className="h-4 w-4" aria-hidden /> Add Your First Income Source
+                  </Button>
+                }
+              />
+            </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="fade-in-up stagger-1 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {sources.map((source) => (
-                <Card key={source.id} className="border-none shadow-sm transition-shadow hover:shadow-md dark:border dark:border-slate-700 dark:bg-slate-800">
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <span
-                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg dark:bg-emerald-900"
-                          aria-hidden
-                        >
-                          📊
-                        </span>
-                        <div className="min-w-0">
-                          <h3 className="truncate text-base font-semibold text-slate-900 dark:text-slate-50">
-                            {source.name}
-                          </h3>
-                          <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold lowercase text-slate-500 dark:bg-slate-700 dark:text-slate-300">
-                              {incomeCategoryLabel(source.category).toLowerCase()}
-                            </span>
-                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold lowercase text-slate-500 dark:bg-slate-700 dark:text-slate-300">
-                              {(FREQUENCY_LABELS[source.frequency] ?? source.frequency).toLowerCase()}
-                            </span>
-                            {!source.active ? (
-                              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold lowercase text-slate-400 dark:bg-slate-700 dark:text-slate-400">
-                                paused
-                              </span>
-                            ) : null}
+                <div key={source.id} className={cn(CARD_SURFACE, "card-hover")}>
+                  <div className="p-6">
+                    <div className="mb-4 flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/30">
+                          <DollarSign className="h-6 w-6 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                        </div>
+                        <div>
+                          <h3 className="truncate font-bold text-neutral-900 dark:text-white">{source.name}</h3>
+                          <div className="mt-1 inline-flex items-center rounded-md border border-transparent bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
+                            {incomeCategoryLabel(source.category).toLowerCase()}
                           </div>
                         </div>
                       </div>
-                      <div className="flex shrink-0 items-center gap-1">
+                      <div className="flex gap-1">
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-8 w-8 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                          className="h-8 w-8 text-neutral-400 hover:text-blue-600"
                           onClick={() => startEdit(source)}
                           aria-label={`Edit ${source.name}`}
                         >
@@ -198,7 +189,7 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-8 w-8 text-slate-400 hover:text-red-500 dark:hover:text-red-400"
+                          className="h-8 w-8 text-neutral-400 hover:text-red-600"
                           onClick={() => void deleteSource(source)}
                           aria-label={`Delete ${source.name}`}
                         >
@@ -206,34 +197,40 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                         </Button>
                       </div>
                     </div>
-                    <div className="mt-4 flex items-end justify-between gap-3">
-                      <div>
-                        <p className="text-xl font-bold tabular-nums text-slate-900 dark:text-slate-50">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-bold text-neutral-900 dark:text-white">
                           {formatMoney(source.amountMinor)}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Monthly equivalent</p>
+                        </span>
+                        <div className="flex items-center gap-1 text-sm text-neutral-500 dark:text-neutral-400">
+                          <span aria-hidden>📊</span>
+                          <span>{(FREQUENCY_LABELS[source.frequency] ?? source.frequency).toLowerCase()}</span>
+                        </div>
                       </div>
-                      <p className="text-sm font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
-                        {formatMoney(monthlyEquivalent(source.amountMinor, source.frequency))}
-                      </p>
+                      <div className="border-t pt-3 dark:border-gray-700">
+                        <p className="mb-1 text-sm text-neutral-500 dark:text-neutral-400">Monthly equivalent</p>
+                        <p className="text-lg font-semibold text-primary-sage">
+                          {formatMoney(monthlyEquivalent(source.amountMinor, source.frequency))}
+                        </p>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))}
             </div>
           )}
         </>
       )}
 
-      <Sheet open={editOpen} onOpenChange={setEditOpen}>
-        <SheetContent side="right" className="w-full overflow-y-auto p-0 sm:max-w-md dark:bg-slate-900 dark:text-slate-100">
-          <SheetHeader className="px-6 pb-2 pt-6">
-            <SheetTitle className="flex items-center gap-2">
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-emerald-600" aria-hidden /> Edit Income Source
-            </SheetTitle>
-            <SheetDescription>Update the amount, frequency or category.</SheetDescription>
-          </SheetHeader>
-          <form onSubmit={submitEdit} className="space-y-4 px-6 pb-6">
+            </DialogTitle>
+            <DialogDescription>Update the amount, frequency or category.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={submitEdit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="edit-income-name">Income Source</Label>
               <Input
@@ -242,7 +239,7 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
                 required
                 maxLength={120}
-                className="dark:bg-slate-800"
+               
               />
             </div>
             <div className="space-y-2">
@@ -256,7 +253,7 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                 value={form.amount}
                 onChange={(event) => setForm((current) => ({ ...current, amount: event.target.value }))}
                 required
-                className="dark:bg-slate-800"
+               
               />
             </div>
             <div>
@@ -286,7 +283,7 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                   value={form.frequency}
                   onValueChange={(value) => setForm((current) => ({ ...current, frequency: value }))}
                 >
-                  <SelectTrigger id="edit-income-frequency" className="dark:bg-slate-800">
+                  <SelectTrigger id="edit-income-frequency">
                     <SelectValue>{FREQUENCY_LABELS[form.frequency] ?? "Monthly"}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -304,7 +301,7 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                   value={form.category}
                   onValueChange={(value) => setForm((current) => ({ ...current, category: value }))}
                 >
-                  <SelectTrigger id="edit-income-category" className="dark:bg-slate-800">
+                  <SelectTrigger id="edit-income-category">
                     <SelectValue>{incomeCategoryLabel(form.category)}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -331,10 +328,10 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
               />
             </div>
             <div className="flex items-center justify-end gap-2 pt-1">
-              <Button type="button" variant="outline" onClick={() => setEditOpen(false)} className="dark:border-slate-700">
+              <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-emerald-500 hover:bg-emerald-600" disabled={submitting}>
+              <Button type="submit" className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90" disabled={submitting}>
                 {submitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden /> Saving…
@@ -345,8 +342,8 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
               </Button>
             </div>
           </form>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

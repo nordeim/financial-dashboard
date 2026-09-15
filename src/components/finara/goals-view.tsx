@@ -6,14 +6,16 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Pen, Plus, Target, Trash2 } from "lucide-react";
+import { Clock, DollarSign, Loader2, Pen, Plus, Target, Trash2 } from "lucide-react";
 import { mutate, useQuery } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney, percent, toMinorUnits } from "@/lib/money";
 import { GOAL_CATEGORIES, GOAL_PRIORITIES, goalCategoryEmoji, goalCategoryLabel, goalPriorityLabel } from "@/lib/categories";
+import { GOAL_TILE_GRADIENT, PRIORITY_BADGE } from "@/lib/ui-maps";
 import { formatDate } from "@/lib/date-format";
-import { EmptyState, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
+import { CARD_SURFACE, EmptyState, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
 import type { GoalDto } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 interface GoalFormState {
   name: string;
@@ -126,6 +128,8 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
   };
 
   const deleteGoal = async (goal: GoalDto) => {
+    // Source parity: the live app confirms deletions with a native dialog.
+    if (!window.confirm("Are you sure you want to delete this goal?")) return;
     const result = await mutate(`/api/goals/${goal.id}`, "DELETE");
     if (!result.ok) {
       toast({ title: "Could not delete goal", description: result.error, variant: "destructive" });
@@ -136,13 +140,13 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <ViewHeader
         title="Savings Goals"
         subtitle="Set and track your financial objectives"
         actions={
-          <Button onClick={openCreate} className="bg-emerald-500 hover:bg-emerald-600">
-            <Plus className="mr-1 h-4 w-4" aria-hidden /> New Goal
+          <Button onClick={openCreate} className="h-9 bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
+            <Plus className="h-4 w-4" aria-hidden /> New Goal
           </Button>
         }
       />
@@ -152,118 +156,115 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
       ) : query.loading && !query.data ? (
         <LoadingRows rows={3} />
       ) : goals.length === 0 ? (
-        <div className="rounded-2xl bg-white shadow-sm dark:bg-slate-800 dark:ring-1 dark:ring-slate-700">
+        <div className={cn(CARD_SURFACE, "p-6")}>
           <EmptyState
             icon={Target}
             title="No Goals Set Yet"
             body="Create your first savings goal to start tracking your financial objectives"
             action={
-              <Button onClick={openCreate} className="bg-emerald-500 hover:bg-emerald-600">
+              <Button onClick={openCreate} className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
                 <Plus className="mr-1 h-4 w-4" aria-hidden /> Create Your First Goal
               </Button>
             }
           />
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="fade-in-up grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {goals.map((goal) => {
             const progress = percent(goal.currentAmountMinor, goal.targetAmountMinor);
             const complete = goal.currentAmountMinor >= goal.targetAmountMinor;
             const remaining = daysRemaining(goal.deadline);
             return (
-              <div
-                key={goal.id}
-                className="rounded-2xl bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:bg-slate-800 dark:ring-1 dark:ring-slate-700"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl dark:bg-slate-700"
-                      aria-hidden
-                    >
-                      {goalCategoryEmoji(goal.category)}
-                    </span>
-                    <div className="min-w-0">
-                      <h3 className="truncate text-base font-semibold text-slate-900 dark:text-slate-50">{goal.name}</h3>
-                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold lowercase text-slate-500 dark:bg-slate-700 dark:text-slate-300">
-                          {goalPriorityLabel(goal.priority).toLowerCase()}
-                        </span>
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold lowercase text-slate-500 dark:bg-slate-700 dark:text-slate-300">
-                          {goalCategoryLabel(goal.category).toLowerCase()}
+              <div key={goal.id} className={cn(CARD_SURFACE, "card-hover")}>
+                <div className="flex flex-col space-y-1.5 p-6 pb-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={cn("flex h-12 w-12 items-center justify-center rounded-xl", GOAL_TILE_GRADIENT)}>
+                        <span className="text-2xl" aria-hidden>
+                          {goalCategoryEmoji(goal.category)}
                         </span>
                       </div>
+                      <div>
+                        <div className="truncate text-lg font-bold text-neutral-900 dark:text-neutral-100">{goal.name}</div>
+                        <div className="mt-1 flex items-center gap-2">
+                          <span
+                            className={cn(
+                              "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold",
+                              PRIORITY_BADGE[goal.priority ?? "medium"] ?? PRIORITY_BADGE.medium,
+                            )}
+                          >
+                            {(goal.priority ?? "medium").toLowerCase()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-neutral-400 hover:text-blue-600"
+                        onClick={() => openEdit(goal)}
+                        aria-label={`Edit ${goal.name}`}
+                      >
+                        <Pen className="h-4 w-4" aria-hidden />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-neutral-400 hover:text-red-600"
+                        onClick={() => void deleteGoal(goal)}
+                        aria-label={`Delete ${goal.name}`}
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden />
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex shrink-0 items-center gap-1">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-                      onClick={() => openEdit(goal)}
-                      aria-label={`Edit ${goal.name}`}
-                    >
-                      <Pen className="h-4 w-4" aria-hidden />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 text-slate-400 hover:text-red-500 dark:hover:text-red-400"
-                      onClick={() => void deleteGoal(goal)}
-                      aria-label={`Delete ${goal.name}`}
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden />
-                    </Button>
-                  </div>
                 </div>
-
-                <div className="mt-4">
-                  <div className="mb-1.5 flex items-center justify-between text-xs">
-                    <span className="font-medium text-slate-500 dark:text-slate-400">Progress</span>
-                    <span className="font-semibold tabular-nums text-slate-700 dark:text-slate-200">
-                      {progress.toFixed(1)}%
-                    </span>
-                  </div>
-                  <div
-                    className="h-2.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700"
-                    role="progressbar"
-                    aria-valuenow={Math.round(progress)}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label={`${goal.name} progress: ${Math.round(progress)}%`}
-                  >
+                <div className="space-y-4 p-6 pt-0">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-neutral-600 dark:text-neutral-300">Progress</span>
+                      <span className="font-medium text-neutral-800 dark:text-neutral-100">{progress.toFixed(1)}%</span>
+                    </div>
                     <div
-                      className={`h-full rounded-full ${complete ? "bg-emerald-500" : "bg-gradient-to-r from-emerald-400 to-teal-500"}`}
-                      style={{ width: `${Math.min(progress, 100)}%` }}
-                    />
+                      className="h-2 overflow-hidden rounded-full bg-primary/20"
+                      role="progressbar"
+                      aria-valuenow={Math.round(progress)}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label={`${goal.name} progress: ${Math.round(progress)}%`}
+                    >
+                      <div
+                        className="h-full bg-primary transition-all"
+                        style={{ width: `${Math.min(progress, 100)}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-sm text-neutral-500 dark:text-neutral-400">
+                      <span>{formatMoney(goal.currentAmountMinor)}</span>
+                      <span>{formatMoney(goal.targetAmountMinor)}</span>
+                    </div>
                   </div>
-                  <div className="mt-2 flex items-center justify-between text-sm">
-                    <span className="font-semibold tabular-nums text-slate-900 dark:text-slate-50">
-                      {formatMoney(goal.currentAmountMinor)}
-                    </span>
-                    <span className="tabular-nums text-slate-400 dark:text-slate-500">
-                      / {formatMoney(goal.targetAmountMinor)}
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="h-4 w-4 text-neutral-500 dark:text-neutral-400" aria-hidden />
+                    <span className="text-neutral-600 dark:text-neutral-300">
+                      {remaining !== null ? `${remaining} days remaining` : "No deadline set"}
                     </span>
                   </div>
+                  <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                    Target: {formatDate(goal.deadline ?? "", "MM/dd/yyyy")}
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="mt-4 h-8 w-full text-xs"
+                    onClick={() => {
+                      setContributing(goal);
+                      setContribution("");
+                    }}
+                    disabled={complete}
+                  >
+                    <DollarSign className="mr-1 h-4 w-4" aria-hidden /> {complete ? "Goal reached" : "Add Progress"}
+                  </Button>
                 </div>
-
-                <div className="mt-3 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
-                  <span>Target: {formatDate(goal.deadline ?? "", "MM/dd/yyyy")}</span>
-                  {remaining !== null ? <span>{remaining} days remaining</span> : null}
-                </div>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-4 w-full dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                  onClick={() => {
-                    setContributing(goal);
-                    setContribution("");
-                  }}
-                  disabled={complete}
-                >
-                  <Plus className="mr-1 h-4 w-4" aria-hidden /> {complete ? "Goal reached" : "Add Progress"}
-                </Button>
               </div>
             );
           })}
@@ -271,7 +272,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg dark:bg-slate-900 dark:text-slate-100">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit Goal" : "Create New Goal"}</DialogTitle>
             <DialogDescription>
@@ -287,7 +288,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
                 required
                 maxLength={120}
-                className="dark:bg-slate-800"
+               
               />
             </div>
             <div className="space-y-2">
@@ -302,7 +303,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                 onChange={(event) => setForm((current) => ({ ...current, target: event.target.value }))}
                 placeholder="0.00"
                 required
-                className="dark:bg-slate-800"
+               
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -314,7 +315,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                   value={form.deadline}
                   onChange={(event) => setForm((current) => ({ ...current, deadline: event.target.value }))}
                   required
-                  className="dark:bg-slate-800"
+                 
                 />
               </div>
               <div className="space-y-2">
@@ -323,7 +324,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                   value={form.category}
                   onValueChange={(value) => setForm((current) => ({ ...current, category: value }))}
                 >
-                  <SelectTrigger id="goal-category" className="dark:bg-slate-800">
+                  <SelectTrigger id="goal-category">
                     <SelectValue>{goalCategoryLabel(form.category)}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -342,7 +343,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                 value={form.priority}
                 onValueChange={(value) => setForm((current) => ({ ...current, priority: value }))}
               >
-                <SelectTrigger id="goal-priority" className="dark:bg-slate-800">
+                <SelectTrigger id="goal-priority">
                   <SelectValue>{goalPriorityLabel(form.priority)}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -355,10 +356,10 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
               </Select>
             </div>
             <div className="flex justify-end gap-2 pt-1">
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="dark:border-slate-700">
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-emerald-500 hover:bg-emerald-600" disabled={submitting}>
+              <Button type="submit" className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90" disabled={submitting}>
                 {submitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden /> Saving…
@@ -375,7 +376,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
       </Dialog>
 
       <Dialog open={contributing !== null} onOpenChange={(open) => (open ? null : setContributing(null))}>
-        <DialogContent className="sm:max-w-sm dark:bg-slate-900 dark:text-slate-100">
+        <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Add Progress</DialogTitle>
             <DialogDescription>
@@ -401,14 +402,14 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                 onChange={(event) => setContribution(event.target.value)}
                 placeholder="0.00"
                 required
-                className="dark:bg-slate-800"
+               
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setContributing(null)} className="dark:border-slate-700">
+              <Button type="button" variant="outline" onClick={() => setContributing(null)}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-emerald-500 hover:bg-emerald-600">
+              <Button type="submit" className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
                 Add Amount
               </Button>
             </div>

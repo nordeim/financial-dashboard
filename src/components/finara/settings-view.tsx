@@ -2,16 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Download, Eye, EyeOff, Lock, Save, Settings as SettingsIcon, ShieldCheck, Upload } from "lucide-react";
+import { Bell, Download, Save, Shield, Upload, User } from "lucide-react";
 import { mutate, useQuery } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { CURRENCIES, DATE_FORMATS } from "@/lib/categories";
-import { ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
+import { CARD_SURFACE, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
 import type { SettingsDto } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 const TOGGLES = [
   { key: "pushNotifications", label: "Push Notifications", description: "Receive notifications in your browser" },
@@ -20,12 +20,13 @@ const TOGGLES = [
   { key: "monthlyReports", label: "Monthly Reports", description: "Receive monthly spending summaries" },
 ] as const;
 
-const TRUST_BADGES = [
-  { icon: Lock, title: "Encrypted", caption: "Protected" },
-  { icon: ShieldCheck, title: "Multi-Device", caption: "Synced" },
-  { icon: Eye, title: "Your Eyes Only", caption: "Private" },
-  { icon: ShieldCheck, title: "GDPR", caption: "Compliant" },
-];
+/** Live-verified data summary tiles (title on top, colored pill beneath). */
+const DATA_SUMMARY = [
+  { title: "Protected", pill: "Encrypted", pillClass: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" },
+  { title: "Synced", pill: "Multi-Device", pillClass: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" },
+  { title: "Private", pill: "Your Eyes Only", pillClass: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300" },
+  { title: "GDPR", pill: "Compliant", pillClass: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300" },
+] as const;
 
 export function SettingsView() {
   const query = useQuery<SettingsDto>("/api/settings");
@@ -88,7 +89,7 @@ export function SettingsView() {
       return;
     }
     setImporting(true);
-    const result = await mutate<{ imported: number; skipped: number; errors: { row: number; error: string }[]}>(
+    const result = await mutate<{ imported: number; skipped: number; errors: { row: number; error: string }[] }>(
       "/api/import",
       "POST",
       { mode: "finara-export", ...(parsed as object) },
@@ -117,147 +118,164 @@ export function SettingsView() {
       ) : !form ? (
         <LoadingRows rows={4} />
       ) : (
-        <div className="space-y-4 pb-6">
-          <Card className="border-none shadow-sm">
-            <CardContent className="p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <SettingsIcon className="h-5 w-5 text-slate-500" aria-hidden />
-                <h2 className="text-lg font-semibold text-slate-900">Profile Settings</h2>
+        <div className="space-y-6">
+          {/* Profile Settings (live: user icon header + two selects) */}
+          <div className={cn(CARD_SURFACE, "fade-in-up")}>
+            <div className="flex flex-col space-y-1.5 p-6">
+              <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                <User className="h-5 w-5" aria-hidden /> Profile Settings
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 gap-4 p-6 pt-0 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="setting-currency">Default Currency</Label>
+                <Select value={form.currency} onValueChange={(value) => setForm({ ...form, currency: value })}>
+                  <SelectTrigger id="setting-currency">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CURRENCIES.map((currency) => (
+                      <SelectItem key={currency.code} value={currency.code}>
+                        {currency.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="setting-currency">Default Currency</Label>
-                  <Select value={form.currency} onValueChange={(value) => setForm({ ...form, currency: value })}>
-                    <SelectTrigger id="setting-currency">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CURRENCIES.map((currency) => (
-                        <SelectItem key={currency.code} value={currency.code}>
-                          {currency.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="setting-date-format">Date Format</Label>
-                  <Select value={form.dateFormat} onValueChange={(value) => setForm({ ...form, dateFormat: value })}>
-                    <SelectTrigger id="setting-date-format">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DATE_FORMATS.map((format) => (
-                        <SelectItem key={format.id} value={format.id}>
-                          {format.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="setting-date-format">Date Format</Label>
+                <Select value={form.dateFormat} onValueChange={(value) => setForm({ ...form, dateFormat: value })}>
+                  <SelectTrigger id="setting-date-format">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DATE_FORMATS.map((format) => (
+                      <SelectItem key={format.id} value={format.id}>
+                        {format.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="border-none shadow-sm">
-            <CardContent className="p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <Eye className="h-5 w-5 text-slate-500" aria-hidden />
-                <h2 className="text-lg font-semibold text-slate-900">Notifications</h2>
-              </div>
-              <div className="divide-y divide-slate-100">
-                {TOGGLES.map((toggle) => (
-                  <div key={toggle.key} className="flex items-center justify-between gap-4 py-3.5">
-                    <div>
-                      <Label htmlFor={`setting-${toggle.key}`} className="text-sm font-medium text-slate-800">
-                        {toggle.label}
-                      </Label>
-                      <p className="text-xs text-slate-400">{toggle.description}</p>
-                    </div>
-                    <Switch
-                      id={`setting-${toggle.key}`}
-                      checked={form[toggle.key]}
-                      onCheckedChange={(checked) => setForm({ ...form, [toggle.key]: checked })}
-                    />
+          {/* Notifications (live: bell icon, text-base labels, space-y-6 rows) */}
+          <div className={cn(CARD_SURFACE, "fade-in-up stagger-1")}>
+            <div className="flex flex-col space-y-1.5 p-6">
+              <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                <Bell className="h-5 w-5" aria-hidden /> Notifications
+              </h2>
+            </div>
+            <div className="space-y-6 p-6 pt-0">
+              {TOGGLES.map((toggle) => (
+                <div key={toggle.key} className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor={`setting-${toggle.key}`} className="text-base font-medium">
+                      {toggle.label}
+                    </Label>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">{toggle.description}</p>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  <Switch
+                    id={`setting-${toggle.key}`}
+                    checked={form[toggle.key]}
+                    onCheckedChange={(checked) => setForm({ ...form, [toggle.key]: checked })}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
 
-          <Card className="border-none shadow-sm">
-            <CardContent className="p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <Download className="h-5 w-5 text-emerald-600" aria-hidden />
-                <h2 className="text-lg font-semibold text-slate-900">Export Your Data</h2>
+          {/* Export Your Data (live: blue info box + full-width blue button) */}
+          <div className={cn(CARD_SURFACE, "fade-in-up stagger-2")}>
+            <div className="flex flex-col space-y-1.5 p-6">
+              <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                <Download className="h-5 w-5" aria-hidden /> Export Your Data
+              </h2>
+            </div>
+            <div className="space-y-4 p-6 pt-0">
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+                <div className="flex items-start gap-3">
+                  <Shield className="h-5 w-5 shrink-0 text-blue-600 dark:text-blue-300" aria-hidden />
+                  <div>
+                    <h4 className="mb-1 font-semibold text-blue-800 dark:text-blue-200">GDPR Compliant Export</h4>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      Download all your data in JSON format. This includes expenses, income, goals, and account information.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
-                <h3 className="text-sm font-semibold text-emerald-800">GDPR Compliant Export</h3>
-                <p className="mt-1 text-sm text-emerald-700">
-                  Download all your data in JSON format. This includes expenses, income, goals, and account information.
-                </p>
-                <Button variant="outline" className="mt-3 border-emerald-300 bg-white text-emerald-700 hover:bg-emerald-100" onClick={() => void exportAllData()}>
-                  <Download className="mr-2 h-4 w-4" aria-hidden /> Export All Data
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              <Button className="w-full bg-blue-600 shadow hover:bg-blue-700" onClick={() => void exportAllData()}>
+                <Download className="mr-2 h-4 w-4" aria-hidden /> Export All Data
+              </Button>
+            </div>
+          </div>
 
-          <Card className="border-none shadow-sm">
-            <CardContent className="p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <Upload className="h-5 w-5 text-amber-500" aria-hidden />
-                <h2 className="text-lg font-semibold text-slate-900">Import Data</h2>
+          {/* Import Data (live: amber warning box + visible file input) */}
+          <div className={cn(CARD_SURFACE, "fade-in-up stagger-3")}>
+            <div className="flex flex-col space-y-1.5 p-6">
+              <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                <Upload className="h-5 w-5" aria-hidden /> Import Data
+              </h2>
+            </div>
+            <div className="space-y-4 p-6 pt-0">
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+                <div className="flex items-start gap-3">
+                  <Shield className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-300" aria-hidden />
+                  <div>
+                    <h4 className="mb-1 font-semibold text-amber-800 dark:text-amber-200">Import Warning</h4>
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                      Importing will add data to your existing records. Make sure to backup your current data first.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4">
-                <h3 className="text-sm font-semibold text-amber-800">Import Warning</h3>
-                <p className="mt-1 text-sm text-amber-700">
-                  Importing will add data to your existing records. Make sure to backup your current data first.
-                </p>
-                <Button
-                  variant="outline"
-                  className="mt-3 border-amber-300 bg-white text-amber-700 hover:bg-amber-100"
-                  disabled={importing}
-                  onClick={() => importInputRef.current?.click()}
-                >
-                  <Upload className="mr-2 h-4 w-4" aria-hidden /> {importing ? "Importing…" : "Select Finara Export File"}
-                </Button>
+              <div className="space-y-2">
+                <Label htmlFor="importFile">Select Finara Export File</Label>
                 <input
                   ref={importInputRef}
                   type="file"
                   accept=".json,application/json"
-                  className="sr-only"
+                  className="h-9 w-full cursor-pointer rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                  id="importFile"
                   aria-label="Select a Finara export file to import"
+                  disabled={importing}
                   onChange={(event) => {
                     const file = event.target.files?.[0];
                     if (file) void importExportFile(file);
                   }}
                 />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="border-none shadow-sm">
-            <CardContent className="p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5 text-violet-600" aria-hidden />
-                <h2 className="text-lg font-semibold text-slate-900">Your Data Summary</h2>
-              </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {TRUST_BADGES.map((badge) => (
-                  <div key={badge.title} className="flex flex-col items-center gap-1.5 rounded-xl bg-slate-50 px-3 py-4 text-center">
-                    <badge.icon className="h-5 w-5 text-slate-500" aria-hidden />
-                    <p className="text-xs font-semibold text-slate-700">{badge.title}</p>
-                    <p className="text-[10px] text-slate-400">{badge.caption}</p>
+          {/* Your Data Summary (live: text-2xl titles + colored pills) */}
+          <div className={cn(CARD_SURFACE, "fade-in-up stagger-4")}>
+            <div className="flex flex-col space-y-1.5 p-6">
+              <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                <Shield className="h-5 w-5" aria-hidden /> Your Data Summary
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 gap-4 p-6 pt-0 md:grid-cols-4">
+              {DATA_SUMMARY.map((tile) => (
+                <div key={tile.title} className="text-center">
+                  <div className="mb-1 text-2xl font-bold text-gray-900 dark:text-white">{tile.title}</div>
+                  <div
+                    className={cn(
+                      "inline-flex items-center rounded-md border border-transparent px-2.5 py-0.5 text-xs font-semibold",
+                      tile.pillClass,
+                    )}
+                  >
+                    {tile.pill}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              ))}
+            </div>
+          </div>
 
           <div className="flex justify-end">
-            <Button onClick={() => void handleSave()} className="bg-emerald-500 hover:bg-emerald-600" disabled={saving}>
-              <Save className="mr-2 h-4 w-4" aria-hidden /> {saving ? "Saving…" : "Save Settings"}
+            <Button onClick={() => void handleSave()} className="gap-2 bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90" disabled={saving}>
+              <Save className="h-4 w-4" aria-hidden /> {saving ? "Saving…" : "Save Settings"}
             </Button>
           </div>
         </div>

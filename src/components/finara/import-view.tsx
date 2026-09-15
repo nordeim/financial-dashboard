@@ -2,10 +2,9 @@
 
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CheckCircle2, FileSpreadsheet, FileUp, Loader2, Upload, X } from "lucide-react";
+import { CheckCircle2, CloudUpload, FileSpreadsheet, Loader2, X } from "lucide-react";
 import { mutate } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { toMinorUnits } from "@/lib/money";
@@ -227,37 +226,17 @@ export function ImportView() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <ViewHeader title="Import Transactions" subtitle="Upload a CSV from your bank to quickly add expenses." />
 
-      <Card className="border-none shadow-sm">
-        <CardContent className="p-6">
-          <ol className="mb-6 flex items-center gap-2 text-sm" aria-label="Import steps">
-            {["Upload File", "Review & Categorize", "Done"].map((label, index) => {
-              const stepNumber = index + 1;
-              const isActive = step === stepNumber;
-              const isDone = step > stepNumber;
-              return (
-                <li key={label} className="flex items-center gap-2">
-                  <span
-                    className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-                      isDone
-                        ? "bg-emerald-500 text-white"
-                        : isActive
-                          ? "bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900"
-                          : "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
-                    }`}
-                    aria-current={isActive ? "step" : undefined}
-                  >
-                    {isDone ? <CheckCircle2 className="h-4 w-4" aria-hidden /> : stepNumber}
-                  </span>
-                  <span className={isActive ? "font-semibold text-slate-900 dark:text-slate-100" : "text-slate-400"}>{label}</span>
-                  {index < 2 ? <span className="mx-1 h-px w-8 bg-slate-200 dark:bg-slate-700" aria-hidden /> : null}
-                </li>
-              );
-            })}
-          </ol>
-
+      {/* Live-exact plain card surface (border + bg-card + shadow — not the glass surface). */}
+      <div className="fade-in-up rounded-xl border bg-card text-card-foreground shadow">
+        <div className="flex flex-col space-y-1.5 p-6">
+          <h2 className="font-semibold leading-none tracking-tight">
+            {step === 1 ? "Step 1: Upload File" : step === 2 ? "Step 2: Review & Categorize" : "Step 3: Done"}
+          </h2>
+        </div>
+        <div className="space-y-4 p-6 pt-0">
           {parseError ? (
             <div className="mb-6 flex flex-col items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-6 py-8 text-center" role="alert">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
@@ -273,7 +252,7 @@ export function ImportView() {
 
           {step === 1 ? (
             <div
-              className="flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-800/40"
+              className="border-2 border-dashed p-6 text-center"
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
                 event.preventDefault();
@@ -281,60 +260,52 @@ export function ImportView() {
                 if (file) void handleFile(file);
               }}
             >
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm dark:bg-slate-800">
-                <FileUp className="h-7 w-7 text-emerald-600" aria-hidden />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Step 1: Upload File</p>
-                <p className="mt-1 text-xs text-slate-400">Drag & drop your bank CSV here, or browse</p>
-              </div>
+              <CloudUpload className="mx-auto h-12 w-12 text-gray-400" aria-hidden />
+              <label
+                className="cursor-pointer text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                htmlFor="file-upload"
+              >
+                <span>Upload a file</span>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv,.txt,text/csv"
+                  className="sr-only"
+                  id="file-upload"
+                  aria-label="Choose a CSV file to import"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) void handleFile(file);
+                  }}
+                />
+              </label>
               {pendingFile && !extracting ? (
-                <p className="flex items-center gap-1 text-sm font-medium text-emerald-700" aria-live="polite">
+                <p className="mt-2 flex items-center justify-center gap-1 text-sm font-medium text-emerald-700 dark:text-emerald-400" aria-live="polite">
                   <CheckCircle2 className="h-4 w-4" aria-hidden /> {pendingFile.name}
                 </p>
               ) : null}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                className="bg-white"
-                disabled={extracting}
-              >
-                <Upload className="mr-2 h-4 w-4" aria-hidden /> Upload a file
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.txt,text/csv"
-                className="sr-only"
-                aria-label="Choose a CSV file to import"
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (file) void handleFile(file);
-                }}
-              />
-              <p className="text-xs text-slate-400">CSV, XLS, XLSX up to 10MB</p>
-              <Button
-                type="button"
-                disabled={!pendingFile || extracting}
-                className={pendingFile || extracting ? "bg-emerald-500 hover:bg-emerald-600" : "pointer-events-none bg-slate-300 text-slate-500 dark:bg-slate-700 dark:text-slate-400"}
-                onClick={() => void extract()}
-              >
-                {extracting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden /> Extracting...
-                  </>
-                ) : (
-                  <>
-                    <FileUp className="mr-2 h-4 w-4" aria-hidden /> Upload and Extract
-                  </>
-                )}
-              </Button>
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">CSV, XLS, XLSX up to 10MB</p>
             </div>
           ) : null}
 
-          {step === 2 ? (
-            <div className="space-y-4">
+          <Button
+            type="button"
+            disabled={!pendingFile || extracting}
+            onClick={() => void extract()}
+            className="h-9"
+          >
+            {extracting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden /> Extracting...
+              </>
+            ) : (
+              "Upload and Extract"
+            )}
+          </Button>
+        </div>
+
+        {step === 2 ? (
+          <div className="space-y-4 p-6 pt-0">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
                   <FileSpreadsheet className="h-4 w-4 text-emerald-600" aria-hidden />
@@ -345,7 +316,7 @@ export function ImportView() {
                   <Button variant="outline" size="sm" onClick={reset}>
                     <X className="mr-1 h-4 w-4" aria-hidden /> Cancel
                   </Button>
-                  <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600" onClick={() => void runImport()} disabled={importing}>
+                  <Button size="sm" className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90" onClick={() => void runImport()} disabled={importing}>
                     {importing ? (
                       <>
                         <Loader2 className="mr-1 h-4 w-4 animate-spin" aria-hidden /> Importing…
@@ -418,18 +389,18 @@ export function ImportView() {
           ) : null}
 
           {step === 3 && outcome ? (
-            <div className="flex flex-col items-center gap-4 py-8 text-center">
+            <div className="flex flex-col items-center gap-4 p-6 pt-0 text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-900/40">
                 <CheckCircle2 className="h-8 w-8 text-emerald-600" aria-hidden />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Import Complete</h3>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">Import Complete</h3>
+                <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                   {outcome.imported} transactions were imported{outcome.skipped > 0 ? `, ${outcome.skipped} rows were skipped` : ""}.
                 </p>
               </div>
               {outcome.errors.length > 0 ? (
-                <ul className="max-h-40 w-full max-w-md space-y-1 overflow-y-auto rounded-lg bg-amber-50 p-3 text-left text-xs text-amber-700 dark:bg-amber-950/40 dark:text-amber-300" aria-label="Skipped rows">
+                <ul className="max-h-40 w-full max-w-md space-y-1 overflow-y-auto rounded-lg bg-amber-50 p-3 text-left text-xs text-amber-700 dark:bg-amber-900/20 dark:text-amber-300" aria-label="Skipped rows">
                   {outcome.errors.map((entry) => (
                     <li key={`${entry.row}-${entry.error}`}>
                       Row {entry.row}: {entry.error}
@@ -444,8 +415,7 @@ export function ImportView() {
               </div>
             </div>
           ) : null}
-        </CardContent>
-      </Card>
+      </div>
     </div>
   );
 }

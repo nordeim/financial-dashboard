@@ -121,6 +121,109 @@
   }
 }
 
+/* ============================================================
+   Finara design system — source-exact tokens captured from the
+   live app stylesheet on 2026-09-15 (see
+   docs/plans/2026-09-15-parity-remediation-round3.md).
+   ============================================================ */
+
+:root {
+  --primary-navy: #1e293b;
+  --primary-sage: #059669;
+  --accent-blue: #3b82f6;
+  --warning-amber: #f59e0b;
+  --danger-red: #ef4444;
+  --success-green: #10b981;
+  --neutral-100: #f8fafc;
+  --neutral-200: #e2e8f0;
+  --neutral-300: #cbd5e1;
+  --neutral-600: #64748b;
+  --neutral-800: #1e293b;
+  --neutral-900: #0f172a;
+}
+
+.dark {
+  --primary-navy: #e2e8f0;
+  --neutral-100: #0f172a;
+  --neutral-200: #1e293b;
+  --neutral-300: #334155;
+  --neutral-600: #cbd5e1;
+  --neutral-800: #f1f5f9;
+  --neutral-900: #ffffff;
+}
+
+/* Sidebar vertical gradient (light: navy ramp; dark: deeper ramp). */
+.sidebar-gradient {
+  background: linear-gradient(180deg, #1e293b 0%, #334155 100%);
+  transition: background 0.3s ease;
+}
+.dark .sidebar-gradient {
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+}
+
+/* Card lift on hover (live `.card-hover`). */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Source palette utilities. */
+.text-primary-navy { color: var(--primary-navy); }
+.text-primary-sage { color: var(--primary-sage); }
+.bg-primary-navy { background-color: var(--primary-navy); }
+.bg-primary-sage { background-color: var(--primary-sage); }
+.border-primary-sage { border-color: var(--primary-sage); }
+.hover\:bg-primary-sage\/90:hover { background-color: color-mix(in srgb, var(--primary-sage) 90%, transparent); }
+
+/* Global theme transition (live applies this to every element). */
+* {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+/* Enhanced dark-mode support (live overrides). */
+.dark .bg-white { background-color: #1e293b; }
+.dark .text-gray-900 { color: #f1f5f9; }
+.dark .text-gray-800 { color: #e2e8f0; }
+.dark .text-gray-700 { color: #cbd5e1; }
+.dark .text-gray-600 { color: #94a3b8; }
+.dark .text-gray-500 { color: #64748b; }
+.dark .border-gray-200 { border-color: #334155; }
+.dark .border-gray-300 { border-color: #475569; }
+
+/* Staggered entrance animations (CSS-only approximation of the live
+   framer-motion fade/slide; reduced-motion safe). */
+@keyframes finara-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fade-in-up {
+  animation: finara-fade-up 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+@media (prefers-reduced-motion: reduce) {
+  .fade-in-up {
+    animation: none;
+  }
+}
+
 /* Finara: subtle custom scrollbar for long lists inside cards. */
 .finara-scroll::-webkit-scrollbar {
   width: 6px;
