@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useSyncExternalStore } from "react";
+import { Button } from "@/components/ui/button";
 import {
   ChartPie,
   DollarSign,
@@ -23,6 +24,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -74,14 +77,14 @@ function BrandMark({ compact = false }: { compact?: boolean }) {
 /** "Synced" status badge with wifi glyph (live-exact outline style). */
 function SyncedBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-md border border-green-300 px-2.5 py-0.5 text-xs font-semibold text-green-600 dark:border-green-600 dark:text-green-400">
+    <div className="inline-flex items-center gap-1 rounded-md border border-green-300 px-2.5 py-0.5 text-xs font-semibold text-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:border-green-600 dark:text-green-400">
       <Wifi className="h-3 w-3" aria-hidden />
       Synced
-    </span>
+    </div>
   );
 }
 
-/** User avatar + dropdown: Dark Mode / Sign Out (live-exact surface). */
+/** User avatar + dropdown: My Account / Dark Mode / Sign Out (live-exact surface). */
 function UserMenu({
   userName,
   userEmail,
@@ -97,42 +100,78 @@ function UserMenu({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        className="flex h-9 w-full items-center gap-3 rounded-xl bg-white/10 p-3 text-left backdrop-blur-sm transition-colors hover:bg-accent dark:bg-gray-800/50"
-        aria-label={`${userName} ${userEmail}`}
-      >
-        <span className="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-full bg-muted">
-          <span className="flex h-full w-full items-center justify-center rounded-full bg-muted text-sm font-semibold text-slate-600 dark:text-slate-200">
-            {initial}
-          </span>
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-medium text-white dark:text-gray-200">{userName}</span>
-          <span className="block truncate text-xs text-slate-400 dark:text-gray-400">{userEmail}</span>
-        </span>
-        <svg
-          viewBox="0 0 24 24"
-          className="h-4 w-4 shrink-0 text-slate-400"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          aria-hidden
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className="flex h-9 w-full items-center gap-3 rounded-xl bg-white/10 p-3 text-left backdrop-blur-sm dark:bg-gray-800/50"
+          aria-label={`${userName} ${userEmail}`}
         >
-          <path d="m6 9 6 6 6-6" />
-        </svg>
+          <span className="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-full">
+            <span className="flex h-full w-full items-center justify-center rounded-full bg-muted">{initial}</span>
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-white dark:text-gray-200">{userName}</p>
+            <p className="truncate text-xs text-slate-400 dark:text-gray-400">{userEmail}</p>
+          </div>
+        </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" side="top" className="w-52">
-        <DropdownMenuItem onSelect={() => toggleTheme()} className="gap-2">
+      <DropdownMenuContent align="end" side="top" className="w-56">
+        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => toggleTheme()}>
           {isDark ? <Sun className="h-4 w-4" aria-hidden /> : <Moon className="h-4 w-4" aria-hidden />}
           {isDark ? "Light Mode" : "Dark Mode"}
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => onSignOut()} className="gap-2">
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => onSignOut()} className="text-red-500 focus:text-red-500">
           <LogOut className="h-4 w-4" aria-hidden />
           Sign Out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+/** Live nav item anatomy: plain anchor wrapping a div (tabindex=0) that
+ * carries the pill classes — no ul/li, no span. */
+function NavItem({
+  item,
+  active,
+  onNavigate,
+  compact = false,
+}: {
+  item: (typeof NAV_ITEMS)[number];
+  active: boolean;
+  onNavigate: (view: ViewId) => void;
+  compact?: boolean;
+}) {
+  return (
+    <Link
+      href="/"
+      onClick={(event) => {
+        event.preventDefault();
+        onNavigate(item.id);
+      }}
+      aria-current={active ? "page" : undefined}
+    >
+      <div
+        tabIndex={0}
+        className={cn(
+          "flex items-center gap-3 rounded-xl font-medium transition-all duration-200",
+          compact ? "px-4 py-4" : "px-4 py-3",
+          active
+            ? cn(
+                "border border-emerald-400/30 bg-emerald-500/20 text-white shadow-lg",
+                // Desktop active pill carries the blur; the mobile drawer's does not (live-verified).
+                compact ? undefined : "backdrop-blur-sm",
+              )
+            : "text-slate-300 hover:bg-white/10 hover:text-white",
+        )}
+      >
+        <item.icon className={compact ? "h-6 w-6" : "h-5 w-5"} aria-hidden />
+        <span className={compact ? "text-lg" : undefined}>{item.label}</span>
+      </div>
+    </Link>
   );
 }
 
@@ -150,45 +189,21 @@ export function Sidebar({
   onSignOut: () => void;
 }) {
   return (
-    <aside className="hidden w-64 shrink-0 flex-col lg:flex">
+    <aside className="hidden lg:flex lg:w-64 lg:flex-col">
       <div className="sidebar-gradient flex min-h-0 flex-1 flex-col">
         <div className="flex h-16 items-center border-b border-slate-700/30 px-6">
           <BrandMark />
         </div>
-        <nav aria-label="Main navigation" className="flex-1 space-y-2 overflow-y-auto px-4 py-6">
-          <ul className="space-y-2">
-            {NAV_ITEMS.map((item) => {
-              const isActive = item.id === active;
-              return (
-                <li key={item.id}>
-                  <Link
-                    href="/"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      onNavigate(item.id);
-                    }}
-                    aria-current={isActive ? "page" : undefined}
-                  >
-                    <span
-                      className={cn(
-                        "flex items-center gap-3 rounded-xl px-4 py-3 font-medium transition-all duration-200",
-                        isActive
-                          ? "border border-emerald-400/30 bg-emerald-500/20 text-white shadow-lg backdrop-blur-sm"
-                          : "text-slate-300 hover:bg-white/10 hover:text-white",
-                      )}
-                    >
-                      <item.icon className="h-5 w-5 shrink-0" aria-hidden />
-                      {item.label}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+        <nav className="flex-1 space-y-2 px-4 py-6">
+          {NAV_ITEMS.map((item) => (
+            <NavItem key={item.id} item={item} active={item.id === active} onNavigate={onNavigate} />
+          ))}
         </nav>
         <div className="space-y-3 border-t border-slate-700/30 p-4">
           <SyncedBadge />
-          <UserMenu userName={userName} userEmail={userEmail} onSignOut={onSignOut} />
+          <div className="flex items-center gap-3">
+            <UserMenu userName={userName} userEmail={userEmail} onSignOut={onSignOut} />
+          </div>
         </div>
       </div>
     </aside>
@@ -222,77 +237,57 @@ export function MobileTopNav({
   );
 
   return (
-    <div className="lg:hidden">
-      <div className="fixed inset-x-0 top-0 z-50 border-b border-neutral-200 bg-white/95 backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/95">
+    <div>
+      <div className="fixed left-0 right-0 top-0 z-50 border-b border-neutral-200 bg-white/95 backdrop-blur-sm lg:hidden dark:border-gray-700 dark:bg-gray-900/95">
         <div className="flex h-16 items-center justify-between px-4">
-          <BrandMark compact />
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500">
+              <DollarSign className="h-5 w-5 text-white" aria-hidden />
+            </div>
+            <h2 className="text-lg font-bold text-primary-navy dark:text-white">Finara</h2>
+          </div>
           <div className="flex items-center gap-2">
             <SyncedBadge />
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => toggleTheme()}
               aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-gray-800"
+              className="h-8 w-8 text-gray-700 dark:text-gray-300"
             >
-              {isDark ? <Sun className="h-5 w-5" aria-hidden /> : <Moon className="h-5 w-5" aria-hidden />}
-            </button>
-            <button
-              type="button"
+              {isDark ? <Sun className="h-4 w-4" aria-hidden /> : <Moon className="h-4 w-4" aria-hidden />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onToggleMenu}
               aria-expanded={menuOpen}
               aria-controls="mobile-nav-menu"
               aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-gray-800"
+              className="h-9 w-9 text-gray-700 dark:text-gray-300"
             >
-              <Menu className="h-5 w-5" aria-hidden />
-            </button>
+              <Menu className="h-4 w-4" aria-hidden />
+            </Button>
           </div>
         </div>
       </div>
-      {/* pt-20 clears the fixed top bar (live: flex flex-col h-full pt-20). */}
-      <div className="h-16" aria-hidden />
       {menuOpen ? (
-        <nav
+        <div
           id="mobile-nav-menu"
-          aria-label="Main navigation"
-          className="fixed inset-0 z-40 bg-slate-800 dark:bg-gray-900 lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-800 lg:hidden dark:bg-gray-900"
         >
           <div className="flex h-full flex-col pt-20">
-            <ul className="flex-1 space-y-2 px-4 py-6">
-              {NAV_ITEMS.map((item) => {
-                const isActive = item.id === active;
-                return (
-                  <li key={item.id}>
-                    <Link
-                      href="/"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        handleNavigate(item.id);
-                      }}
-                      aria-current={isActive ? "page" : undefined}
-                    >
-                      <span
-                        className={cn(
-                          "flex items-center gap-3 rounded-xl px-4 py-4 font-medium transition-all duration-200",
-                          isActive
-                            ? "border border-emerald-400/30 bg-emerald-500/20 text-white shadow-lg backdrop-blur-sm"
-                            : "text-slate-300 hover:bg-white/10 hover:text-white",
-                        )}
-                      >
-                        <item.icon className="h-6 w-6 shrink-0" aria-hidden />
-                        <span className="text-lg">{item.label}</span>
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+            <nav className="flex-1 space-y-2 px-4 py-6">
+              {NAV_ITEMS.map((item) => (
+                <NavItem key={item.id} item={item} active={item.id === active} onNavigate={handleNavigate} compact />
+              ))}
+            </nav>
             <div className="space-y-3 border-t border-slate-700/30 p-4">
               <SyncedBadge />
               <UserMenu userName={userName} userEmail={userEmail} onSignOut={onSignOut} />
             </div>
           </div>
-        </nav>
+        </div>
       ) : null}
     </div>
   );
