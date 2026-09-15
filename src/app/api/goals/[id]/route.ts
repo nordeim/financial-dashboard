@@ -1,11 +1,15 @@
 import { db } from "@/lib/db";
-import { errorResponse, fail, ok, requireNonNegativeInt, safeJson } from "@/lib/api";
+import { errorResponse, fail, ok, requireIsoDate, requireNonNegativeInt, safeJson } from "@/lib/api";
+import { GOAL_PRIORITIES, normalizeGoalCategory } from "@/lib/categories";
 
 interface GoalPatch {
   name?: unknown;
   targetAmountMinor?: unknown;
   currentAmountMinor?: unknown;
   contributeMinor?: unknown;
+  deadline?: unknown;
+  category?: unknown;
+  priority?: unknown;
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -15,6 +19,10 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     if (!body) return fail("Invalid JSON body", 400);
     const existing = await db.goal.findUnique({ where: { id } });
     if (!existing) return fail("Goal not found", 404);
+
+    if (body.priority !== undefined && !GOAL_PRIORITIES.some((option) => option.id === body.priority)) {
+      return fail("Priority must be one of high, medium, low", 400);
+    }
 
     const contribution =
       body.contributeMinor === undefined ? 0 : requireNonNegativeInt(body.contributeMinor, "Contribution");
@@ -33,6 +41,12 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
             ? undefined
             : requireNonNegativeInt(body.targetAmountMinor, "Target amount"),
         currentAmountMinor: body.currentAmountMinor !== undefined || contribution > 0 ? nextCurrent : undefined,
+        deadline: body.deadline === undefined ? undefined : body.deadline ? requireIsoDate(body.deadline, "Deadline") : null,
+        category:
+          body.category === undefined
+            ? undefined
+            : normalizeGoalCategory(typeof body.category === "string" ? body.category : null),
+        priority: body.priority === undefined ? undefined : String(body.priority),
       },
     });
     return ok({
@@ -42,6 +56,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       currentAmountMinor: updated.currentAmountMinor,
       deadline: updated.deadline?.toISOString() ?? null,
       category: updated.category,
+      priority: updated.priority,
     });
   } catch (error) {
     return errorResponse(error);

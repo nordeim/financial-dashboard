@@ -7,10 +7,9 @@ import {
   requireString,
   safeJson,
 } from "@/lib/api";
+import { ACCOUNT_TYPES, normalizeAccountType } from "@/lib/categories";
 import { ensureSeeded } from "@/lib/seed";
 import type { AccountDto } from "@/lib/types";
-
-const ACCOUNT_TYPES = new Set(["checking", "savings", "credit", "investment", "cash"]);
 
 function toDto(account: {
   id: string;
@@ -24,7 +23,7 @@ function toDto(account: {
   return {
     id: account.id,
     name: account.name,
-    type: account.type,
+    type: normalizeAccountType(account.type),
     institution: account.institution,
     balanceMinor: account.balanceMinor,
     currency: account.currency,
@@ -54,9 +53,9 @@ export async function POST(request: Request) {
     const body = await safeJson<AccountPayload>(request);
     if (!body) return fail("Invalid JSON body", 400);
     const name = requireString(body.name, "Name");
-    const type = requireString(body.type, "Type", 20).toLowerCase();
-    if (!ACCOUNT_TYPES.has(type)) {
-      return fail("Type must be one of checking, savings, credit, investment, cash", 400);
+    const type = normalizeAccountType(requireString(body.type, "Type", 20).toLowerCase());
+    if (!ACCOUNT_TYPES.some((option) => option.id === type)) {
+      return fail("Type must be one of checking, savings, credit-card, investment, other", 400);
     }
     const institution = requireString(body.institution, "Institution");
     const balanceMinor = requireNonNegativeInt(body.balanceMinor, "Balance");

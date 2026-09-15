@@ -3,12 +3,12 @@ import {
   errorResponse,
   fail,
   ok,
-  optionalString,
   requireIsoDate,
   requireNonNegativeInt,
   requireString,
   safeJson,
 } from "@/lib/api";
+import { GOAL_PRIORITIES, normalizeGoalCategory } from "@/lib/categories";
 import { ensureSeeded } from "@/lib/seed";
 
 function toDto(goal: {
@@ -18,6 +18,7 @@ function toDto(goal: {
   currentAmountMinor: number;
   deadline: Date | null;
   category: string | null;
+  priority: string;
 }) {
   return {
     id: goal.id,
@@ -26,6 +27,7 @@ function toDto(goal: {
     currentAmountMinor: goal.currentAmountMinor,
     deadline: goal.deadline?.toISOString() ?? null,
     category: goal.category,
+    priority: goal.priority,
   };
 }
 
@@ -45,6 +47,7 @@ interface GoalPayload {
   currentAmountMinor?: unknown;
   deadline?: unknown;
   category?: unknown;
+  priority?: unknown;
 }
 
 export async function POST(request: Request) {
@@ -59,8 +62,19 @@ export async function POST(request: Request) {
       return fail("Current amount cannot exceed the target amount", 400);
     }
     const deadline = body.deadline ? requireIsoDate(body.deadline, "Deadline") : null;
+    const priority =
+      typeof body.priority === "string" && GOAL_PRIORITIES.some((option) => option.id === body.priority)
+        ? body.priority
+        : "medium";
     const created = await db.goal.create({
-      data: { name, targetAmountMinor, currentAmountMinor, deadline, category: optionalString(body.category, 60) },
+      data: {
+        name,
+        targetAmountMinor,
+        currentAmountMinor,
+        deadline,
+        category: normalizeGoalCategory(typeof body.category === "string" ? body.category : null),
+        priority,
+      },
     });
     return ok(toDto(created), 201);
   } catch (error) {

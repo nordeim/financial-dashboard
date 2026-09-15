@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatMoney, formatMoneyCompact } from "@/lib/money";
 import { subcategoryEmoji } from "@/lib/categories";
 import { ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
+import { Input } from "@/components/ui/input";
 import type { AnalyticsDto } from "@/lib/types";
 
 const CHART_COLORS = ["#10B981", "#3B82F6", "#8B5CF6", "#F59E0B", "#EF4444", "#06B6D4", "#EC4899", "#64748B", "#84CC16"];
@@ -36,14 +37,38 @@ const CHART_COLORS = ["#10B981", "#3B82F6", "#8B5CF6", "#F59E0B", "#EF4444", "#0
 type Period = "3" | "6" | "12";
 
 export function AnalyticsView() {
-  const query = useQuery<AnalyticsDto>("/api/analytics");
   const [period, setPeriod] = useState<Period>("6");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const query = useQuery<AnalyticsDto>(`/api/analytics?months=${period}`);
   const { toast } = useToast();
 
+  // The server windows the aggregates; a custom date range narrows the trend
+  // client-side by month label boundaries.
   const trend = useMemo(() => {
     const all = query.data?.overview.monthlyTrend ?? [];
-    return period === "6" ? all : all.slice(-Number.parseInt(period, 10));
-  }, [query.data, period]);
+    return all;
+  }, [query.data]);
+
+  const dateRangeTrend = useMemo(() => {
+    if (!fromDate && !toDate) return trend;
+    const from = fromDate ? new Date(`${fromDate}T00:00:00`) : null;
+    const to = toDate ? new Date(`${toDate}T23:59:59`) : null;
+    const monthLabelToNumber = (label: string): number => {
+      const map: Record<string, number> = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+      return map[label.split(" ")[0] ?? ""] ?? -1;
+    };
+    return trend.filter((entry) => {
+      const parts = entry.month.split(" ");
+      const month = monthLabelToNumber(entry.month);
+      const year = Number.parseInt(parts[1] ?? "0", 10) + 2000;
+      if (month < 0 || Number.isNaN(year)) return true;
+      const point = new Date(year, month, 1);
+      if (from && point < new Date(from.getFullYear(), from.getMonth(), 1)) return false;
+      if (to && point > new Date(to.getFullYear(), to.getMonth(), 1)) return false;
+      return true;
+    });
+  }, [trend, fromDate, toDate]);
 
   const expensesBySubcategory = useMemo(() => {
     const source = query.data?.expenses.bySubcategory ?? [];
@@ -87,6 +112,20 @@ export function AnalyticsView() {
         subtitle="Real-time insights into your financial performance"
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            <Input
+              type="date"
+              aria-label="From date"
+              value={fromDate}
+              onChange={(event) => setFromDate(event.target.value)}
+              className="w-36 dark:border-slate-700 dark:bg-slate-900"
+            />
+            <Input
+              type="date"
+              aria-label="To date"
+              value={toDate}
+              onChange={(event) => setToDate(event.target.value)}
+              className="w-36 dark:border-slate-700 dark:bg-slate-900"
+            />
             <Select value={period} onValueChange={(value) => setPeriod(value as Period)}>
               <SelectTrigger className="w-32" aria-label="Reporting period">
                 <SelectValue />
@@ -94,13 +133,13 @@ export function AnalyticsView() {
               <SelectContent>
                 <SelectItem value="3">3 Months</SelectItem>
                 <SelectItem value="6">6 Months</SelectItem>
-                <SelectItem value="12">12 Months</SelectItem>
+                <SelectItem value="12">1 Year</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" onClick={() => query.refresh()}>
+            <Button variant="outline" onClick={() => query.refresh()} className="dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
               <RefreshCw className="mr-1 h-4 w-4" aria-hidden /> Refresh
             </Button>
-            <Button variant="outline" onClick={exportCsv}>
+            <Button variant="outline" onClick={exportCsv} className="dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
               <Download className="mr-1 h-4 w-4" aria-hidden /> Export
             </Button>
           </div>
@@ -121,12 +160,12 @@ export function AnalyticsView() {
           </TabsList>
 
           <TabsContent value="overview" className="mt-4 space-y-4">
-            <Card className="border-none shadow-sm">
+            <Card className="border-none shadow-sm dark:border dark:border-slate-700 dark:bg-slate-800">
               <CardContent className="p-5">
-                <h2 className="mb-4 text-lg font-semibold text-slate-900">Income vs Expenses Trend</h2>
+                <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-50">Income vs Expenses Trend</h2>
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={trend} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                    <AreaChart data={dateRangeTrend} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#10B981" stopOpacity={0.25} />
@@ -143,8 +182,8 @@ export function AnalyticsView() {
                         tick={{ fontSize: 12, fill: "#64748B" }}
                         tickLine={false}
                         axisLine={false}
-                        tickFormatter={(value: number) => formatMoneyCompact(value)}
-                        width={56}
+                        tickFormatter={(value: number) => formatMoney(value)}
+                        width={76}
                       />
                       <Tooltip
                         formatter={(value: number | string) => formatMoney(Number(value))}
@@ -161,22 +200,22 @@ export function AnalyticsView() {
             </Card>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <Card className="border-none shadow-sm">
+              <Card className="border-none shadow-sm dark:border dark:border-slate-700 dark:bg-slate-800">
                 <CardContent className="p-5">
-                  <p className="text-sm font-medium text-slate-500">Avg Monthly Income</p>
-                  <p className="mt-2 text-2xl font-bold tabular-nums text-emerald-600">{formatMoney(query.data.overview.avgIncomeMinor)}</p>
+                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Avg Monthly Income</p>
+                  <p className="mt-2 text-2xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">{formatMoney(query.data.overview.avgIncomeMinor)}</p>
                 </CardContent>
               </Card>
-              <Card className="border-none shadow-sm">
+              <Card className="border-none shadow-sm dark:border dark:border-slate-700 dark:bg-slate-800">
                 <CardContent className="p-5">
-                  <p className="text-sm font-medium text-slate-500">Avg Monthly Expenses</p>
-                  <p className="mt-2 text-2xl font-bold tabular-nums text-red-500">{formatMoney(query.data.overview.avgExpensesMinor)}</p>
+                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Avg Monthly Expenses</p>
+                  <p className="mt-2 text-2xl font-bold tabular-nums text-red-500 dark:text-red-400">{formatMoney(query.data.overview.avgExpensesMinor)}</p>
                 </CardContent>
               </Card>
-              <Card className="border-none shadow-sm">
+              <Card className="border-none shadow-sm dark:border dark:border-slate-700 dark:bg-slate-800">
                 <CardContent className="p-5">
-                  <p className="text-sm font-medium text-slate-500">Avg Monthly Savings</p>
-                  <p className="mt-2 text-2xl font-bold tabular-nums text-blue-600">{formatMoney(query.data.overview.avgSavingsMinor)}</p>
+                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Avg Monthly Savings</p>
+                  <p className="mt-2 text-2xl font-bold tabular-nums text-blue-600 dark:text-blue-400">{formatMoney(query.data.overview.avgSavingsMinor)}</p>
                 </CardContent>
               </Card>
             </div>

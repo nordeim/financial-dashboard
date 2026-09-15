@@ -1,25 +1,14 @@
 import { db } from "@/lib/db";
-import { subcategoryLabel } from "@/lib/categories";
-import { changePercent, monthlyEquivalent, percent } from "@/lib/money";
+import { normalizeSubcategory, subcategoryLabel } from "@/lib/categories";
+import { computeDashboardKpis, type IncomeEventInput } from "@/lib/dashboard-kpis";
+import { monthlyEquivalent, percent } from "@/lib/money";
 import type { AnalyticsDto, BudgetProgressDto, DashboardDto } from "@/lib/types";
 
-function monthStart(offset = 0): Date {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth() - offset, 1);
-}
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-function monthEnd(offset = 0): Date {
-  return new Date(monthStart(offset - 1).getTime() - 1);
-}
-
-function monthKey(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-01`;
-}
-
-const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-function monthLabel(date: Date): string {
-  return MONTH_LABELS[date.getMonth()] ?? String(date.getMonth() + 1);
+/** Short month + two-digit year axis label, e.g. "Apr 26". */
+function monthAxisLabel(date: Date): string {
+  return `${MONTHS[date.getMonth()]} ${String(date.getFullYear()).slice(-2)}`;
 }
 
 export async function getDashboard(): Promise<DashboardDto> {
@@ -30,56 +19,38 @@ export async function getDashboard(): Promise<DashboardDto> {
     db.goal.findMany(),
   ]);
 
-  const thisMonth = monthStart();
-  const lastMonthStart = monthStart(1);
-  const lastMonthEnd = monthEnd(1);
+  const now = new Date();
 
-  const inMonth = (date: Date, from: Date, to: Date): boolean =>
-    date.getTime() >= from.getTime() && date.getTime() <= to.getTime();
+  const kpis = computeDashboardKpis({
+    expenses: expenses.map((expense) => ({
+      description: expense.description,
+      amountMinor: expense.amountMinor,
+      category: expense.category,
+      subcategory: expense.subcategory,
+      date: expense.date,
+    })),
+    incomeSources: incomeSources.map((source) => ({
+      name: source.name,
+      amountMinor: source.amountMinor,
+      frequency: source.frequency,
+    })),
+    goals: goals.map((goal) => ({
+      currentAmountMinor: goal.currentAmountMinor,
+      targetAmountMinor: goal.targetAmountMinor,
+    })),
+    now,
+    // Income renders in recent activity through its next-payment events so
+    // the feed mixes both transaction kinds like the source app.
+    recentIncomeEvents: incomeSources
+      .map((source): IncomeEventInput | null => {
+        const reference = source.nextPaymentDate ?? source.createdAt;
+        return { name: source.name, amountMinor: source.amountMinor, date: reference };
+      })
+      .filter((event): event is IncomeEventInput => event !== null),
+  });
 
-  const currentMonthExpenses = expenses.filter((e) => inMonth(e.date, thisMonth, new Date()));
-  const priorMonthExpenses = expenses.filter((e) => inMonth(e.date, lastMonthStart, lastMonthEnd));
-
-  const monthlyIncomeMinor = incomeSources.reduce(
-    (sum, source) => sum + monthlyEquivalent(source.amountMinor, source.frequency),
-    0,
-  );
-  const monthlyExpensesMinor = currentMonthExpenses.reduce((sum, e) => sum + e.amountMinor, 0);
-  const priorExpensesMinor = priorMonthExpenses.reduce((sum, e) => sum + e.amountMinor, 0);
-  const netBalanceMinor = monthlyIncomeMinor - monthlyExpensesMinor;
-  const savingsRate = monthlyIncomeMinor > 0 ? (netBalanceMinor / monthlyIncomeMinor) * 100 : 0;
-
-  // Largest expense subcategory this month.
-  const bySubcategory = new Map<string, number>();
-  for (const expense of currentMonthExpenses) {
-    bySubcategory.set(expense.subcategory, (bySubcategory.get(expense.subcategory) ?? 0) + expense.amountMinor);
-  }
-  let largestExpenseSubcategory: string | null = null;
-  let largestExpenseMinor = 0;
-  for (const [subcategory, amount] of bySubcategory) {
-    if (amount > largestExpenseMinor) {
-      largestExpenseSubcategory = subcategoryLabel(subcategory);
-      largestExpenseMinor = amount;
-    }
-  }
-
-  // Six-month trend keyed by month, oldest first.
-  const trendMap = new Map<string, { incomeMinor: number; expensesMinor: number; netMinor: number }>();
-  for (let offset = 5; offset >= 0; offset -= 1) {
-    const start = monthStart(offset);
-    trendMap.set(monthKey(start), { incomeMinor: 0, expensesMinor: 0, netMinor: 0 });
-  }
-  for (const expense of expenses) {
-    const key = monthKey(expense.date);
-    const bucket = trendMap.get(key);
-    if (bucket) bucket.expensesMinor += expense.amountMinor;
-  }
-  const monthlyTrend = Array.from(trendMap.entries()).map(([month, values]) => ({
-    month,
-    incomeMinor: monthlyIncomeMinor,
-    expensesMinor: values.expensesMinor,
-    netMinor: monthlyIncomeMinor - values.expensesMinor,
-  }));
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const currentMonthExpenses = expenses.filter((expense) => expense.date >= thisMonthStart);
 
   const budgetProgress: BudgetProgressDto[] = budgets.map((budget) => {
     const spentMinor = currentMonthExpenses
@@ -94,39 +65,28 @@ export async function getDashboard(): Promise<DashboardDto> {
     };
   });
 
-  const budgetSurplusMinor = monthlyIncomeMinor - monthlyExpensesMinor;
-
   return {
     kpis: {
-      monthlyIncomeMinor,
-      monthlyExpensesMinor,
-      netBalanceMinor,
-      savingsRatePercent: Math.round(savingsRate * 10) / 10,
-      incomeChangePercent: null,
-      expenseChangePercent: changePercent(monthlyExpensesMinor, priorExpensesMinor),
-      netChangePercent: changePercent(netBalanceMinor, monthlyIncomeMinor - priorExpensesMinor),
-      activeGoals: goals.length,
-      largestExpenseSubcategory,
-      largestExpenseMinor,
+      monthlyIncomeMinor: kpis.monthlyIncomeMinor,
+      monthlyExpensesMinor: kpis.monthlyExpensesMinor,
+      netBalanceMinor: kpis.netBalanceMinor,
+      savingsProgressPercent: kpis.savingsProgressPercent,
+      incomeChangePercent: kpis.incomeChangePercent,
+      expenseChangePercent: kpis.expenseChangePercent,
+      netChangePercent: kpis.netChangePercent,
+      activeGoals: kpis.activeGoals,
+      largestExpenseCategory: kpis.largestExpenseCategory,
+      largestExpenseMinor: kpis.largestExpenseMinor,
     },
     budgets: budgetProgress,
-    budgetSurplusMinor,
-    recentTransactions: expenses.slice(0, 6).map((expense) => ({
-      id: expense.id,
-      description: expense.description,
-      amountMinor: expense.amountMinor,
-      category: expense.category,
-      subcategory: expense.subcategory,
-      date: expense.date.toISOString(),
-      notes: expense.notes,
-      recurring: expense.recurring,
-      accountId: expense.accountId,
-    })),
+    budgetSurplusMinor: kpis.monthlyIncomeMinor - kpis.monthlyExpensesMinor,
+    recentTransactions: kpis.recentActivity,
     incomeSources: incomeSources.map((source) => ({
       id: source.id,
       name: source.name,
       amountMinor: source.amountMinor,
       frequency: source.frequency,
+      category: source.category,
       active: source.active,
       nextPaymentDate: source.nextPaymentDate?.toISOString() ?? null,
     })),
@@ -137,55 +97,60 @@ export async function getDashboard(): Promise<DashboardDto> {
       currentAmountMinor: goal.currentAmountMinor,
       deadline: goal.deadline?.toISOString() ?? null,
       category: goal.category,
+      priority: goal.priority,
     })),
-    monthlyTrend,
+    monthlyTrend: kpis.monthlyTrend,
   };
 }
 
-export async function getAnalytics(): Promise<AnalyticsDto> {
+export async function getAnalytics(months = 6): Promise<AnalyticsDto> {
+  const windowMonths = [3, 6, 12].includes(months) ? months : 6;
   const [expenses, incomeSources, investments] = await Promise.all([
     db.expense.findMany({ orderBy: { date: "asc" } }),
     db.incomeSource.findMany({ where: { active: true } }),
     db.investment.findMany(),
   ]);
 
+  const now = new Date();
+  const windowStart = new Date(now.getFullYear(), now.getMonth() - (windowMonths - 1), 1);
+
   const monthlyIncomeMinor = incomeSources.reduce(
     (sum, source) => sum + monthlyEquivalent(source.amountMinor, source.frequency),
     0,
   );
 
+  // Trend window: last `windowMonths` months, oldest first.
   const trendMap = new Map<string, { label: string; incomeMinor: number; expensesMinor: number }>();
-  for (let offset = 5; offset >= 0; offset -= 1) {
-    const start = monthStart(offset);
-    trendMap.set(monthKey(start), { label: monthLabel(start), incomeMinor: 0, expensesMinor: 0 });
+  for (let offset = windowMonths - 1; offset >= 0; offset -= 1) {
+    const start = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+    const key = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}`;
+    trendMap.set(key, { label: monthAxisLabel(start), incomeMinor: 0, expensesMinor: 0 });
   }
-  for (const expense of expenses) {
-    const bucket = trendMap.get(monthKey(expense.date));
+  const windowedExpenses = expenses.filter((expense) => expense.date >= windowStart);
+  for (const expense of windowedExpenses) {
+    const key = `${expense.date.getFullYear()}-${String(expense.date.getMonth() + 1).padStart(2, "0")}`;
+    const bucket = trendMap.get(key);
     if (bucket) bucket.expensesMinor += expense.amountMinor;
   }
   const monthlyTrend = Array.from(trendMap.values()).map((values) => ({
     month: values.label,
-    incomeMinor: values.incomeMinor,
+    incomeMinor: monthlyIncomeMinor,
     expensesMinor: values.expensesMinor,
-    netMinor: values.incomeMinor - values.expensesMinor,
+    netMinor: monthlyIncomeMinor - values.expensesMinor,
   }));
 
-  const totalIncomeMinor = monthlyIncomeMinor * 6;
-  const totalExpensesMinor = expenses.reduce((sum, e) => sum + e.amountMinor, 0);
-  const avgIncomeMinor = Math.round(totalIncomeMinor / 6);
-  const avgExpensesMinor = Math.round(totalExpensesMinor / 6);
+  // Source-app averaging: window total divided by the period month count.
+  const totalIncomeMinor = monthlyIncomeMinor * windowMonths;
+  const totalExpensesMinor = windowedExpenses.reduce((sum, e) => sum + e.amountMinor, 0);
+  const avgIncomeMinor = Math.round(totalIncomeMinor / windowMonths);
+  const avgExpensesMinor = Math.round(totalExpensesMinor / windowMonths);
 
   const subcategoryTotals = new Map<string, number>();
   const categoryTotals = new Map<string, number>();
-  for (const expense of expenses) {
-    subcategoryTotals.set(
-      expense.subcategory,
-      (subcategoryTotals.get(expense.subcategory) ?? 0) + expense.amountMinor,
-    );
-    categoryTotals.set(
-      expense.category,
-      (categoryTotals.get(expense.category) ?? 0) + expense.amountMinor,
-    );
+  for (const expense of windowedExpenses) {
+    const subcategory = normalizeSubcategory(expense.subcategory);
+    subcategoryTotals.set(subcategory, (subcategoryTotals.get(subcategory) ?? 0) + expense.amountMinor);
+    categoryTotals.set(expense.category, (categoryTotals.get(expense.category) ?? 0) + expense.amountMinor);
   }
   const bySubcategory = Array.from(subcategoryTotals.entries())
     .map(([subcategory, amountMinor]) => ({
@@ -204,16 +169,11 @@ export async function getAnalytics(): Promise<AnalyticsDto> {
     .sort((a, b) => b.amountMinor - a.amountMinor);
 
   const incomeBySource = incomeSources
-    .map((source) => ({
-      name: source.name,
-      amountMinor: monthlyEquivalent(source.amountMinor, source.frequency),
-    }))
-    .sort((a, b) => b.amountMinor - a.amountMinor)
-    .map((source) => ({
-      name: source.name,
-      amountMinor: source.amountMinor,
-      percent: percent(source.amountMinor, monthlyIncomeMinor),
-    }));
+    .map((source) => {
+      const equivalent = monthlyEquivalent(source.amountMinor, source.frequency);
+      return { name: source.name, amountMinor: equivalent, percent: percent(equivalent, monthlyIncomeMinor) };
+    })
+    .sort((a, b) => b.amountMinor - a.amountMinor);
 
   const portfolioValueMinor = investments.reduce(
     (sum, holding) => sum + Math.round(holding.shares * holding.currentPriceMinor),
@@ -266,9 +226,11 @@ export async function getAnalytics(): Promise<AnalyticsDto> {
         id: holding.id,
         symbol: holding.symbol,
         name: holding.name,
+        type: holding.type,
         shares: holding.shares,
         avgPriceMinor: holding.avgPriceMinor,
         currentPriceMinor: holding.currentPriceMinor,
+        portfolioPercent: holding.portfolioPercent,
         sector: holding.sector,
       })),
     },

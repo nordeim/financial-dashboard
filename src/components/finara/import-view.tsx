@@ -10,7 +10,7 @@ import { mutate } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { toMinorUnits } from "@/lib/money";
 import { EXPENSE_CATEGORIES, SUBCATEGORIES, subcategoryLabel } from "@/lib/categories";
-import { ErrorNote, ViewHeader } from "@/components/finara/ui-bits";
+import { ViewHeader } from "@/components/finara/ui-bits";
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
@@ -97,14 +97,18 @@ export function ImportView() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [parseError, setParseError] = useState<string | null>(null);
+  const [extracting, setExtracting] = useState(false);
+  const [pendingFile, setPendingFile] = useState<{ name: string; text: string } | null>(null);
   const [importing, setImporting] = useState(false);
   const [outcome, setOutcome] = useState<ImportOutcome | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
+  /** Step 1 selection: just stage the file (name + text) for the CTA, source-app style. */
   const handleFile = async (file: File) => {
     setParseError(null);
     setOutcome(null);
+    setPendingFile(null);
     if (file.size > MAX_FILE_BYTES) {
       setParseError("File exceeds the 10MB limit.");
       return;
@@ -115,15 +119,32 @@ export function ImportView() {
     }
     try {
       const text = await file.text();
-      const lines = text.split(/\r?\n/).filter((line) => line.trim() !== "");
+      setPendingFile({ name: file.name, text });
+    } catch {
+      setParseError("The file could not be read.");
+    }
+  };
+
+  /** CTA: parse the staged file — shows "Extracting..." while working, the
+   *  source-app error card ("An Error Occurred" + "Start New Import") on failure. */
+  const extract = async () => {
+    if (!pendingFile || extracting) return;
+    setExtracting(true);
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    const failure = (message: string) => {
+      setExtracting(false);
+      setParseError(message);
+    };
+    try {
+      const lines = pendingFile.text.split(/\r?\n/).filter((line) => line.trim() !== "");
       if (lines.length < 2) {
-        setParseError("The file needs a header row plus at least one data row.");
+        failure("The file needs a header row plus at least one data row.");
         return;
       }
       const header = splitCsvLine(lines[0]!);
       const mapping = mapColumns(header);
       if (!mapping) {
-        setParseError("Could not find date, description and amount columns in the header row.");
+        failure("Could not find date, description and amount columns in the header row.");
         return;
       }
       const parsed: ParsedRow[] = [];
@@ -146,14 +167,16 @@ export function ImportView() {
         });
       }
       if (parsed.length === 0) {
-        setParseError("No importable rows were found.");
+        failure("No importable rows were found.");
         return;
       }
       setRows(parsed);
-      setFileName(file.name);
+      setFileName(pendingFile.name);
+      setPendingFile(null);
+      setExtracting(false);
       setStep(2);
     } catch {
-      setParseError("The file could not be read.");
+      failure("The file could not be parsed.");
     }
   };
 
@@ -198,6 +221,8 @@ export function ImportView() {
     setFileName(null);
     setOutcome(null);
     setParseError(null);
+    setPendingFile(null);
+    setExtracting(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -216,24 +241,39 @@ export function ImportView() {
                 <li key={label} className="flex items-center gap-2">
                   <span
                     className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-                      isDone ? "bg-emerald-500 text-white" : isActive ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-400"
+                      isDone
+                        ? "bg-emerald-500 text-white"
+                        : isActive
+                          ? "bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900"
+                          : "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
                     }`}
                     aria-current={isActive ? "step" : undefined}
                   >
                     {isDone ? <CheckCircle2 className="h-4 w-4" aria-hidden /> : stepNumber}
                   </span>
-                  <span className={isActive ? "font-semibold text-slate-900" : "text-slate-400"}>{label}</span>
-                  {index < 2 ? <span className="mx-1 h-px w-8 bg-slate-200" aria-hidden /> : null}
+                  <span className={isActive ? "font-semibold text-slate-900 dark:text-slate-100" : "text-slate-400"}>{label}</span>
+                  {index < 2 ? <span className="mx-1 h-px w-8 bg-slate-200 dark:bg-slate-700" aria-hidden /> : null}
                 </li>
               );
             })}
           </ol>
 
-          {parseError ? <ErrorNote message={parseError} onRetry={reset} /> : null}
+          {parseError ? (
+            <div className="mb-6 flex flex-col items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-6 py-8 text-center" role="alert">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                <X className="h-6 w-6 text-red-600" aria-hidden />
+              </div>
+              <h3 className="text-base font-semibold text-red-700">An Error Occurred</h3>
+              <p className="max-w-md text-sm text-red-600">{parseError}</p>
+              <Button variant="outline" className="border-red-300 text-red-600 hover:bg-red-100" onClick={reset}>
+                Start New Import
+              </Button>
+            </div>
+          ) : null}
 
           {step === 1 ? (
             <div
-              className="flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 px-6 py-12 text-center"
+              className="flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-800/40"
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
                 event.preventDefault();
@@ -241,18 +281,24 @@ export function ImportView() {
                 if (file) void handleFile(file);
               }}
             >
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm dark:bg-slate-800">
                 <FileUp className="h-7 w-7 text-emerald-600" aria-hidden />
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-800">Step 1: Upload File</p>
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Step 1: Upload File</p>
                 <p className="mt-1 text-xs text-slate-400">Drag & drop your bank CSV here, or browse</p>
               </div>
+              {pendingFile && !extracting ? (
+                <p className="flex items-center gap-1 text-sm font-medium text-emerald-700" aria-live="polite">
+                  <CheckCircle2 className="h-4 w-4" aria-hidden /> {pendingFile.name}
+                </p>
+              ) : null}
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}
                 className="bg-white"
+                disabled={extracting}
               >
                 <Upload className="mr-2 h-4 w-4" aria-hidden /> Upload a file
               </Button>
@@ -270,11 +316,19 @@ export function ImportView() {
               <p className="text-xs text-slate-400">CSV, XLS, XLSX up to 10MB</p>
               <Button
                 type="button"
-                disabled
-                className="pointer-events-none bg-slate-300 text-slate-500"
-                aria-hidden
+                disabled={!pendingFile || extracting}
+                className={pendingFile || extracting ? "bg-emerald-500 hover:bg-emerald-600" : "pointer-events-none bg-slate-300 text-slate-500 dark:bg-slate-700 dark:text-slate-400"}
+                onClick={() => void extract()}
               >
-                Upload and Extract
+                {extracting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden /> Extracting...
+                  </>
+                ) : (
+                  <>
+                    <FileUp className="mr-2 h-4 w-4" aria-hidden /> Upload and Extract
+                  </>
+                )}
               </Button>
             </div>
           ) : null}
@@ -282,7 +336,7 @@ export function ImportView() {
           {step === 2 ? (
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="flex items-center gap-2 text-sm text-slate-600">
+                <p className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
                   <FileSpreadsheet className="h-4 w-4 text-emerald-600" aria-hidden />
                   <span className="font-semibold">{fileName}</span>
                   <span className="text-slate-400">· {rows.length} transactions detected</span>
@@ -307,7 +361,7 @@ export function ImportView() {
               <p className="text-xs text-slate-400">
                 Categories were guessed from descriptions — adjust any row before importing.
               </p>
-              <div className="max-h-96 overflow-auto rounded-xl border border-slate-100 finara-scroll">
+              <div className="max-h-96 overflow-auto rounded-xl border border-slate-100 dark:border-slate-700 finara-scroll">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -365,17 +419,17 @@ export function ImportView() {
 
           {step === 3 && outcome ? (
             <div className="flex flex-col items-center gap-4 py-8 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-900/40">
                 <CheckCircle2 className="h-8 w-8 text-emerald-600" aria-hidden />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">Import Complete</h3>
-                <p className="mt-1 text-sm text-slate-500">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Import Complete</h3>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                   {outcome.imported} transactions were imported{outcome.skipped > 0 ? `, ${outcome.skipped} rows were skipped` : ""}.
                 </p>
               </div>
               {outcome.errors.length > 0 ? (
-                <ul className="max-h-40 w-full max-w-md space-y-1 overflow-y-auto rounded-lg bg-amber-50 p-3 text-left text-xs text-amber-700" aria-label="Skipped rows">
+                <ul className="max-h-40 w-full max-w-md space-y-1 overflow-y-auto rounded-lg bg-amber-50 p-3 text-left text-xs text-amber-700 dark:bg-amber-950/40 dark:text-amber-300" aria-label="Skipped rows">
                   {outcome.errors.map((entry) => (
                     <li key={`${entry.row}-${entry.error}`}>
                       Row {entry.row}: {entry.error}

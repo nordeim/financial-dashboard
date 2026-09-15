@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Brain, Loader2, Send, Sparkles, Target, TrendingDown, TrendingUp } from "lucide-react";
+import { Brain, Loader2, Send } from "lucide-react";
 import { mutate } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import type { AiChatMessage } from "@/lib/types";
@@ -18,27 +18,18 @@ const SUGGESTED_QUESTIONS = [
   "How can I save more money?",
 ];
 
-const QUICK_ACTIONS = [
-  { label: "Add Income", icon: TrendingUp, kind: "income" as const },
-  { label: "Add Expense", icon: TrendingDown, kind: "expense" as const },
-  { label: "Set Goal", icon: Target, kind: "goal" as const },
-  { label: "View Reports", icon: Sparkles, kind: "reports" as const },
-];
-
 const GREETING: AiChatMessage = {
   role: "assistant",
   content:
-    "Hi! I'm your Finara AI coach. Ask me about your spending, budgets, savings goals or investments — I ground every answer in your current data.",
+    "👋 Hi! I'm your AI financial advisor. I can help you analyze your spending, identify savings opportunities, and answer questions about your finances. What would you like to know?",
 };
 
 export function AiCoachDialog({
   open,
   onOpenChange,
-  onQuickAction,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onQuickAction: (action: "add-income" | "add-expense" | "set-goal" | "view-reports") => void;
 }) {
   const [messages, setMessages] = useState<AiChatMessage[]>([GREETING]);
   const [draft, setDraft] = useState("");
@@ -70,51 +61,18 @@ export function AiCoachDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[85vh] max-w-lg flex-col sm:max-w-xl">
+      <DialogContent className="flex h-[85vh] max-w-lg flex-col sm:max-w-xl dark:bg-slate-900 dark:text-slate-100">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100">
-              <Brain className="h-5 w-5 text-violet-600" aria-hidden />
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100 dark:bg-violet-900">
+              <Brain className="h-5 w-5 text-violet-600 dark:text-violet-400" aria-hidden />
             </span>
-            AI Coach
+            AI Financial Coach
           </DialogTitle>
           <DialogDescription>Ask anything about your finances — answers use your live data.</DialogDescription>
         </DialogHeader>
 
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Quick Actions</p>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {QUICK_ACTIONS.map((action) => (
-              <button
-                key={action.label}
-                type="button"
-                onClick={() => {
-                  switch (action.kind) {
-                    case "income":
-                      onQuickAction("add-income");
-                      break;
-                    case "expense":
-                      onQuickAction("add-expense");
-                      break;
-                    case "goal":
-                      onQuickAction("set-goal");
-                      break;
-                    case "reports":
-                      onQuickAction("view-reports");
-                      break;
-                  }
-                  onOpenChange(false);
-                }}
-                className="flex flex-col items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2 py-3 text-xs font-medium text-slate-600 transition-all hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500"
-              >
-                <action.icon className="h-4 w-4" aria-hidden />
-                {action.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <ScrollArea className="flex-1 rounded-xl border border-slate-100 bg-slate-50 p-3">
+        <ScrollArea className="flex-1 rounded-xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
           <div ref={scrollRef} className="space-y-3 pr-2">
             {messages.map((message, index) => (
               <div
@@ -125,7 +83,7 @@ export function AiCoachDialog({
                   className={
                     message.role === "user"
                       ? "max-w-[85%] rounded-2xl rounded-br-sm bg-emerald-500 px-3.5 py-2.5 text-sm text-white shadow-sm"
-                      : "max-w-[85%] rounded-2xl rounded-bl-sm bg-white px-3.5 py-2.5 text-sm text-slate-700 shadow-sm"
+                      : "max-w-[85%] rounded-2xl rounded-bl-sm bg-white px-3.5 py-2.5 text-sm text-slate-700 shadow-sm dark:bg-slate-900 dark:text-slate-200"
                   }
                 >
                   {message.content}
@@ -134,9 +92,9 @@ export function AiCoachDialog({
             ))}
             {sending ? (
               <div className="flex justify-start">
-                <div className="flex items-center gap-2 rounded-2xl rounded-bl-sm bg-white px-3.5 py-2.5 shadow-sm">
+                <div className="flex items-center gap-2 rounded-2xl rounded-bl-sm bg-white px-3.5 py-2.5 shadow-sm dark:bg-slate-900">
                   <Loader2 className="h-4 w-4 animate-spin text-violet-500" aria-hidden />
-                  <span className="text-sm text-slate-400">Thinking…</span>
+                  <span className="text-sm text-slate-400">AI is thinking...</span>
                 </div>
               </div>
             ) : null}
@@ -144,17 +102,20 @@ export function AiCoachDialog({
         </ScrollArea>
 
         {messages.length <= 1 ? (
-          <div className="flex flex-wrap gap-2">
-            {SUGGESTED_QUESTIONS.map((question) => (
-              <button
-                key={question}
-                type="button"
-                onClick={() => void send(question)}
-                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700"
-              >
-                {question}
-              </button>
-            ))}
+          <div>
+            <p className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">Quick questions:</p>
+            <div className="flex flex-wrap gap-2">
+              {SUGGESTED_QUESTIONS.map((question) => (
+                <button
+                  key={question}
+                  type="button"
+                  onClick={() => void send(question)}
+                  className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-violet-700 dark:hover:bg-violet-950"
+                >
+                  {question}
+                </button>
+              ))}
+            </div>
           </div>
         ) : null}
 
@@ -171,6 +132,7 @@ export function AiCoachDialog({
             placeholder="Ask me about your finances..."
             aria-label="Ask the AI coach about your finances"
             maxLength={500}
+            className="dark:bg-slate-800"
           />
           <Button type="submit" size="icon" className="bg-emerald-500 hover:bg-emerald-600" disabled={!draft.trim() || sending} aria-label="Send message">
             {sending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Send className="h-4 w-4" aria-hidden />}

@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Plus, TrendingDown, TrendingUp } from "lucide-react";
@@ -14,16 +14,22 @@ import { useToast } from "@/hooks/use-toast";
 import { toMinorUnits } from "@/lib/money";
 import {
   EXPENSE_CATEGORIES,
+  FREQUENCY_LABELS,
+  INCOME_CATEGORIES,
+  INCOME_FREQUENCIES,
   QUICK_SELECT_SUBCATEGORIES,
   subcategoriesFor,
   subcategoryLabel,
 } from "@/lib/categories";
-
-const QUICK_AMOUNTS = [1, 5, 10, 50, 100, 500];
+import type { ExpenseDto } from "@/lib/types";
 
 export type TransactionKind = "expense" | "income";
 
-interface FormData {
+/** Quick-add chips mirror the source app's labels exactly. */
+const EXPENSE_QUICK_AMOUNTS = [1, 5, 10, 50, 100, 500];
+const INCOME_QUICK_AMOUNTS = [1, 5, 10, 50, 100, 500];
+
+interface ExpenseFormData {
   description: string;
   amount: string;
   category: string;
@@ -33,79 +39,108 @@ interface FormData {
   recurring: boolean;
 }
 
+interface IncomeFormData {
+  name: string;
+  amount: string;
+  frequency: string;
+  category: string;
+  active: boolean;
+}
+
 function todayIso(): string {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
+function defaultExpenseForm(): ExpenseFormData {
+  return { description: "", amount: "", category: "Needs", subcategory: "other-needs", date: todayIso(), notes: "", recurring: false };
+}
+
+function defaultIncomeForm(): IncomeFormData {
+  return { name: "", amount: "", frequency: "monthly", category: "primary", active: true };
 }
 
 export function AddTransactionDialog({
   open,
   onOpenChange,
   kind,
-  defaultSubcategory,
+  editing,
   onSaved,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   kind: TransactionKind;
-  defaultSubcategory?: string | null;
+  /** Expense row being edited; null/undefined = create mode. */
+  editing?: ExpenseDto | null;
   onSaved?: () => void;
 }) {
   const isExpense = kind === "expense";
-  const [mode, setMode] = useState<"quick" | "manual">(defaultSubcategory ? "manual" : "quick");
+  const isEditing = isExpense && editing !== null && editing !== undefined;
+  const [mode, setMode] = useState<"quick" | "manual">("quick");
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
-  const [form, setForm] = useState<FormData>({
-    description: "",
-    amount: "",
-    category: "Needs",
-    subcategory: defaultSubcategory ?? "other",
-    date: todayIso(),
-    notes: "",
-    recurring: false,
-  });
+  const [expenseForm, setExpenseForm] = useState<ExpenseFormData>(defaultExpenseForm());
+  const [incomeForm, setIncomeForm] = useState<IncomeFormData>(defaultIncomeForm());
 
-  const resetForm = () => {
-    setForm({
-      description: "",
-      amount: "",
-      category: "Needs",
-      subcategory: defaultSubcategory ?? "other",
-      date: todayIso(),
-      notes: "",
-      recurring: false,
-    });
-    setMode(defaultSubcategory ? "manual" : "quick");
+  // Prefill when opened in edit mode — render-time state adjustment keyed on the
+  // (open, row-id) pair, the React-documented pattern instead of a prefill effect.
+  // Re-running on refetch (same id) is deliberately avoided so in-flight edits are
+  // never clobbered; closing resets the tracker so the row can be re-edited.
+  const editingId = editing?.id ?? null;
+  const [prefillState, setPrefillState] = useState<{ open: boolean; id: string | null }>({
+    open: false,
+    id: null,
+  });
+  if (prefillState.open !== open || prefillState.id !== editingId) {
+    setPrefillState({ open, id: editingId });
+    if (open && isEditing && editing) {
+      setExpenseForm({
+        description: editing.description,
+        amount: (editing.amountMinor / 100).toFixed(2),
+        category: editing.category,
+        subcategory: editing.subcategory,
+        date: editing.date.slice(0, 10),
+        notes: editing.notes ?? "",
+        recurring: editing.recurring,
+      });
+      setMode("manual");
+    }
+  }
+
+  const resetForms = () => {
+    setExpenseForm(defaultExpenseForm());
+    setIncomeForm(defaultIncomeForm());
+    setMode(isEditing ? "manual" : "quick");
   };
 
-  const applyQuickSelect = (subcategoryId: string, label: string) => {
+  const applyQuickSelect = (subcategoryId: string) => {
     const def = QUICK_SELECT_SUBCATEGORIES.find((entry) => entry.id === subcategoryId);
-    setForm((current) => ({
+    setExpenseForm((current) => ({
       ...current,
       subcategory: subcategoryId,
       category: def?.category ?? "Needs",
-      description: label,
     }));
     setMode("manual");
   };
 
-  const addQuickAmount = (units: number) => {
-    setForm((current) => {
+  const addQuickAmount = (units: number, target: "expense" | "income") => {
+    const key = target === "expense" ? setExpenseForm : setIncomeForm;
+    key((current) => {
       const currentUnits = Number.parseFloat(current.amount) || 0;
       const next = Math.round((currentUnits + units) * 100) / 100;
       return { ...current, amount: String(next) };
     });
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleExpenseSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!form.description.trim()) {
+    if (!expenseForm.description.trim()) {
       toast({ title: "Description is required", variant: "destructive" });
       return;
     }
     let amountMinor: number;
     try {
-      amountMinor = toMinorUnits(form.amount);
+      amountMinor = toMinorUnits(expenseForm.amount);
     } catch {
       toast({ title: "Enter a valid positive amount", variant: "destructive" });
       return;
@@ -115,244 +150,398 @@ export function AddTransactionDialog({
       return;
     }
     setSubmitting(true);
-    if (isExpense) {
-      const result = await mutate("/api/expenses", "POST", {
-        description: form.description.trim(),
-        amountMinor,
-        category: form.category,
-        subcategory: form.subcategory,
-        date: new Date(`${form.date}T12:00:00`).toISOString(),
-        notes: form.notes.trim() || null,
-        recurring: form.recurring,
-      });
-      setSubmitting(false);
-      if (!result.ok) {
-        toast({ title: "Could not save expense", description: result.error, variant: "destructive" });
-        return;
-      }
-      toast({ title: "Expense added", description: `${form.description.trim()} recorded successfully.` });
-    } else {
-      const result = await mutate("/api/income", "POST", {
-        name: form.description.trim(),
-        amountMinor,
-        frequency: form.recurring ? "monthly" : "one-time",
-        active: true,
-      });
-      setSubmitting(false);
-      if (!result.ok) {
-        toast({ title: "Could not save income source", description: result.error, variant: "destructive" });
-        return;
-      }
-      toast({ title: "Income source added", description: `${form.description.trim()} recorded successfully.` });
+    const payload = {
+      description: expenseForm.description.trim(),
+      amountMinor,
+      category: expenseForm.category,
+      subcategory: expenseForm.subcategory,
+      date: new Date(`${expenseForm.date}T12:00:00`).toISOString(),
+      notes: expenseForm.notes.trim() || null,
+      recurring: expenseForm.recurring,
+    };
+    const result = isEditing && editing
+      ? await mutate(`/api/expenses/${editing.id}`, "PATCH", payload)
+      : await mutate("/api/expenses", "POST", payload);
+    setSubmitting(false);
+    if (!result.ok) {
+      toast({ title: isEditing ? "Could not update expense" : "Could not save expense", description: result.error, variant: "destructive" });
+      return;
     }
-    resetForm();
+    toast({
+      title: isEditing ? "Expense updated" : "Expense added",
+      description: `${expenseForm.description.trim()} recorded successfully.`,
+    });
+    resetForms();
     onOpenChange(false);
     onSaved?.();
   };
 
+  const handleIncomeSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!incomeForm.name.trim()) {
+      toast({ title: "Income source name is required", variant: "destructive" });
+      return;
+    }
+    let amountMinor: number;
+    try {
+      amountMinor = toMinorUnits(incomeForm.amount);
+    } catch {
+      toast({ title: "Enter a valid positive amount", variant: "destructive" });
+      return;
+    }
+    if (amountMinor === 0) {
+      toast({ title: "Amount must be greater than zero", variant: "destructive" });
+      return;
+    }
+    setSubmitting(true);
+    const result = await mutate("/api/income", "POST", {
+      name: incomeForm.name.trim(),
+      amountMinor,
+      frequency: incomeForm.frequency,
+      category: incomeForm.category,
+      active: incomeForm.active,
+    });
+    setSubmitting(false);
+    if (!result.ok) {
+      toast({ title: "Could not save income source", description: result.error, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Income source added", description: `${incomeForm.name.trim()} recorded successfully.` });
+    resetForms();
+    onOpenChange(false);
+    onSaved?.();
+  };
+
+  const handleCategoryChange = (value: string) => {
+    setExpenseForm((current) => {
+      const stillValid = subcategoriesFor(value as (typeof EXPENSE_CATEGORIES)[number]).some(
+        (entry) => entry.id === current.subcategory,
+      );
+      return { ...current, category: value, subcategory: stillValid ? current.subcategory : "other-wants" };
+    });
+  };
+
   return (
-    <Dialog
+    <Sheet
       open={open}
       onOpenChange={(next) => {
-        if (!next) resetForm();
+        if (!next) resetForms();
         onOpenChange(next);
       }}
     >
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {isExpense ? <TrendingDown className="h-5 w-5 text-red-500" aria-hidden /> : <TrendingUp className="h-5 w-5 text-emerald-600" aria-hidden />}
-            {isExpense ? "Add Expense" : "Add Income Source"}
-          </DialogTitle>
-          <DialogDescription>
+      <SheetContent side="right" className="w-full overflow-y-auto p-0 sm:max-w-md dark:bg-slate-900 dark:text-slate-100">
+        <SheetHeader className="px-6 pb-2 pt-6">
+          <SheetTitle className="flex items-center gap-2">
+            {isExpense ? (
+              <TrendingDown className="h-5 w-5 text-red-500" aria-hidden />
+            ) : (
+              <TrendingUp className="h-5 w-5 text-emerald-600" aria-hidden />
+            )}
+            {isExpense ? (isEditing ? "Edit Expense" : "Add Expense") : "Add Income Source"}
+          </SheetTitle>
+          <SheetDescription>
             {isExpense
               ? "Pick a category for one-tap entry, or fill the form manually."
               : "Add a new income stream to your monthly totals."}
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
-        {isExpense && mode === "quick" ? (
-          <div>
-            <h3 className="mb-3 text-sm font-semibold text-slate-700">Quick Select Category</h3>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {QUICK_SELECT_SUBCATEGORIES.map((entry) => (
-                <button
-                  key={entry.id}
-                  type="button"
-                  onClick={() => applyQuickSelect(entry.id, entry.label)}
-                  className="flex min-h-[64px] flex-col items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-3 text-center text-xs font-medium text-slate-600 transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
-                >
-                  <span className="text-xl" aria-hidden>
-                    {entry.emoji}
-                  </span>
-                  {entry.label}
-                </button>
-              ))}
-            </div>
-            <Button type="button" variant="ghost" className="mt-4 w-full text-slate-500" onClick={() => setMode("manual")}>
-              Or fill manually
-            </Button>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="txn-description">{isExpense ? "Description" : "Income source name"}</Label>
-              <Input
-                id="txn-description"
-                value={form.description}
-                onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-                placeholder={isExpense ? "e.g. Weekly groceries" : "e.g. Freelance project"}
-                required
-                maxLength={120}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="txn-amount">Amount (USD)</Label>
-              <Input
-                id="txn-amount"
-                type="number"
-                inputMode="decimal"
-                min="0"
-                step="0.01"
-                value={form.amount}
-                onChange={(event) => setForm((current) => ({ ...current, amount: event.target.value }))}
-                placeholder="0.00"
-                required
-              />
-            </div>
-
+        <div className="px-6 pb-6">
+          {isExpense && mode === "quick" ? (
             <div>
-              <p className="mb-2 text-xs font-medium text-slate-500">Quick Add Amount</p>
-              <div className="flex flex-wrap gap-2">
-                {QUICK_AMOUNTS.map((units) => (
+              <h3 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">Quick Select Category</h3>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {QUICK_SELECT_SUBCATEGORIES.map((entry) => (
                   <button
-                    key={units}
+                    key={entry.id}
                     type="button"
-                    onClick={() => addQuickAmount(units)}
-                    className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
+                    onClick={() => applyQuickSelect(entry.id)}
+                    className="flex min-h-[64px] flex-col items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-3 text-center text-xs font-medium text-slate-600 transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:bg-emerald-950"
                   >
-                    + ${units}
+                    <span className="text-xl" aria-hidden>
+                      {entry.emoji}
+                    </span>
+                    {entry.label}
                   </button>
                 ))}
               </div>
+              <Button
+                type="button"
+                variant="ghost"
+                className="mt-4 w-full text-slate-500 dark:text-slate-400"
+                onClick={() => setMode("manual")}
+              >
+                Or fill manually
+              </Button>
             </div>
+          ) : isExpense ? (
+            <form onSubmit={handleExpenseSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="txn-description">Description</Label>
+                <Input
+                  id="txn-description"
+                  value={expenseForm.description}
+                  onChange={(event) => setExpenseForm((current) => ({ ...current, description: event.target.value }))}
+                  placeholder="e.g. Weekly groceries"
+                  required
+                  maxLength={120}
+                  className="dark:bg-slate-800"
+                />
+              </div>
 
-            {isExpense ? (
-              <>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="txn-category">Category</Label>
-                    <Select
-                      value={form.category}
-                      onValueChange={(value) =>
-                        setForm((current) => {
-                          const first = subcategoriesFor(value as (typeof EXPENSE_CATEGORIES)[number])[0];
-                          return { ...current, category: value, subcategory: first?.id ?? "other" };
-                        })
-                      }
+              <div className="space-y-2">
+                <Label htmlFor="txn-amount">Amount (USD)</Label>
+                <Input
+                  id="txn-amount"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.01"
+                  value={expenseForm.amount}
+                  onChange={(event) => setExpenseForm((current) => ({ ...current, amount: event.target.value }))}
+                  placeholder="0.00"
+                  required
+                  className="dark:bg-slate-800"
+                />
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">Quick Add Amount</p>
+                <div className="flex flex-wrap gap-2">
+                  {EXPENSE_QUICK_AMOUNTS.map((units) => (
+                    <button
+                      key={units}
+                      type="button"
+                      onClick={() => addQuickAmount(units, "expense")}
+                      className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:bg-emerald-950"
                     >
-                      <SelectTrigger id="txn-category">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {EXPENSE_CATEGORIES.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="txn-subcategory">Subcategory</Label>
-                    <Select
-                      value={form.subcategory}
-                      onValueChange={(value) => setForm((current) => ({ ...current, subcategory: value }))}
-                    >
-                      <SelectTrigger id="txn-subcategory">
-                        <SelectValue>{subcategoryLabel(form.subcategory)}</SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {subcategoriesFor(form.category as (typeof EXPENSE_CATEGORIES)[number]).map((entry) => (
-                          <SelectItem key={entry.id} value={entry.id}>
-                            {entry.emoji} {entry.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                      + USD{units}
+                    </button>
+                  ))}
                 </div>
+              </div>
 
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label htmlFor="txn-date">Date</Label>
-                  <Input
-                    id="txn-date"
-                    type="date"
-                    value={form.date}
-                    onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))}
-                    required
-                  />
+                  <Label htmlFor="txn-category">Category</Label>
+                  <Select value={expenseForm.category} onValueChange={handleCategoryChange}>
+                    <SelectTrigger id="txn-category" className="dark:bg-slate-800">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EXPENSE_CATEGORIES.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="txn-notes">Notes (optional)</Label>
-                  <Textarea
-                    id="txn-notes"
-                    value={form.notes}
-                    onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
-                    placeholder="Anything worth remembering about this expense"
-                    rows={2}
-                    maxLength={500}
-                  />
+                  <Label htmlFor="txn-subcategory">Subcategory</Label>
+                  <Select
+                    value={expenseForm.subcategory}
+                    onValueChange={(value) => setExpenseForm((current) => ({ ...current, subcategory: value }))}
+                  >
+                    <SelectTrigger id="txn-subcategory" className="dark:bg-slate-800">
+                      <SelectValue>{subcategoryLabel(expenseForm.subcategory)}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subcategoriesFor(expenseForm.category as (typeof EXPENSE_CATEGORIES)[number]).map((entry) => (
+                        <SelectItem key={entry.id} value={entry.id}>
+                          {entry.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+              </div>
 
-                <div className="flex items-center justify-between rounded-lg border border-slate-200 px-4 py-3">
-                  <div>
-                    <Label htmlFor="txn-recurring" className="text-sm">
-                      This is a recurring expense
-                    </Label>
-                    <p className="text-xs text-slate-400">Charges that repeat every month</p>
-                  </div>
-                  <Switch
-                    id="txn-recurring"
-                    checked={form.recurring}
-                    onCheckedChange={(checked) => setForm((current) => ({ ...current, recurring: checked }))}
-                  />
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center justify-between rounded-lg border border-slate-200 px-4 py-3">
+              <div className="space-y-2">
+                <Label htmlFor="txn-date">Date</Label>
+                <Input
+                  id="txn-date"
+                  type="date"
+                  value={expenseForm.date}
+                  onChange={(event) => setExpenseForm((current) => ({ ...current, date: event.target.value }))}
+                  required
+                  className="dark:bg-slate-800"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="txn-notes">Notes (optional)</Label>
+                <Textarea
+                  id="txn-notes"
+                  value={expenseForm.notes}
+                  onChange={(event) => setExpenseForm((current) => ({ ...current, notes: event.target.value }))}
+                  placeholder="Anything worth remembering about this expense"
+                  rows={2}
+                  maxLength={500}
+                  className="dark:bg-slate-800"
+                />
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border border-slate-200 px-4 py-3 dark:border-slate-700">
                 <div>
-                  <Label htmlFor="income-recurring" className="text-sm">
-                    Recurring monthly income
+                  <Label htmlFor="txn-recurring" className="text-sm">
+                    This is a recurring expense
+                  </Label>
+                  <p className="text-xs text-slate-400">Charges that repeat every month</p>
+                </div>
+                <Switch
+                  id="txn-recurring"
+                  checked={expenseForm.recurring}
+                  onCheckedChange={(checked) => setExpenseForm((current) => ({ ...current, recurring: checked }))}
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                {!isEditing ? (
+                  <Button type="button" variant="ghost" onClick={() => setMode("quick")} className="text-slate-500 dark:text-slate-400">
+                    ← Back to Quick Select
+                  </Button>
+                ) : (
+                  <span />
+                )}
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      resetForms();
+                      onOpenChange(false);
+                    }}
+                    className="dark:border-slate-700"
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="bg-emerald-500 hover:bg-emerald-600" disabled={submitting}>
+                    {submitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden /> Saving…
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="mr-1 h-4 w-4" aria-hidden />
+                        {isEditing ? "Save Changes" : "Add Expense"}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleIncomeSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="income-name">Income Source</Label>
+                <Input
+                  id="income-name"
+                  value={incomeForm.name}
+                  onChange={(event) => setIncomeForm((current) => ({ ...current, name: event.target.value }))}
+                  placeholder="e.g. Salary, freelance project"
+                  required
+                  maxLength={120}
+                  className="dark:bg-slate-800"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="income-amount">Amount (USD)</Label>
+                <Input
+                  id="income-amount"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.01"
+                  value={incomeForm.amount}
+                  onChange={(event) => setIncomeForm((current) => ({ ...current, amount: event.target.value }))}
+                  placeholder="0.00"
+                  required
+                  className="dark:bg-slate-800"
+                />
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">Quick Add Amount</p>
+                <div className="flex flex-wrap gap-2">
+                  {INCOME_QUICK_AMOUNTS.map((units) => (
+                    <button
+                      key={units}
+                      type="button"
+                      onClick={() => addQuickAmount(units, "income")}
+                      className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:bg-emerald-950"
+                    >
+                      + ${units.toFixed(2)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="income-frequency">Frequency</Label>
+                  <Select
+                    value={incomeForm.frequency}
+                    onValueChange={(value) => setIncomeForm((current) => ({ ...current, frequency: value }))}
+                  >
+                    <SelectTrigger id="income-frequency" className="dark:bg-slate-800">
+                      <SelectValue>{FREQUENCY_LABELS[incomeForm.frequency] ?? "Monthly"}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {INCOME_FREQUENCIES.map((frequency) => (
+                        <SelectItem key={frequency} value={frequency}>
+                          {FREQUENCY_LABELS[frequency]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="income-category">Category</Label>
+                  <Select
+                    value={incomeForm.category}
+                    onValueChange={(value) => setIncomeForm((current) => ({ ...current, category: value }))}
+                  >
+                    <SelectTrigger id="income-category" className="dark:bg-slate-800">
+                      <SelectValue>
+                        {INCOME_CATEGORIES.find((option) => option.id === incomeForm.category)?.label ?? "Primary Income"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {INCOME_CATEGORIES.map((option) => (
+                        <SelectItem key={option.id} value={option.id}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border border-slate-200 px-4 py-3 dark:border-slate-700">
+                <div>
+                  <Label htmlFor="income-active" className="text-sm">
+                    Active Income Source
                   </Label>
                   <p className="text-xs text-slate-400">Counts toward your monthly income total</p>
                 </div>
                 <Switch
-                  id="income-recurring"
-                  checked={form.recurring}
-                  onCheckedChange={(checked) => setForm((current) => ({ ...current, recurring: checked }))}
+                  id="income-active"
+                  checked={incomeForm.active}
+                  onCheckedChange={(checked) => setIncomeForm((current) => ({ ...current, active: checked }))}
                 />
               </div>
-            )}
 
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-              {isExpense ? (
-                <Button type="button" variant="ghost" onClick={() => setMode("quick")} className="text-slate-500">
-                  ← Back to Quick Select
-                </Button>
-              ) : (
-                <span />
-              )}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-end gap-2 pt-1">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    resetForm();
+                    resetForms();
                     onOpenChange(false);
                   }}
+                  className="dark:border-slate-700"
                 >
                   Cancel
                 </Button>
@@ -364,15 +553,15 @@ export function AddTransactionDialog({
                   ) : (
                     <>
                       <Plus className="mr-1 h-4 w-4" aria-hidden />
-                      {isExpense ? "Add Expense" : "Add Income"}
+                      Add Income
                     </>
                   )}
                 </Button>
               </div>
-            </div>
-          </form>
-        )}
-      </DialogContent>
-    </Dialog>
+            </form>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

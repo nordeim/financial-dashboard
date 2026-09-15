@@ -8,6 +8,7 @@ import {
   requireString,
   safeJson,
 } from "@/lib/api";
+import { INCOME_CATEGORIES, INCOME_FREQUENCIES } from "@/lib/categories";
 import { ensureSeeded } from "@/lib/seed";
 import type { IncomeSourceDto } from "@/lib/types";
 
@@ -16,6 +17,7 @@ function toDto(source: {
   name: string;
   amountMinor: number;
   frequency: string;
+  category: string;
   active: boolean;
   nextPaymentDate: Date | null;
 }): IncomeSourceDto {
@@ -24,6 +26,7 @@ function toDto(source: {
     name: source.name,
     amountMinor: source.amountMinor,
     frequency: source.frequency,
+    category: source.category,
     active: source.active,
     nextPaymentDate: source.nextPaymentDate?.toISOString() ?? null,
   };
@@ -43,11 +46,10 @@ interface IncomePayload {
   name?: unknown;
   amountMinor?: unknown;
   frequency?: unknown;
+  category?: unknown;
   active?: unknown;
   nextPaymentDate?: unknown;
 }
-
-const FREQUENCIES = new Set(["monthly", "biweekly", "weekly", "one-time"]);
 
 export async function POST(request: Request) {
   try {
@@ -56,12 +58,16 @@ export async function POST(request: Request) {
     const name = requireString(body.name, "Name");
     const amountMinor = requireNonNegativeInt(body.amountMinor, "Amount");
     const frequency = requireString(body.frequency, "Frequency", 20);
-    if (!FREQUENCIES.has(frequency)) {
-      return fail("Frequency must be one of monthly, biweekly, weekly, one-time", 400);
+    if (!(INCOME_FREQUENCIES as readonly string[]).includes(frequency)) {
+      return fail("Frequency must be one of monthly, weekly, biweekly, annual", 400);
     }
+    const category =
+      typeof body.category === "string" && INCOME_CATEGORIES.some((option) => option.id === body.category)
+        ? body.category
+        : "primary";
     const nextPaymentDate = body.nextPaymentDate ? requireIsoDate(body.nextPaymentDate, "Next payment date") : null;
     const created = await db.incomeSource.create({
-      data: { name, amountMinor, frequency, active: body.active !== false, nextPaymentDate },
+      data: { name, amountMinor, frequency, category, active: body.active !== false, nextPaymentDate },
     });
     return ok(toDto(created), 201);
   } catch (error) {

@@ -1,12 +1,15 @@
 import { db } from "@/lib/db";
 import { errorResponse, fail, ok, optionalString, safeJson } from "@/lib/api";
 import { ensureSeeded } from "@/lib/seed";
+import { normalizeFinaraExport, parseFlexibleDate } from "@/lib/import-export";
 
 /**
- * Batch CSV import. Accepts pre-mapped rows (date, description, amountMinor,
- * category, subcategory). Each row is validated individually; row-level
- * failures are reported without aborting the whole import, and the response
- * states exactly what was imported.
+ * Batch import. Two modes:
+ *  - default (CSV rows): accepts pre-mapped rows (date, description, amountMinor,
+ *    category, subcategory).
+ *  - "finara-export": accepts a full Finara JSON export (as produced by
+ *    GET /api/export) and re-inserts expenses, income sources, goals and accounts.
+ * Row-level failures are reported without aborting the whole import.
  */
 
 interface ImportRow {
@@ -18,42 +21,20 @@ interface ImportRow {
 }
 
 interface ImportPayload {
+  mode?: unknown;
   rows?: ImportRow[];
 }
 
 const CATEGORIES = new Set(["Needs", "Wants", "Savings"]);
-
-function parseDate(value: unknown): Date | null {
-  if (typeof value !== "string" || value.trim() === "") return null;
-  const direct = new Date(value);
-  if (!Number.isNaN(direct.getTime())) return direct;
-  // Common bank-export shapes: MM/DD/YYYY, DD.MM.YYYY, YYYYMMDD.
-  const slash = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (slash) {
-    const [, first, second, year] = slash;
-    const month = Number.parseInt(first!, 10);
-    const day = Number.parseInt(second!, 10);
-    if (month >= 1 && month <= 12) return new Date(Number.parseInt(year!, 10), month - 1, day, 12);
-    if (day >= 1 && day <= 12 && month >= 1 && month <= 31) return new Date(Number.parseInt(year!, 10), day - 1, month, 12);
-  }
-  const dotted = value.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
-  if (dotted) {
-    const [, day, month, year] = dotted;
-    return new Date(Number.parseInt(year!, 10), Number.parseInt(month!, 10) - 1, Number.parseInt(day!, 10), 12);
-  }
-  const compact = value.match(/^(\d{4})(\d{2})(\d{2})$/);
-  if (compact) {
-    const [, year, month, day] = compact;
-    return new Date(Number.parseInt(year!, 10), Number.parseInt(month!, 10) - 1, Number.parseInt(day!, 10), 12);
-  }
-  return null;
-}
+const parseDate = parseFlexibleDate;
 
 export async function POST(request: Request) {
   try {
     await ensureSeeded();
     const body = await safeJson<ImportPayload>(request);
-    if (!body || !Array.isArray(body.rows)) return fail("Body must contain a rows array", 400);
+    if (!body) return fail("Body must be a JSON object", 400);
+    if (body.mode === "finara-export") return importFinaraExport(body);
+    if (!Array.isArray(body.rows)) return fail("Body must contain a rows array", 400);
     if (body.rows.length === 0) return fail("No rows to import", 400);
     if (body.rows.length > 2000) return fail("Import is capped at 2000 rows per batch", 400);
 
@@ -100,4 +81,39 @@ export async function POST(request: Request) {
   } catch (error) {
     return errorResponse(error);
   }
+}
+
+/** finara-export mode: re-insert entities from a Finara JSON export file. */
+async function importFinaraExport(payload: unknown) {
+  const normalized = normalizeFinaraExport(payload);
+  if (normalized.errors.some((error) => error.entity === "payload")) {
+    return fail("File is not a valid Finara export", 400);
+  }
+  const totalRows =
+    normalized.expenses.length +
+    normalized.incomeSources.length +
+    normalized.goals.length +
+    normalized.accounts.length +
+    normalized.errors.length;
+  if (totalRows === 0) return fail("The export file contains no importable records", 400);
+  if (totalRows > 2000) return fail("Import is capped at 2000 rows per batch", 400);
+
+  if (normalized.accounts.length > 0) await db.account.createMany({ data: normalized.accounts });
+  if (normalized.incomeSources.length > 0) await db.incomeSource.createMany({ data: normalized.incomeSources });
+  if (normalized.goals.length > 0) await db.goal.createMany({ data: normalized.goals });
+  if (normalized.expenses.length > 0) await db.expense.createMany({ data: normalized.expenses });
+
+  const imported =
+    normalized.expenses.length +
+    normalized.incomeSources.length +
+    normalized.goals.length +
+    normalized.accounts.length;
+  return ok({
+    imported,
+    skipped: normalized.errors.length,
+    errors: normalized.errors.slice(0, 25).map((error) => ({
+      row: error.row,
+      error: `${error.entity}: ${error.error}`,
+    })),
+  });
 }

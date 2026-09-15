@@ -19,8 +19,8 @@ export function ViewHeader({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{title}</h1>
-        <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-slate-50">{title}</h1>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </div>
@@ -31,7 +31,7 @@ export function ViewHeader({
 export function TrendPill({ value, invert = false }: { value: number | null; invert?: boolean }) {
   if (value === null || !Number.isFinite(value)) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400">
+      <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400 dark:text-slate-500">
         <Minus className="h-3.5 w-3.5" aria-hidden /> —
       </span>
     );
@@ -44,7 +44,7 @@ export function TrendPill({ value, invert = false }: { value: number | null; inv
     <span
       className={cn(
         "inline-flex items-center gap-1 text-xs font-semibold",
-        good ? "text-emerald-600" : "text-red-500",
+        good ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400",
       )}
     >
       <Icon className="h-3.5 w-3.5" aria-hidden />
@@ -71,12 +71,12 @@ export function StatCard({
   invertTrend?: boolean;
 }) {
   return (
-    <Card className="border-none shadow-sm">
+    <Card className="border-none shadow-sm dark:border dark:border-slate-700 dark:bg-slate-800">
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-sm font-medium text-slate-500">{label}</p>
-            <p className="mt-2 truncate text-2xl font-bold tabular-nums text-slate-900">{value}</p>
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
+            <p className="mt-2 truncate text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-50">{value}</p>
             {trend !== undefined ? (
               <div className="mt-2">
                 <TrendPill value={trend} invert={invertTrend} />
@@ -159,11 +159,11 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-xl px-6 py-12 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
-        <Icon className="h-7 w-7 text-slate-400" aria-hidden />
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700">
+        <Icon className="h-7 w-7 text-slate-400 dark:text-slate-400" aria-hidden />
       </div>
-      <h3 className="text-base font-semibold text-slate-900">{title}</h3>
-      <p className="max-w-sm text-sm text-slate-500">{body}</p>
+      <h3 className="text-base font-semibold text-slate-900 dark:text-slate-50">{title}</h3>
+      <p className="max-w-sm text-sm text-slate-500 dark:text-slate-400">{body}</p>
       {action}
     </div>
   );
@@ -184,11 +184,11 @@ export function SectionCard({
   className?: string;
 }) {
   return (
-    <Card className={cn("border-none shadow-sm", className)}>
+    <Card className={cn("border-none shadow-sm dark:border dark:border-slate-700 dark:bg-slate-800", className)}>
       <CardContent className="p-5">
         <div className="mb-4 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">{title}</h2>
             {badge}
           </div>
           {actions}
@@ -202,7 +202,14 @@ export function SectionCard({
 export function SurplusBadge({ amountMinor }: { amountMinor: number }) {
   const positive = amountMinor >= 0;
   return (
-    <Badge variant="outline" className={positive ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-red-200 bg-red-50 text-red-600"}>
+    <Badge
+      variant="outline"
+      className={
+        positive
+          ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
+          : "border-red-200 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-950 dark:text-red-400"
+      }
+    >
       {positive ? "surplus" : "deficit"} · {formatSigned(positive ? amountMinor : -amountMinor)}
     </Badge>
   );
@@ -217,7 +224,7 @@ export function LoadingRows({ rows = 3 }: { rows?: number }) {
   return (
     <div className="space-y-3" role="status" aria-label="Loading content">
       {Array.from({ length: rows }).map((_, index) => (
-        <div key={index} className="h-16 animate-pulse rounded-xl bg-slate-100" />
+        <div key={index} className="h-16 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" />
       ))}
     </div>
   );
@@ -225,13 +232,16 @@ export function LoadingRows({ rows = 3 }: { rows?: number }) {
 
 export function ErrorNote({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-6 text-center" role="alert">
-      <p className="text-sm font-medium text-red-700">{message}</p>
+    <div
+      className="flex flex-col items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-6 text-center dark:border-red-900 dark:bg-red-950/40"
+      role="alert"
+    >
+      <p className="text-sm font-medium text-red-700 dark:text-red-300">{message}</p>
       {onRetry ? (
         <button
           type="button"
           onClick={onRetry}
-          className="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50"
+          className="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-slate-800 dark:text-red-400 dark:hover:bg-slate-700"
         >
           Try again
         </button>

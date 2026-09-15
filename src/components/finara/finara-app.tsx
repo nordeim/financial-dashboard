@@ -108,6 +108,7 @@ export function FinaraApp() {
   const handleSignOut = () => {
     writeSession(null);
     setView("dashboard");
+    setMobileMenuOpen(false);
   };
 
   if (!session) {
@@ -115,49 +116,44 @@ export function FinaraApp() {
   }
 
   return (
-    <div className="relative flex min-h-screen bg-slate-100">
-      <Sidebar active={view} onNavigate={navigate} userName={session.name} userEmail={session.email} />
+    <div className="relative flex min-h-screen bg-slate-100 dark:bg-zinc-950">
+      <Sidebar
+        active={view}
+        onNavigate={navigate}
+        userName={session.name}
+        userEmail={session.email}
+        onSignOut={handleSignOut}
+      />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <MobileTopNav
           active={view}
           onNavigate={navigate}
           userName={session.name}
+          userEmail={session.email}
           menuOpen={mobileMenuOpen}
           onToggleMenu={() => setMobileMenuOpen((open) => !open)}
+          onSignOut={handleSignOut}
         />
 
         <main id="main-content" className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
           {view === "dashboard" ? (
             <DashboardView
               onNavigate={navigate}
-              onAddTransaction={() => openAddTransaction("expense")}
+              onAddTransaction={(kind: TransactionKind) => openAddTransaction(kind)}
               onOpenAiCoach={() => setAiCoachOpen(true)}
               refreshKey={refreshKey}
             />
           ) : null}
           {view === "income" ? <IncomeView onAddIncome={() => openAddTransaction("income")} refreshKey={refreshKey} /> : null}
           {view === "expenses" ? <ExpensesView onAddExpense={() => openAddTransaction("expense")} refreshKey={refreshKey} /> : null}
-          {view === "accounts" ? <AccountsView /> : null}
-          {view === "investments" ? <InvestmentsView /> : null}
+          {view === "accounts" ? <AccountsView refreshKey={refreshKey} onNavigate={() => navigate("import")} /> : null}
+          {view === "investments" ? <InvestmentsView refreshKey={refreshKey} /> : null}
           {view === "import" ? <ImportView /> : null}
           {view === "analytics" ? <AnalyticsView /> : null}
-          {view === "goals" ? <GoalsView /> : null}
+          {view === "goals" ? <GoalsView refreshKey={refreshKey} /> : null}
           {view === "settings" ? <SettingsView /> : null}
         </main>
-
-        <footer className="mt-auto border-t border-slate-200/70 bg-white/60 px-4 py-3 sm:px-6 lg:px-8">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
-            <p>Finara — Smart Finance Tracker</p>
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="rounded-md px-2 py-1 font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
-            >
-              Sign out
-            </button>
-          </div>
-        </footer>
       </div>
 
       <AddTransactionDialog
@@ -170,22 +166,6 @@ export function FinaraApp() {
       <AiCoachDialog
         open={aiCoachOpen}
         onOpenChange={setAiCoachOpen}
-        onQuickAction={(action) => {
-          switch (action) {
-            case "add-income":
-              openAddTransaction("income");
-              break;
-            case "add-expense":
-              openAddTransaction("expense");
-              break;
-            case "set-goal":
-              navigate("goals");
-              break;
-            case "view-reports":
-              navigate("analytics");
-              break;
-          }
-        }}
       />
     </div>
   );

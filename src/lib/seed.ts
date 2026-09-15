@@ -29,12 +29,12 @@ const RECURRING_SEEDS: ExpenseSeed[] = [
   { description: "Metro transit pass", amountMinor: 9600, category: "Needs", subcategory: "transportation", monthsAgo: 0, day: 2, recurring: true },
   { description: "Health insurance premium", amountMinor: 24500, category: "Needs", subcategory: "healthcare", monthsAgo: 0, day: 5, recurring: true },
   { description: "Pharmacy pickup", amountMinor: 4300, category: "Needs", subcategory: "healthcare", monthsAgo: 0, day: 21, recurring: false },
-  { description: "Car payment", amountMinor: 42000, category: "Needs", subcategory: "debt", monthsAgo: 0, day: 10, recurring: true },
+  { description: "Student loan payment", amountMinor: 42000, category: "Needs", subcategory: "other-needs", monthsAgo: 0, day: 10, recurring: true },
   { description: "Netflix + Spotify bundle", amountMinor: 3599, category: "Wants", subcategory: "subscriptions", monthsAgo: 0, day: 8, recurring: true },
   { description: "Dinner at Trattoria Roma", amountMinor: 12500, category: "Wants", subcategory: "dining", monthsAgo: 0, day: 9, recurring: false },
   { description: "Cinema - weekend show", amountMinor: 3200, category: "Wants", subcategory: "entertainment", monthsAgo: 0, day: 16, recurring: false },
-  { description: "Emergency fund transfer", amountMinor: 40000, category: "Savings", subcategory: "emergency", monthsAgo: 0, day: 3, recurring: true },
-  { description: "Brokerage index purchase", amountMinor: 60000, category: "Savings", subcategory: "investing", monthsAgo: 0, day: 15, recurring: true },
+  { description: "Emergency fund transfer", amountMinor: 40000, category: "Savings", subcategory: "emergency-fund", monthsAgo: 0, day: 3, recurring: true },
+  { description: "Brokerage index purchase", amountMinor: 60000, category: "Savings", subcategory: "investments", monthsAgo: 0, day: 15, recurring: true },
   { description: "401k contribution", amountMinor: 52000, category: "Savings", subcategory: "retirement", monthsAgo: 0, day: 25, recurring: true },
 ];
 
@@ -52,11 +52,11 @@ function recurringForMonth(monthsAgo: number, maxDay: number): ExpenseSeed[] {
 const ONE_OFF_SEEDS: ExpenseSeed[] = [
   { description: "Weekend brunch", amountMinor: 5400, category: "Wants", subcategory: "dining", monthsAgo: 0, day: 22, recurring: false },
   { description: "Uniqlo wardrobe refresh", amountMinor: 12900, category: "Wants", subcategory: "shopping", monthsAgo: 1, day: 11, recurring: false },
-  { description: "Weekend trip to Kyoto", amountMinor: 86500, category: "Wants", subcategory: "travel", monthsAgo: 2, day: 17, recurring: false },
+  { description: "Weekend trip to Kyoto", amountMinor: 86500, category: "Wants", subcategory: "other-wants", monthsAgo: 2, day: 17, recurring: false },
   { description: "Concert tickets", amountMinor: 15800, category: "Wants", subcategory: "entertainment", monthsAgo: 3, day: 20, recurring: false },
-  { description: "Gym membership", amountMinor: 4900, category: "Wants", subcategory: "fitness", monthsAgo: 1, day: 7, recurring: false },
-  { description: "Online course - ML specialization", amountMinor: 24900, category: "Wants", subcategory: "education", monthsAgo: 4, day: 13, recurring: false },
-  { description: "Laptop repair", amountMinor: 18700, category: "Needs", subcategory: "other", monthsAgo: 3, day: 26, recurring: false },
+  { description: "Gym membership", amountMinor: 4900, category: "Wants", subcategory: "other-wants", monthsAgo: 1, day: 7, recurring: false },
+  { description: "Online course - ML specialization", amountMinor: 24900, category: "Wants", subcategory: "other-wants", monthsAgo: 4, day: 13, recurring: false },
+  { description: "Laptop repair", amountMinor: 18700, category: "Needs", subcategory: "other-needs", monthsAgo: 3, day: 26, recurring: false },
   { description: "Dentist checkup", amountMinor: 13500, category: "Needs", subcategory: "healthcare", monthsAgo: 2, day: 24, recurring: false },
   { description: "Car service - oil change", amountMinor: 8900, category: "Needs", subcategory: "transportation", monthsAgo: 1, day: 19, recurring: false },
   { description: "Birthday gift for Mia", amountMinor: 7500, category: "Wants", subcategory: "shopping", monthsAgo: 2, day: 5, recurring: false },
@@ -98,7 +98,7 @@ async function seed(): Promise<void> {
     data: [
       { name: "Everyday Checking", type: "checking", institution: "Chase Bank", balanceMinor: 487350 },
       { name: "High-Yield Savings", type: "savings", institution: "Ally Bank", balanceMinor: 1254900 },
-      { name: "Amex Gold Card", type: "credit", institution: "American Express", balanceMinor: -128430 },
+      { name: "Amex Gold Card", type: "credit-card", institution: "American Express", balanceMinor: -128430 },
       { name: "Brokerage Cash", type: "investment", institution: "Vanguard", balanceMinor: 61200 },
     ],
   });
@@ -107,10 +107,10 @@ async function seed(): Promise<void> {
   nextMonth.setMonth(nextMonth.getMonth() + 1, 1);
   await db.incomeSource.createMany({
     data: [
-      { name: "Software Engineer Salary", amountMinor: 480000, frequency: "biweekly", active: true, nextPaymentDate: nextMonth },
-      { name: "Freelance Web Projects", amountMinor: 60000, frequency: "monthly", active: true, nextPaymentDate: nextMonth },
-      { name: "Rental Income - Unit 4B", amountMinor: 95000, frequency: "monthly", active: true, nextPaymentDate: nextMonth },
-      { name: "Dividend Portfolio", amountMinor: 12400, frequency: "quarterly", active: true, nextPaymentDate: nextMonth },
+      { name: "Software Engineer Salary", amountMinor: 480000, frequency: "biweekly", category: "primary", active: true, nextPaymentDate: nextMonth },
+      { name: "Freelance Web Projects", amountMinor: 60000, frequency: "monthly", category: "secondary", active: true, nextPaymentDate: nextMonth },
+      { name: "Rental Income - Unit 4B", amountMinor: 95000, frequency: "monthly", category: "passive", active: true, nextPaymentDate: nextMonth },
+      { name: "Dividend Portfolio", amountMinor: 12400, frequency: "annual", category: "passive", active: true, nextPaymentDate: nextMonth },
     ],
   });
 
@@ -147,22 +147,22 @@ async function seed(): Promise<void> {
   };
   await db.goal.createMany({
     data: [
-      { name: "Emergency Fund", targetAmountMinor: 1500000, currentAmountMinor: 962500, deadline: goalDeadline(8), category: "Emergency Fund" },
-      { name: "Trip to Bali", targetAmountMinor: 450000, currentAmountMinor: 178300, deadline: goalDeadline(11), category: "Vacation" },
-      { name: "New MacBook Pro", targetAmountMinor: 280000, currentAmountMinor: 210000, deadline: goalDeadline(3), category: "Major Purchase" },
+      { name: "Emergency Fund", targetAmountMinor: 1500000, currentAmountMinor: 962500, deadline: goalDeadline(8), category: "emergency", priority: "high" },
+      { name: "Trip to Bali", targetAmountMinor: 450000, currentAmountMinor: 178300, deadline: goalDeadline(11), category: "vacation", priority: "medium" },
+      { name: "New MacBook Pro", targetAmountMinor: 280000, currentAmountMinor: 210000, deadline: goalDeadline(3), category: "other", priority: "low" },
     ],
   });
 
   await db.investment.createMany({
     data: [
-      { symbol: "AAPL", name: "Apple Inc.", shares: 45, avgPriceMinor: 14250, currentPriceMinor: 22880, sector: "Technology" },
-      { symbol: "MSFT", name: "Microsoft Corp.", shares: 28, avgPriceMinor: 30500, currentPriceMinor: 42110, sector: "Technology" },
-      { symbol: "NVDA", name: "NVIDIA Corp.", shares: 60, avgPriceMinor: 21800, currentPriceMinor: 48950, sector: "Technology" },
-      { symbol: "VTI", name: "Vanguard Total Stock Market ETF", shares: 120, avgPriceMinor: 21300, currentPriceMinor: 27460, sector: "ETF" },
-      { symbol: "JNJ", name: "Johnson & Johnson", shares: 25, avgPriceMinor: 15800, currentPriceMinor: 16420, sector: "Healthcare" },
-      { symbol: "JPM", name: "JPMorgan Chase & Co.", shares: 30, avgPriceMinor: 13900, currentPriceMinor: 21980, sector: "Finance" },
-      { symbol: "O", name: "Realty Income Corp.", shares: 80, avgPriceMinor: 5600, currentPriceMinor: 5890, sector: "Real Estate" },
-      { symbol: "XOM", name: "Exxon Mobil Corp.", shares: 18, avgPriceMinor: 10400, currentPriceMinor: 11730, sector: "Energy" },
+      { symbol: "AAPL", name: "Apple Inc.", type: "stock", shares: 45, avgPriceMinor: 14250, currentPriceMinor: 22880, sector: "Technology" },
+      { symbol: "MSFT", name: "Microsoft Corp.", type: "stock", shares: 28, avgPriceMinor: 30500, currentPriceMinor: 42110, sector: "Technology" },
+      { symbol: "NVDA", name: "NVIDIA Corp.", type: "stock", shares: 60, avgPriceMinor: 21800, currentPriceMinor: 48950, sector: "Technology" },
+      { symbol: "VTI", name: "Vanguard Total Stock Market ETF", type: "etf", shares: 120, avgPriceMinor: 21300, currentPriceMinor: 27460, sector: "Other" },
+      { symbol: "JNJ", name: "Johnson & Johnson", type: "stock", shares: 25, avgPriceMinor: 15800, currentPriceMinor: 16420, sector: "Healthcare" },
+      { symbol: "JPM", name: "JPMorgan Chase & Co.", type: "stock", shares: 30, avgPriceMinor: 13900, currentPriceMinor: 21980, sector: "Finance" },
+      { symbol: "O", name: "Realty Income Corp.", type: "stock", shares: 80, avgPriceMinor: 5600, currentPriceMinor: 5890, sector: "Real Estate" },
+      { symbol: "XOM", name: "Exxon Mobil Corp.", type: "stock", shares: 18, avgPriceMinor: 10400, currentPriceMinor: 11730, sector: "Energy" },
     ],
   });
 
@@ -172,7 +172,7 @@ async function seed(): Promise<void> {
       { key: "dateFormat", value: "MM/dd/yyyy" },
       { key: "pushNotifications", value: "false" },
       { key: "emailAlerts", value: "false" },
-      { key: "budgetWarnings", value: "true" },
+      { key: "budgetWarnings", value: "false" },
       { key: "monthlyReports", value: "false" },
     ],
   });

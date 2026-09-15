@@ -9,6 +9,7 @@ import {
   requireString,
   safeJson,
 } from "@/lib/api";
+import { normalizeSubcategory } from "@/lib/categories";
 import { ensureSeeded } from "@/lib/seed";
 import type { ExpenseDto } from "@/lib/types";
 
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
     if (!CATEGORIES.has(category)) {
       return fail("Category must be one of Needs, Wants, Savings", 400);
     }
-    const subcategory = requireString(body.subcategory, "Subcategory", 40);
+    const subcategory = normalizeSubcategory(requireString(body.subcategory, "Subcategory", 40));
     const date = requireIsoDate(body.date, "Date");
     const created = await db.expense.create({
       data: {

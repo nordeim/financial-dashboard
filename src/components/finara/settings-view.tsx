@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -31,6 +31,8 @@ export function SettingsView() {
   const query = useQuery<SettingsDto>("/api/settings");
   const [form, setForm] = useState<SettingsDto | null>(null);
   const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   // Hydrate the editable form once data arrives; keep user edits afterwards.
@@ -70,6 +72,40 @@ export function SettingsView() {
     }
     setForm(result.data);
     toast({ title: "Settings saved", description: "Your preferences were updated." });
+  };
+
+  /** Round-trips a Finara JSON export file through POST /api/import (finara-export mode). */
+  const importExportFile = async (file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: "Import failed", description: "File exceeds the 10MB limit.", variant: "destructive" });
+      return;
+    }
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(await file.text());
+    } catch {
+      toast({ title: "Import failed", description: "The file is not valid JSON.", variant: "destructive" });
+      return;
+    }
+    setImporting(true);
+    const result = await mutate<{ imported: number; skipped: number; errors: { row: number; error: string }[]}>(
+      "/api/import",
+      "POST",
+      { mode: "finara-export", ...(parsed as object) },
+    );
+    setImporting(false);
+    if (importInputRef.current) importInputRef.current.value = "";
+    if (!result.ok || !result.data) {
+      toast({ title: "Import failed", description: result.error, variant: "destructive" });
+      return;
+    }
+    toast({
+      title: `Imported ${result.data.imported} records`,
+      description:
+        result.data.skipped > 0
+          ? `${result.data.skipped} records were skipped — check the Import page for details.`
+          : "Expenses, income, goals and accounts were restored.",
+    });
   };
 
   return (
@@ -181,15 +217,22 @@ export function SettingsView() {
                 <Button
                   variant="outline"
                   className="mt-3 border-amber-300 bg-white text-amber-700 hover:bg-amber-100"
-                  onClick={() =>
-                    toast({
-                      title: "Finara export import",
-                      description: "Use the CSV import flow on the Import page — full export-file restore is not part of this demo.",
-                    })
-                  }
+                  disabled={importing}
+                  onClick={() => importInputRef.current?.click()}
                 >
-                  <Upload className="mr-2 h-4 w-4" aria-hidden /> Select Finara Export File
+                  <Upload className="mr-2 h-4 w-4" aria-hidden /> {importing ? "Importing…" : "Select Finara Export File"}
                 </Button>
+                <input
+                  ref={importInputRef}
+                  type="file"
+                  accept=".json,application/json"
+                  className="sr-only"
+                  aria-label="Select a Finara export file to import"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) void importExportFile(file);
+                  }}
+                />
               </div>
             </CardContent>
           </Card>

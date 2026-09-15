@@ -18,6 +18,7 @@ export interface IncomeSourceDto {
   name: string;
   amountMinor: number;
   frequency: string;
+  category: string;
   active: boolean;
   nextPaymentDate: string | null;
 }
@@ -48,15 +49,18 @@ export interface GoalDto {
   currentAmountMinor: number;
   deadline: string | null;
   category: string | null;
+  priority: string;
 }
 
 export interface InvestmentDto {
   id: string;
   symbol: string;
   name: string;
+  type: string;
   shares: number;
   avgPriceMinor: number;
   currentPriceMinor: number;
+  portfolioPercent: number | null;
   sector: string;
 }
 
@@ -64,12 +68,12 @@ export interface KpiCardDto {
   monthlyIncomeMinor: number;
   monthlyExpensesMinor: number;
   netBalanceMinor: number;
-  savingsRatePercent: number;
+  savingsProgressPercent: number;
   incomeChangePercent: number | null;
   expenseChangePercent: number | null;
   netChangePercent: number | null;
   activeGoals: number;
-  largestExpenseSubcategory: string | null;
+  largestExpenseCategory: string | null;
   largestExpenseMinor: number;
 }
 
@@ -81,11 +85,21 @@ export interface BudgetProgressDto {
   percentUsed: number;
 }
 
+export interface RecentActivityItemDto {
+  id: string;
+  kind: "income" | "expense";
+  description: string;
+  amountMinor: number;
+  category: string | null;
+  subcategory: string | null;
+  date: string;
+}
+
 export interface DashboardDto {
   kpis: KpiCardDto;
   budgets: BudgetProgressDto[];
   budgetSurplusMinor: number;
-  recentTransactions: ExpenseDto[];
+  recentTransactions: RecentActivityItemDto[];
   incomeSources: IncomeSourceDto[];
   goals: GoalDto[];
   monthlyTrend: { month: string; incomeMinor: number; expensesMinor: number; netMinor: number }[];

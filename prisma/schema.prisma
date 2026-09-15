@@ -7,11 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Connected financial accounts (checking, savings, credit, investment, cash).
+// Connected financial accounts (checking, savings, credit-card, investment, other).
 model Account {
   id           String   @id @default(cuid())
   name         String
-  type         String // checking | savings | credit | investment | cash
+  type         String // checking | savings | credit-card | investment | other
   institution  String
   balanceMinor Int      @default(0)
   currency     String   @default("USD")
@@ -20,12 +20,13 @@ model Account {
   updatedAt    DateTime @updatedAt
 }
 
-// Recurring or one-time income streams.
+// Recurring income streams.
 model IncomeSource {
   id              String    @id @default(cuid())
   name            String
   amountMinor     Int
-  frequency       String // monthly | biweekly | weekly | one-time
+  frequency       String // monthly | weekly | biweekly | annual
+  category        String    @default("primary") // primary | secondary | passive | other
   active          Boolean   @default(true)
   nextPaymentDate DateTime?
   createdAt       DateTime  @default(now())
@@ -57,14 +58,15 @@ model Budget {
   updatedAt         DateTime @updatedAt
 }
 
-// Savings goals with target amount and optional deadline.
+// Savings goals with target amount, optional deadline, category and priority.
 model Goal {
   id                 String    @id @default(cuid())
   name               String
   targetAmountMinor  Int
   currentAmountMinor Int       @default(0)
   deadline           DateTime?
-  category           String? // Emergency Fund, Vacation, ...
+  category           String? // emergency | vacation | home | car | education | retirement | other
+  priority           String    @default("medium") // high | medium | low
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 }
@@ -74,9 +76,11 @@ model Investment {
   id                String   @id @default(cuid())
   symbol            String
   name              String
+  type              String   @default("stock") // stock | etf | bond | crypto | mutual-fund | other
   shares            Float
   avgPriceMinor     Int
   currentPriceMinor Int
+  portfolioPercent  Float?
   sector            String
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

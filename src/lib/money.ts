@@ -64,6 +64,10 @@ export function monthlyEquivalent(amountMinor: number, frequency: string): numbe
       return Math.round((amountMinor * 52) / 12);
     case "biweekly":
       return Math.round((amountMinor * 26) / 12);
+    case "annual":
+      return Math.round(amountMinor / 12);
+    // Legacy rows only — the source app's frequency set is monthly/weekly/
+    // bi-weekly/annual and the seed no longer emits these values.
     case "quarterly":
       return Math.round(amountMinor / 3);
     case "one-time":
