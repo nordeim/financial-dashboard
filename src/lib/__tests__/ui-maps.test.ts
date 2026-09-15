@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ACCOUNT_TYPE_ICONS,
+  ACTIVITY_BADGE,
   CATEGORY_BADGE,
   CATEGORY_DOT,
   GOAL_EMOJI,
@@ -86,5 +87,41 @@ describe("ACCOUNT_TYPE_ICONS (verified on live by creating each type)", () => {
     expect(names(ACCOUNT_TYPE_ICONS["credit-card"])).toBe("Banknote");
     expect(names(ACCOUNT_TYPE_ICONS.investment)).toBe("Building");
     expect(names(ACCOUNT_TYPE_ICONS.other)).toBe("Building");
+  });
+});
+
+describe("ACTIVITY_BADGE (Recent Activity rows, live-verified 2026-09-15 round 4)", () => {
+  it("maps income categories to their live badge colors", () => {
+    expect(ACTIVITY_BADGE.primary).toBe(
+      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+    );
+    expect(ACTIVITY_BADGE.secondary).toBe(
+      "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
+    );
+    expect(ACTIVITY_BADGE.passive).toBe(
+      "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
+    );
+    expect(ACTIVITY_BADGE.other).toBe(
+      "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
+    );
+  });
+
+  it("maps the 50/30/20 buckets to their live badge colors (no border variant)", () => {
+    expect(ACTIVITY_BADGE.needs).toBe(
+      "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+    );
+    expect(ACTIVITY_BADGE.wants).toBe(
+      "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+    );
+    expect(ACTIVITY_BADGE.savings).toBe(
+      "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
+    );
+  });
+
+  it("is distinct from the expense-row CATEGORY_BADGE (which carries border variants)", () => {
+    expect(ACTIVITY_BADGE.wants).not.toContain("border-purple-200");
+    expect(CATEGORY_BADGE.wants).toContain("border-purple-200");
+    expect(CATEGORY_BADGE.wants).toContain("dark:bg-purple-900/20");
+    expect(ACTIVITY_BADGE.wants).toContain("dark:bg-purple-900/30");
   });
 });

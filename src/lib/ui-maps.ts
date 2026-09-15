@@ -38,11 +38,30 @@ export const GOAL_EMOJI: Record<string, string> = {
   other: "🎯",
 };
 
-/** Priority pill classes on goal cards (live-verified: high=red, medium=yellow, low=green). */
+/** Priority pill classes on goal cards (live-verified: high=red, medium=yellow, low=green;
+ * rendered through Badge variant="secondary" — the live pills carry no dark variants). */
 export const PRIORITY_BADGE: Record<string, string> = {
-  high: "bg-red-100 text-red-800 border-transparent",
-  medium: "bg-yellow-100 text-yellow-800 border-transparent",
-  low: "bg-green-100 text-green-800 border-transparent",
+  high: "bg-red-100 text-red-800",
+  medium: "bg-yellow-100 text-yellow-800",
+  low: "bg-green-100 text-green-800",
+};
+
+/**
+ * Recent Activity row badges (round 4, live-verified 2026-09-15 by creating
+ * throwaway records of each category on the live app). Rendered through
+ * Badge variant="secondary"; the live pills carry NO border color variant and
+ * use the 900/30 dark surface (unlike the expense-row CATEGORY_BADGE).
+ * Income categories: primary=green, secondary=orange, passive/other=gray.
+ * Savings=emerald follows the app-wide 50/30/20 hue convention (Reasoned).
+ */
+export const ACTIVITY_BADGE: Record<string, string> = {
+  primary: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  secondary: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
+  passive: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
+  other: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
+  needs: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+  wants: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+  savings: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
 };
 
 /** 50/30/20 bucket dots used on budget rows and expense summary cards. */
