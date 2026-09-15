@@ -12,16 +12,18 @@ Finara solves the "where did my money go?" problem with a single, real-time surf
 
 | Feature | What it does |
 |---------|--------------|
-| 📊 **Financial Dashboard** | Monthly income/expenses/net KPIs with trend pills, savings rate, largest expense category, active goals, budget overview with progress bars, recent activity |
-| 💸 **Expenses** | Emoji quick-select categories, quick-add amount chips, Needs/Wants/Savings tabs, search, recurring expenses |
-| 💰 **Income Sources** | Per-source frequency (biweekly/weekly/monthly/quarterly) normalized to monthly equivalents, pause/delete |
-| 🏦 **Accounts** | Connected checking/savings/credit/investment/cash accounts with combined net worth |
-| 📈 **Investments** | Holdings table with market value and gain/loss, sector-allocation donut |
-| 🎯 **Savings Goals** | Target/current progress bars, deadlines, one-click contributions |
-| 📥 **CSV Import** | 3-step flow: upload → review with smart category guessing → import (bank date formats handled) |
-| 🧭 **Analytics** | Income vs expenses trend, spending by category, income by source, sector allocation, CSV export |
+| 📊 **Financial Dashboard** | Monthly income/expenses/net KPIs with source-parity trend pills (real month-over-month with placeholder fallback), savings goal progress, largest expense category, active goals, budget overview, mixed recent activity, quick actions |
+| 🌙 **Dark Mode** | User-menu toggle + mobile sun/moon button; persists via `localStorage` theme store; full dark palette across all 9 views, dialogs, and the login card |
+| 💸 **Expenses** | Emoji quick-select categories, quick-add amount chips, Needs/Wants/Savings tabs, search, collapsible Filters panel (date-range presets, category, min/max amount, sort), bulk select + bulk edit/delete, row edit dialog, 10-row pagination |
+| 💰 **Income Sources** | Per-source frequency (monthly/weekly/bi-weekly/annual) normalized to monthly equivalents, income categories (primary/secondary/passive/other), active toggle, edit dialog |
+| 🏦 **Accounts** | Checking/savings/credit-card/investment/other accounts with edit + delete and an Import Transactions link |
+| 📈 **Investments** | Holdings by type (stock/ETF/bond/crypto/mutual fund) with portfolio %, sector allocation donut, edit + delete |
+| 🎯 **Savings Goals** | Categories + priorities, progress bars, deadlines, one-click Add Progress |
+| 📥 **CSV Import** | Source-parity 3-step flow: upload → Upload and Extract (with Extracting… state) → review with smart category guessing → import; live-shaped error card with Start New Import retry |
+| 🧭 **Analytics** | 3/6/12-month windows with From/To date pickers, windowed monthly averages, income vs expenses trend, category donuts, sector allocation |
 | 🤖 **AI Coach & Insights** | Chat grounded in your live financial snapshot; dashboard insight cards with deterministic fallback |
-| 🔐 **GDPR Export** | One-click full JSON export of every entity you own |
+| 🔐 **GDPR Export & Restore** | One-click full JSON export; Settings page round-trips a Finara export file back into the database (finara-export import mode) |
+| 🧪 **Unit Tests** | Vitest suite (69 tests) covering money math, taxonomy, KPI computation, filters, date formats, and export normalization |
 | 🌙 **Responsive** | Sidebar on desktop, hamburger nav on mobile; WCAG-minded focus states and aria labels |
 
 ## Architecture
@@ -71,6 +73,7 @@ Requires **Bun ≥ 1.3** (or Node.js ≥ 20 with npm — commands below use `bun
 
 - `bun run lint` → exits 0, no output.
 - `bun run typecheck` → exits 0, no output.
+- `bun run test` → 69 tests passing (Vitest).
 - First visit to any API route (e.g. the dashboard) auto-seeds a six-month demo history: 4 accounts, 4 income sources, ~96 expenses, 3 budgets, 3 goals, 8 holdings. Seeding is idempotent and concurrency-safe (DB-level unique-key lock + completion marker).
 
 ## Demo Credentials
@@ -95,11 +98,16 @@ financial-dashboard/
 │   │   ├── 📂 finara/                     # App components (15): views, dialogs, shell
 │   │   └── 📂 ui/                         # shadcn/ui primitives
 │   ├── 📂 hooks/                          # use-api (typed fetch), use-toast
-│   └── 📂 lib/                            # money, categories, types, analytics, seed, api
+│   └── 📂 lib/                            # money, categories, types, analytics, seed, api,
+│                                          # dashboard-kpis, expense-filters, date-format,
+│                                          # import-export (pure domain modules, TDD)
+│                                          # + __tests__/ (Vitest, 69 tests)
 ├── 📂 prisma/
 │   └── 📄 schema.prisma                   # 7 models, money as integer minor units
 ├── 📂 db/                                 # SQLite runtime storage (gitignored)
-├── 📂 docs/                               # Wrapper script, push runbook, reference image
+├── 📂 docs/                               # Wrapper script, push runbook, reference image,
+│                                          # plans/ (remediation plans)
+├── 📄 vitest.config.ts                    # Vitest runner (node env, @ alias)
 ├── 📄 AGENTS.md                           # Agent instructions
 ├── 📄 CLAUDE.md                           # Claude Code project instructions
 └── 📄 Project_Architecture_Document.md    # Full architecture reference (PAD)
@@ -117,14 +125,14 @@ All routes return a uniform envelope: `{ "ok": true, "data": … }` or `{ "ok": 
 | `/api/expenses` | GET, POST | List / create expenses (validated category + subcategory) |
 | `/api/expenses/[id]` | PATCH, DELETE | Update / delete an expense |
 | `/api/accounts` | GET, POST | List / connect accounts |
-| `/api/accounts/[id]` | DELETE | Remove an account |
+| `/api/accounts/[id]` | PATCH, DELETE | Update / remove an account |
 | `/api/budgets` | GET, PUT | List / upsert the three 50/30/20 category budgets |
-| `/api/goals` | GET, POST | List / create savings goals |
+| `/api/goals` | GET, POST | List / create savings goals (category + priority) |
 | `/api/goals/[id]` | PATCH, DELETE | Contribute / update / delete a goal |
 | `/api/investments` | GET, POST | List / add holdings |
-| `/api/investments/[id]` | DELETE | Remove a holding |
-| `/api/import` | POST | Batch CSV import (row-level validation, ≤ 2000 rows) |
-| `/api/analytics` | GET | Trends, category breakdowns, portfolio metrics |
+| `/api/investments/[id]` | PATCH, DELETE | Update / remove a holding |
+| `/api/import` | POST | Batch CSV import (`rows` mode) or Finara JSON export restore (`mode: "finara-export"`); row-level validation, ≤ 2000 rows |
+| `/api/analytics` | GET | Trends, category breakdowns, portfolio metrics (`?months=3\|6\|12`) |
 | `/api/settings` | GET, PUT | Currency, date format, notification toggles |
 | `/api/ai/chat` | POST | AI coach chat (messages array → grounded reply) |
 | `/api/ai/insights` | GET | Dashboard insight cards (LLM-polished, deterministic fallback) |
@@ -152,14 +160,16 @@ Typography: **Inter** (400–800) via `next/font`; tabular numerals for all mone
 
 ## Testing & Verification
 
-This repository's current gate (run before every push):
+The full gate (run before every push):
 
 ```bash
 bun run lint        # ESLint 9 — must exit 0
 bun run typecheck   # tsc --noEmit — must exit 0
+bun run test        # Vitest — 69 unit tests, must all pass
+bun run build       # next build — must exit 0
 ```
 
-Browser verification was performed end-to-end at build time (login, all nine views, add-expense flow, CSV import, AI chat, GDPR export, mobile navigation). A formal automated test suite (Vitest unit + Playwright E2E) is a deliberate backlog item — see Project_Architecture_Document.md §11.
+The Vitest suite covers the pure domain layer with TDD-maintained specs: money math (minor units, monthly-equivalent normalization incl. annual), taxonomy sets (categories, frequencies, currencies, sectors), dashboard KPI computation (goal-progress savings, placeholder-aware trends, largest-expense bucket), expense filter/sort/pagination logic, date formats, and Finara export normalization. Browser verification is performed end-to-end before each push round (login, all nine views, expense add/edit/bulk-delete, filters, income/goal/account/investment flows, CSV import, export restore, dark-mode toggle + persistence, mobile navigation, zero console errors). A formal Playwright E2E suite remains a backlog item — see Project_Architecture_Document.md §11.
 
 ## Security
 
@@ -179,7 +189,7 @@ python3 docs/ssh_git_wrapper_v3.py \
   --branch main
 ```
 
-Run `bun run lint && bun run typecheck` green first; commit before pushing (the wrapper pushes commits, not the working tree).
+Run `bun run lint && bun run typecheck && bun run test` green first; commit before pushing (the wrapper pushes commits, not the working tree).
 
 ## License
 

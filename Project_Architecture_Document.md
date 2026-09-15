@@ -1,9 +1,9 @@
-# Finara (Financial Dashboard) — Master Project Architecture Document (PAD) v1.0
+# Finara (Financial Dashboard) — Master Project Architecture Document (PAD) v1.1
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
-**Companion Documents:** `README.md` (user onboarding), `AGENTS.md` (agent instructions), `CLAUDE.md` (Claude Code conventions), `docs/Finara_Dashboard.png` (visual reference of the original app)
-**Last Updated:** 2026-09-15
+**Companion Documents:** `README.md` (user onboarding), `AGENTS.md` (agent instructions), `CLAUDE.md` (Claude Code conventions), `docs/Finara_Dashboard.png` (visual reference of the original app), `docs/plans/2026-09-15-parity-remediation-round2.md` (parity audit + remediation plan)
+**Last Updated:** 2026-09-15 (v1.1 — parity remediation round 2: ADR-008..010, pure domain layer + Vitest, taxonomy alignment, dark mode, filters/bulk/edit/pagination, export restore)
 **Audience:** Senior Engineers, Tech Leads, DevOps, and Onboarding Engineers
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
@@ -102,10 +102,34 @@ Finara is a personal-finance dashboard: income, expenses, 50/30/20 budgets, acco
 **ADR-007: Income frequency normalization to monthly equivalents**
 
 - **Context:** A biweekly $4,800 salary is $10,400/month, not $4,800 — naive sums misreport every derived KPI (savings rate, budget surplus, AI answers).
-- **Decision:** `monthlyEquivalent(amountMinor, frequency)` in the pure `src/lib/money.ts`: biweekly ×26/12, weekly ×52/12, quarterly ÷3, one-time → 0. Every income total path (dashboard, analytics, insights, chat snapshot, income view) calls it.
+- **Decision:** `monthlyEquivalent(amountMinor, frequency)` in the pure `src/lib/money.ts`: biweekly ×26/12, weekly ×52/12, annual ÷12 (`quarterly`/`one-time` remain as legacy-data guards only). Every income total path (dashboard, analytics, insights, chat snapshot, income view) calls it.
 - **Rationale:** One canonical, client-safe (no Prisma import) function keeps all five consumers consistent — it lives in `money.ts` precisely so client components can import it without dragging the DB client into the browser bundle.
 - **Consequences:** (+) Correct KPIs everywhere. (−) "Monthly Income" excludes one-time windfalls by definition (an honest, documented choice).
 - **Alternatives Rejected:** Raw sums (wrong); per-source next-payment projection (overkill for KPI cards).
+
+**ADR-008: Dark mode as a module-level external store (`useSyncExternalStore`)**
+
+- **Context:** The source app toggles a `dark` class on `document.documentElement` and persists the choice; React Compiler forbids the usual read-in-effect patterns, and SSR must not flash the wrong theme.
+- **Decision:** `src/components/finara/theme.ts` exposes read/subscribe/write functions backed by `localStorage["finara-theme"]`. The shell consumes it via `useSyncExternalStore` with a `null` server snapshot; writes flip the `<html>` class and persist. `<html suppressHydrationWarning>` in `layout.tsx` absorbs the post-hydration class flip. Component dark styling uses Tailwind `dark:` variants; global tokens live in the `.dark` block of `globals.css`.
+- **Rationale:** Identical discipline to the session gate (ADR-001's SPA shell): one external store, one subscription point, no effect-body setState (a compiler ERROR), no hydration flash.
+- **Consequences:** (+) Theme survives reload; toggle works from the user menu (desktop) and the sun/moon button (mobile). (−) Every new view must remember its `dark:` variants (reviewed in the parity checklist).
+- **Alternatives Rejected:** `next-themes` (adds a dependency for a 40-line store); CSS-only `prefers-color-scheme` (no user control); class toggle in an effect (compiler error).
+
+**ADR-009: Pure domain layer with Vitest seams (TDD)**
+
+- **Context:** Round-1 verification caught math bugs (analytics averages dividing all-time totals by window months; trend placeholders vs. real month-over-month) that browser spot-checks missed — the logic needed executable specifications.
+- **Decision:** Framework-free modules own every piece of domain math: `dashboard-kpis.ts` (KPI computation incl. placeholder-fallback trends and goal-progress savings), `expense-filters.ts` (filter/sort/badge-count logic), `date-format.ts` (5 format patterns), `import-export.ts` (Finara export normalization), plus the existing `money.ts`/`categories.ts`. Each carries a Vitest spec in `src/lib/__tests__/` (69 tests); views and route handlers stay thin consumers. Behavior changes land red → green.
+- **Rationale:** Pure functions are the cheapest thing to test; hoisting them out of components also satisfies the client-import rule (no Prisma/React in `src/lib` domain modules).
+- **Consequences:** (+) Regressions in money math and parity rules now fail CI-locally before review; the KPI semantics are documented in code. (−) A second place to look for logic (lib, not view) — the rule is "if it computes, it lives in lib".
+- **Alternatives Rejected:** Component-level React Testing Library tests (slower, brittle); snapshot tests (verify shape, not math).
+
+**ADR-010: Taxonomy alignment with the source app + legacy normalization map**
+
+- **Context:** The round-2 live-site audit captured the source app's exact native-select enums; the clone's drift (extra `one-time`/`quarterly` frequencies, missing income categories/goal priorities/investment types, SGD vs. the 10-currency set) surfaced in six dialogs.
+- **Decision:** `src/lib/categories.ts` is the single source of truth and now mirrors the source sets exactly (subcategories + emoji order, frequencies `monthly|weekly|biweekly|annual`, income categories, goal categories + priorities, investment types + 9 sectors, account types, 10 currencies, 5 date formats). Pre-remediation rows normalize through a legacy subcategory map on API write; the seed emits only the new taxonomy. `categories.test.ts` pins every set.
+- **Rationale:** One module feeds API validation, UI selects, and the CSV import guesser — aligning it once fixes every dialog; the test keeps future drift impossible to merge silently.
+- **Consequences:** (+) Six dialogs match the source app; validation and UI can't diverge. (−) The legacy map is dead code once no pre-remediation databases exist (safe to remove later).
+- **Alternatives Rejected:** Per-dialog hardcoding (the original bug); a DB enum table (overkill for a pinned set).
 
 ---
 
@@ -198,8 +222,10 @@ financial-dashboard/
 │   │   │   ├── income-view.tsx / expenses-view.tsx / accounts-view.tsx
 │   │   │   ├── investments-view.tsx / import-view.tsx / analytics-view.tsx
 │   │   │   ├── goals-view.tsx / settings-view.tsx
-│   │   │   ├── add-transaction-dialog.tsx ← quick-select grid + manual form + quick amounts
+│   │   │   ├── add-transaction-dialog.tsx ← quick-select grid + manual form + quick amounts + edit prefill
+│   │   │   ├── expense-filters-panel.tsx ← collapsible Filters panel (presets, min/max, sort)
 │   │   │   ├── ai-coach-dialog.tsx     ← chat with quick actions + suggested questions
+│   │   │   ├── theme.ts                ← dark-mode external store (useSyncExternalStore)
 │   │   │   └── ui-bits.tsx             ← StatCard, GradientCard, EmptyState, TrendPill, …
 │   │   └── ui/                         ← shadcn primitives (button, dialog, select, …)
 │   ├── hooks/
@@ -207,15 +233,21 @@ financial-dashboard/
 │   │   └── use-toast.ts                ← shadcn toast hook
 │   └── lib/
 │       ├── money.ts                    ← minor-units conversion, formatting, monthlyEquivalent (pure)
-│       ├── categories.ts               ← 50/30/20 taxonomy, emoji map, enums (pure)
+│       ├── categories.ts               ← source-app-aligned taxonomy + legacy map (pure)
 │       ├── types.ts                    ← DTOs crossing the boundary (pure)
+│       ├── dashboard-kpis.ts           ← KPI computation: goal-progress savings, placeholder-aware trends (pure)
+│       ├── expense-filters.ts          ← filter/sort/badge-count logic for the expenses list (pure)
+│       ├── date-format.ts              ← the 5 settings-aware date formats (pure)
+│       ├── import-export.ts            ← Finara export normalization + flexible date parsing (pure)
 │       ├── api.ts                      ← ApiResult envelope + validation guards (server)
 │       ├── analytics.ts                ← getDashboard/getAnalytics aggregations (server)
 │       ├── seed.ts                     ← idempotent, lock-guarded demo data (server)
-│       └── db.ts                       ← Prisma client singleton (server)
+│       ├── db.ts                       ← Prisma client singleton (server)
+│       └── __tests__/                  ← Vitest specs (69 tests) for every pure module
 ├── prisma/schema.prisma                ← 7 models, Int *Minor money columns
 ├── db/                                 ← SQLite runtime storage (gitignored, .gitkeep)
-├── docs/                               ← SSH wrapper + push runbook + reference image + prompts
+├── docs/                               ← SSH wrapper + push runbook + reference image + plans/
+├── vitest.config.ts                    ← Vitest runner (node env, @ alias)
 ├── .env.example                        ← DATABASE_URL only
 ├── AGENTS.md / CLAUDE.md / README.md   ← agent + human documentation
 └── (eslint.config.mjs, tsconfig.json, tailwind.config.ts [legacy], postcss.config.mjs, components.json)
@@ -325,14 +357,15 @@ erDiagram
         string id PK
         string name
         int amountMinor "per payment, NOT monthly"
-        string frequency "monthly|biweekly|weekly|one-time|quarterly"
+        string frequency "monthly|weekly|biweekly|annual"
+        string category "primary|secondary|passive|other"
         boolean active
         datetime nextPaymentDate
     }
     Account {
         string id PK
         string name
-        string type "checking|savings|credit|investment|cash"
+        string type "checking|savings|credit-card|investment|other"
         string institution
         int balanceMinor "negative allowed (credit)"
     }
@@ -348,14 +381,18 @@ erDiagram
         int targetAmountMinor
         int currentAmountMinor "clamped <= target"
         datetime deadline
-        string category
+        string category "emergency|vacation|home|car|education|retirement|other"
+        string priority "high|medium|low"
     }
     Investment {
         string id PK
         string symbol
+        string name
+        string type "stock|etf|bond|crypto|mutual-fund|other"
         float shares "the ONLY float field (not money)"
         int avgPriceMinor
         int currentPriceMinor
+        float portfolioPercent
         string sector
     }
     Setting {
@@ -451,22 +488,26 @@ Subtle transitions only: card hover `-translate-y-0.5`, dialog scale/fade from `
 |----------|-------|-----------|----------|
 | Lint gate | 1 suite | ESLint 9 + React Compiler rules | repo root |
 | Type gate | 1 suite | `tsc --noEmit` (strict) | repo root |
-| Automated unit/E2E | 0 | (Vitest + Playwright planned) | — |
-| Browser verification | ~20 golden-path checks | Manual agent-browser session | n/a |
+| Unit suite | 69 tests / 6 files | Vitest 5 (node env) | `src/lib/__tests__/` |
+| Browser verification | ~30 golden-path checks | agent-browser session per push round | n/a |
+
+Unit coverage: `money` (13 — minor units, formats, monthly-equivalent incl. annual), `expense-filters` (17 — presets, search, sort, badge count), `dashboard-kpis` (14 — goal-progress savings, placeholder-aware trends, largest-expense bucket, mixed recent activity), `categories` (12 — taxonomy sets pinned to the source app), `date-format` (7), `import-export` (6 — export round-trip, per-entity row errors, PascalCase keys).
 
 ### 7.2 Verified at build time (evidence-backed)
 
-Login → dashboard; all nine views render live data; add-expense (quick-select → quick amounts → submit → list refresh); CSV import 3-step flow (3 rows, smart categories, DB verified); goal contribution; AI coach chat returns grounded figures; AI insights render with fallback; GDPR export downloads valid JSON; mobile hamburger nav; zero console errors on fresh load; 5-way concurrent seed burst with zero duplication.
+Login → dashboard; all nine views render live data; add-expense (quick-select → quick amounts → submit → list refresh); expense edit dialog (prefill → save → persisted); filters panel (badge "2" default, presets, apply); bulk select → delete; pagination walk; income/goal/account/investment add + edit; CSV import 3-step flow (upload → Upload and Extract → review → import, DB verified); Finara export file round-trip via Settings (account + goal + expense restored); AI coach chat returns grounded figures; AI insights render with fallback; GDPR export downloads valid JSON; dark-mode toggle via user menu + mobile button, persists across reload; mobile hamburger nav; zero console errors on fresh load; 5-way concurrent seed burst with zero duplication; production `next build` exits 0.
 
 ### 7.3 Coverage Thresholds
 
-None configured yet — the lint + typecheck gates are the current bar. Introducing Vitest with thresholds on `src/lib` (pure modules: `money`, `categories`, seed lock logic) is the planned first step (§10).
+Vitest covers the pure domain layer (`src/lib` behavior modules) with 69 tests; thresholds are not enforced numerically yet — the rule is "every behavior change lands with its failing test first" (ADR-009). Playwright E2E over the golden paths is the planned next layer (§10).
 
 ### 7.4 Pre-Push Checklist
 
 - [ ] `bun run lint` exits 0
 - [ ] `bun run typecheck` exits 0
-- [ ] Touched flow exercised in a browser (golden path)
+- [ ] `bun run test` — 69 tests, 0 failures
+- [ ] `bun run build` exits 0
+- [ ] Touched flow exercised in a browser (golden path) with zero console errors
 - [ ] No secrets staged (`git ls-files | grep -E "\.env$|\.key$|ssh-key"` is empty)
 - [ ] Commit messages follow Conventional Commits
 - [ ] Push via `docs/ssh_git_wrapper_v3.py` to `main`
@@ -539,13 +580,16 @@ Branch `main` only (this repo's contract). Conventional Commits, atomic scope (`
 | Priority | Issue | Impact | Status |
 |----------|-------|--------|--------|
 | CRITICAL | Demo login gate is client-side only; API is unauthenticated once deployed | Anyone reaching a deployed instance can read/write all data | Open — replace with real auth before any real deployment |
-| HIGH | No automated test suite (Vitest/Playwright) | Regressions in money math or guards rely on manual verification | Open — planned |
 | HIGH | No CI pipeline | Push gate is honor-system | Open — planned |
 | MEDIUM | No migration history (schema via `db:push`) | Schema evolution on live data is unsafe | Open — adopt `prisma migrate dev` |
 | MEDIUM | Analytics income trend is flat (monthly normalization applied to all months) | Trend chart understates historical income variation | Open — by design until per-month income events exist |
+| MEDIUM | Playwright E2E layer absent | Browser golden paths re-run manually each round | Open — planned (Vitest layer shipped 2026-09-15) |
 | LOW | `tailwind.config.ts` is unused legacy scaffold | Confusing dead file | Open — safe to delete with a docs pass |
 | LOW | No `prefers-reduced-motion` override | Accessibility polish | Open |
 | LOW | One-time income sources excluded from monthly totals | KPI definition choice, documented | By design |
+| LOW | Source-app trend placeholders replicated as fallbacks only | Deliberate parity trade-off — real MoM math wins when history exists | By design (ADR-009) |
+
+Resolved in the 2026-09-15 parity remediation (round 2): taxonomy drift in six dialogs, missing dark mode, missing expenses filters/bulk/edit/pagination, missing income/goal/account/investment edit endpoints, KPI semantics (savings-goal progress, placeholder trends), windowed analytics averages, settings export-file restore, test-runner absence (69-test Vitest suite). Plan and audit trail: `docs/plans/2026-09-15-parity-remediation-round2.md`.
 
 ---
 
