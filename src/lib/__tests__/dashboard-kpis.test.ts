@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { budgetRemainingLabel } from "@/lib/dashboard-kpis";
 import { computeDashboardKpis, PLACEHOLDER_TRENDS } from "@/lib/dashboard-kpis";
 
 interface ExpenseInput {
@@ -176,5 +177,19 @@ describe("monthly trend", () => {
     expect(result.monthlyTrend).toHaveLength(6);
     expect(result.monthlyTrend[0]?.month).toBe("Apr 26");
     expect(result.monthlyTrend[5]?.month).toBe("Sep 26");
+  });
+});
+
+describe("budget remaining label (live-verified limit=0 edge)", () => {
+  it("shows $0.00 remaining when the monthly limit is zero", () => {
+    expect(budgetRemainingLabel(0, -450)).toBe("$0.00 remaining");
+  });
+
+  it("shows the plain remaining amount under budget", () => {
+    expect(budgetRemainingLabel(100000, 40000)).toBe("$400.00 remaining");
+  });
+
+  it("shows the over-budget wording when a real limit is exceeded", () => {
+    expect(budgetRemainingLabel(100000, -2500)).toBe("$25.00 over budget");
   });
 });

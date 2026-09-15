@@ -1,5 +1,5 @@
 import { subcategoryLabel } from "@/lib/categories";
-import { changePercent, monthlyEquivalent, percent } from "@/lib/money";
+import { changePercent, formatMoney, monthlyEquivalent, percent } from "@/lib/money";
 
 /**
  * Pure dashboard KPI computation — no database access, fully deterministic for
@@ -207,4 +207,17 @@ export function computeDashboardKpis(input: {
     recentActivity: activity,
     monthlyTrend,
   };
+}
+
+/**
+ * Budget-row remaining-amount label (live-verified round 4): a zero monthly
+ * limit renders "$0.00 remaining" — never the over-budget wording (observed
+ * on the live app with an unconfigured $0.00 budget). Real limits keep the
+ * under/over phrasing.
+ */
+export function budgetRemainingLabel(limitMinor: number, remainingMinor: number): string {
+  if (limitMinor <= 0) return `${formatMoney(0)} remaining`;
+  return remainingMinor >= 0
+    ? `${formatMoney(remainingMinor)} remaining`
+    : `${formatMoney(-remainingMinor)} over budget`;
 }
