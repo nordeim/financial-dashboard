@@ -2,7 +2,7 @@
 IMPORTANT: File is read fresh for every conversation. Be brief and practical.
 project_type: nextjs-spa-app
 version: 1.0.0
-last_updated: 2026-09-15
+last_updated: 2026-09-16
 ---
 
 # Finara — Smart Finance Tracker
@@ -13,11 +13,11 @@ Single-page Next.js 16 personal-finance dashboard: income sources, 50/30/20 expe
 
 ### Meticulous Approach (Six-Phase Workflow)
 
-1. **ANALYZE** — Read the relevant view component, its API route, and `src/lib/{types,categories,money,ui-maps}.ts` in full before writing. Identify which surface owns the data you are changing. For parity work, re-read `docs/plans/2026-09-15-parity-remediation-round3.md` § audit findings (and round-2 § "Key live-site behavioral facts") first — class-exact restyles copy the strings from the captured live DOM evidence, never approximations.
+1. **ANALYZE** — Read the relevant view component, its API route, and `src/lib/{types,categories,money,ui-maps}.ts` in full before writing. Identify which surface owns the data you are changing. For parity work, re-read the round-4 plan `docs/plans/2026-09-15-parity-remediation-round4.md` §A/§E (and round-3 § audit findings, round-2 § "Key live-site behavioral facts") first — class-exact restyles copy the strings from the captured live DOM evidence, never approximations.
 2. **PLAN** — State the smallest correct implementation path; name files touched. Money, budget, or AI-touching changes need extra validation.
 3. **VALIDATE** — Confirm scope on money/auth-adjacent changes before coding.
-4. **IMPLEMENT (TDD)** — Domain logic changes go red → green: write the failing `src/lib/__tests__/*.test.ts` spec first, implement in the pure module (`dashboard-kpis`, `expense-filters`, `date-format`, `import-export`, `money`, `categories`, `ui-maps`), then wire views/route handlers around it. Typed, validated increments; server logic in route handlers / `src/lib`, UI in `src/components/finara/*`.
-5. **VERIFY** — `bun run lint && bun run typecheck && bun run test` green (76 unit tests); `bun run build` exits 0; exercise the flow in a browser (agent-browser or manual) and check the console for zero errors. Claims of "works" require executed evidence — label anything not executed as Reasoned/Assumed. Parity changes additionally require a side-by-side screenshot comparison against the captured live app (theme-matched, scroll-top, data-ignoring) before deliver.
+4. **IMPLEMENT (TDD)** — Domain logic changes go red → green: write the failing `src/lib/__tests__/*.test.{ts,tsx}` spec first, implement in the pure module (`dashboard-kpis`, `expense-filters`, `date-format`, `import-export`, `money`, `categories`, `ui-maps` — plus the primitive class-set pins in `ui-primitives.test.tsx`), then wire views/route handlers around it. Typed, validated increments; server logic in route handlers / `src/lib`, UI in `src/components/finara/*`.
+5. **VERIFY** — `bun run lint && bun run typecheck && bun run test` green (98 unit tests); `bun run build` exits 0; exercise the flow in a browser (agent-browser or manual) and check the console for zero errors. Claims of "works" require executed evidence — label anything not executed as Reasoned/Assumed. Parity changes additionally require a side-by-side screenshot comparison against the captured live app (theme-matched, scroll-top, data-ignoring) before deliver; structural changes re-run the signature-multiset DOM diff and account for every only-live/only-clone delta.
 6. **DELIVER** — Note what was verified, what was deferred, and the commit grouping.
 
 ### Project-Specific Principles
@@ -25,7 +25,9 @@ Single-page Next.js 16 personal-finance dashboard: income sources, 50/30/20 expe
 - **Money is integers.** All amounts are minor units; floats never touch money paths (`src/lib/money.ts` is the only conversion seam).
 - **The server is the source of truth.** Views render from API responses; derived client state (filters, tabs, form drafts) never duplicates persisted data.
 - **One category taxonomy.** `src/lib/categories.ts` is the single source for categories/subcategories/emoji/frequencies/currencies — API validation and UI selects both consume it, and `categories.test.ts` pins the sets to the live source app.
-- **One UI-map module.** `src/lib/ui-maps.ts` is the single source for live-verified sector hexes, goal emoji, priority badges, account icons, category dots/badges — pinned by `ui-maps.test.ts`; views never fork these values inline.
+- **One UI-map module.** `src/lib/ui-maps.ts` is the single source for live-verified sector hexes, goal emoji, priority/activity/expense-row badges, account icons, category dots/badges — pinned by `ui-maps.test.ts`; views never fork these values inline.
+- **Pinned shadcn primitives (parity contract, ADR-015).** `src/components/ui/*` render the live app's classic class sets, enforced by `ui-primitives.test.tsx` — never "upgrade" them with `npx shadcn add/diff`; a newer snapshot fails the suite by design. Where lucide renamed a glyph (Filter→Funnel), the live-exact shape is an inline SVG (`ClassicFilterIcon`).
+- **Three add-entry flows (ADR-014).** FAB → Quick Add chooser (z-40, rotating plus→X toggle, compact form, subcategory "other"); Expenses header → full Quick Select modal; Dashboard header "Add Transaction" → navigates to Expenses. Do not merge them.
 - **Source-exact design system.** The Finara look (CSS vars, `sidebar-gradient`, `.card-hover`, gradient cards, gray-based dark overrides) lives in `src/app/globals.css`; views use the exact utility-class strings captured from the live DOM. Centered modals + native `confirm()` deletes are parity contracts — see AGENTS.md § Domain rules.
 - **Pure domain layer.** KPIs, filters, date formatting, and export normalization live in framework-free modules under `src/lib/` with Vitest specs — views never re-derive them.
 - **Honest empty, loading, and error states** on every surface (`EmptyState`, `LoadingRows`, `ErrorNote` in `ui-bits.tsx`) — no silent fallbacks.
@@ -80,16 +82,16 @@ bun run dev        # http://localhost:3000 — demo credentials on the login car
 | `bun run start` | Serve the production build |
 | `bun run lint` | ESLint 9 flat config |
 | `bun run typecheck` | `tsc --noEmit` |
-| `bun run test` / `test:watch` | Vitest unit suite (76 tests) / watch mode |
+| `bun run test` / `test:watch` | Vitest unit suite (98 tests) / watch mode |
 | `bun run db:push` / `db:generate` | Apply schema / regen client |
 
 ## Testing Strategy
 
-- **Pre-push gate**: `bun run lint && bun run typecheck && bun run test` (76 Vitest specs) + `bun run build`; browser-verify the touched flow and confirm zero console errors.
+- **Pre-push gate**: `bun run lint && bun run typecheck && bun run test` (98 Vitest specs) + `bun run build`; browser-verify the touched flow and confirm zero console errors.
 - **TDD loop for domain logic**: failing test → pure-module implementation → wire the view/route → re-run the suite. A behavior change without a test is incomplete.
-- **Parity verification gates** (visual/behavioral parity with the source app): filters badge count, KPI placeholder fallbacks, savings-goal progress semantics, windowed analytics averages, dark-mode persistence, taxonomy selects, ui-maps entries, empty analytics Income tab, centered-modal + confirm() contracts are all pinned by tests or browser checks — re-run them after any related change.
+- **Parity verification gates** (visual/behavioral parity with the source app): filters badge count, KPI placeholder fallbacks, savings-goal progress semantics, budget limit-0 footer, windowed analytics averages, dark-mode persistence, taxonomy selects, ui-maps entries, pinned primitive class sets, empty analytics Income tab, centered-modal + confirm() contracts, FAB Quick Add flow are all pinned by tests or browser checks — re-run them after any related change.
 - **Live-DOM evidence workflow**: when auditing the source app, capture per-view DOM dumps + stylesheet + behavioral probes (create/delete throwaway records to prove maps like sector colors and emoji), archive them, then restyle class-exact against the dumps; finish with theme-matched VLM side-by-side screenshots (ignore data/scroll differences) as a sanity check.
-- Playwright E2E remains the planned next layer (see PAD §11); until then the golden paths are login → dashboard, expense add via FAB quick-select + manual/edit/confirm-delete, income/goal/account/investment CRUD, filters + pagination, CSV import, export restore, dark-mode toggle + reload, AI chat, mobile drawer.
+- Playwright E2E remains the planned next layer (see PAD §10); until then the golden paths are login (incl. the invalid-credentials error alert) → dashboard, FAB Quick Add round-trip, expense add via full quick-select + manual/edit/confirm-delete, income/goal/account/investment CRUD, filters + pagination, CSV import, export restore, dark-mode toggle + reload, AI chat, mobile drawer.
 - A red gate is a regression or a wrong test — never weaken lint/type rules to pass.
 
 ## Code Quality Standards

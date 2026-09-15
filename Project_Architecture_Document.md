@@ -1,9 +1,9 @@
-# Finara (Financial Dashboard) — Master Project Architecture Document (PAD) v1.2
+# Finara (Financial Dashboard) — Master Project Architecture Document (PAD) v1.3
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
-**Companion Documents:** `README.md` (user onboarding), `AGENTS.md` (agent instructions), `CLAUDE.md` (Claude Code conventions), `docs/Finara_Dashboard.png` (visual reference of the original app), `docs/plans/2026-09-15-parity-remediation-round2.md` (round-2 parity audit), `docs/plans/2026-09-15-parity-remediation-round3.md` (round-3 pixel-parity audit + plan this revision implements)
-**Last Updated:** 2026-09-15 (v1.2 — pixel-parity remediation round 3: ADR-011..013, source-exact design system, centered dialogs + native confirms, ui-maps module, CSS entrance animations; v1.1 — parity remediation round 2: ADR-008..010, pure domain layer + Vitest, taxonomy alignment, dark mode, filters/bulk/edit/pagination, export restore)
+**Companion Documents:** `README.md` (user onboarding), `AGENTS.md` (agent instructions), `CLAUDE.md` (Claude Code conventions), `docs/Finara_Dashboard.png` (visual reference of the original app), `docs/plans/2026-09-15-parity-remediation-round2.md` (round-2 parity audit), `docs/plans/2026-09-15-parity-remediation-round3.md` (round-3 pixel-parity audit), `docs/plans/2026-09-15-parity-remediation-round4.md` (round-4 structural-parity audit + plan this revision implements, incl. the execution & verification record)
+**Last Updated:** 2026-09-16 (v1.3 — structural parity remediation round 4: ADR-014..015, live-exact classic shadcn class sets, app-shell/sidebar DOM anatomy, Quick Add FAB flow, per-view structural details, login error-state fix, 98-test suite; v1.2 — pixel-parity remediation round 3: ADR-011..013, source-exact design system, centered dialogs + native confirms, ui-maps module, CSS entrance animations; v1.1 — parity remediation round 2: ADR-008..010, pure domain layer + Vitest, taxonomy alignment, dark mode, filters/bulk/edit/pagination, export restore)
 **Audience:** Senior Engineers, Tech Leads, DevOps, and Onboarding Engineers
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
@@ -152,8 +152,24 @@ Finara is a personal-finance dashboard: income, expenses, 50/30/20 budgets, acco
 - **Context:** The live app animates every section entrance with framer-motion (staggered fade/slide). Adding framer-motion for parity would cost a dependency + bundle weight for a decorative effect.
 - **Decision:** `.fade-in-up` keyframe class + `.stagger-1..5` delay utilities in `globals.css`, applied to section wrappers; wrapped in `@media (prefers-reduced-motion: reduce)` to disable animation entirely.
 - **Rationale:** Visually equivalent entrance for a fraction of the cost; reduced-motion accessibility is built in (closing the round-2 backlog item).
-- **Consequences:** (+) Zero JS animation cost; reduced-motion safe. (−) Not spring-physics-identical to framer-motion (acceptable — entrance feel is matched, not physics).
+- **Consequences:** (+) Zero JS animation cost; reduced-motion safe. (−) Not spring-physics-identical to framer-motion (acceptable — entrance feel is matched, not physics). The live DOM therefore shows framer wrapper divs with settled inline styles where the clone shows `.fade-in-up`/`.stagger-*` wrappers — a documented, accepted signature delta in the round-4 diff.
 - **Alternatives Rejected:** framer-motion dependency (bundle + complexity); no animation (visible parity gap).
+
+**ADR-014: Quick Add FAB flow with rotating toggle (round 4, live-verified 2026-09-15)**
+
+- **Context:** Round-4 live probes showed the FAB no longer opens the full Add Transaction modal: it opens a lightweight two-step **Quick Add** chooser, while the Expenses header button keeps the full Quick Select modal and the Dashboard header's "Add Transaction" navigates to the Expenses view.
+- **Decision:** New `quick-add-dialog.tsx` — step 1 chooser ("What would you like to add?": Add Income / Add Expense, outline `h-12` buttons with colored trending glyphs) at overlay `z-40`; step 2 compact form (description, amount, category Select; income defaults frequency to monthly server-side). Expense submits `POST /api/expenses` with `subcategory: "other"`; income submits `POST /api/income`. The sage FAB (`z-50`) stays above the `z-40` overlay and acts as the close toggle, rotating its plus glyph 45° into an X while open (`<div style="transform: rotate(45deg)">` wrapper — live-exact).
+- **Rationale:** Behavioral parity: the FAB flow, its z-layering, and the rotating affordance were all probed on the live app; the full modal remains reachable from the Expenses header (unchanged live behavior).
+- **Consequences:** (+) FAB round-trip verified E2E (add → list → delete → clean); the full dialog stays for edits and Quick Select. (−) Two dialog systems coexist (deliberate — the live app has both); quick-added rows carry subcategory "other" and the default emoji, exactly like live.
+- **Alternatives Rejected:** Reusing the full AddTransactionDialog for the FAB (breaks the probed live flow); routing the FAB to /Expenses (that is the Dashboard header button's behavior, not the FAB's).
+
+**ADR-015: shadcn primitives pinned to the live app's classic class sets (round 4)**
+
+- **Context:** The vendored `src/components/ui/*` had drifted to the newest shadcn snapshot (`data-slot` attributes, `transition-all`, `focus-visible:ring-[3px]`, `shadow-xs`, Card `gap-6 py-6` grids, Table `whitespace-nowrap`, Toaster as `ol`, …) while the live app renders the classic sets — this was root cause R1 of the round-4 diff, touching every view.
+- **Decision:** All app-rendered primitives (`button, badge, card, input, label, select, tabs, checkbox, switch, table, scroll-area, progress, alert, toast/toaster, dropdown-menu, separator`) were reverted to the live-exact classic class strings and pinned by `src/lib/__tests__/ui-primitives.test.tsx` (16 specs: exact base strings for every variant/size, `Badge`/Toaster render as `div`, no `data-slot` anywhere). Radix behavior, `cn()` merging, and React 19 function components are preserved; `vitest.config.ts` now includes `.tsx` specs. Icons renamed upstream render as live-exact inline SVG where the shape changed (e.g. the classic angular `filter` polygon in `ClassicFilterIcon` — modern lucide aliases `Filter` to the rounded `Funnel`).
+- **Rationale:** The primitives are the multiply-leveraged layer of the UI: pinning their strings once fixes every view's signatures and prevents silent re-drift; the spec suite turns "do not upgrade shadcn primitives" into an executable rule.
+- **Consequences:** (+) Per-view structural diff dropped to only documented deltas (see the round-4 plan §E.2); primitive regressions now fail CI. (−) `npx shadcn add`/`diff` would fight the pins (documented in AGENTS.md invariants); unused vendored primitives outside the pinned set (popover, tooltip, …) still carry newer internals — they are not app-rendered.
+- **Alternatives Rejected:** Keeping the newest snapshot and overriding per call site (whack-a-mole across nine views); forking shadcn into a private registry (overkill for a pinned clone).
 
 ---
 
@@ -466,7 +482,7 @@ Dark mode swaps to the source app's gray ramp (gray-800/700/600 overrides in `.d
 
 ### 5.3 Component Primitives
 
-shadcn/ui (new-york style, Radix-based) for dialogs, selects, switches, tabs, tables, toasts. Finara composites in `ui-bits.tsx`: `StatCard` (always-emerald trend chip; no chip on Savings Progress), `GradientCard` (w-16 icon circles, exact gradients), `SectionCard` (source card surface), `ViewHeader`, `EmptyState`, `LoadingRows`, `ErrorNote`, `SurplusBadge`. Long lists get `max-h-* overflow-y-auto` with the `finara-scroll` custom scrollbar. All dialogs are centered modals (`max-w-2xl`; AI Coach `h-[80vh]`) — ADR-012.
+shadcn/ui (new-york style, Radix-based) for dialogs, selects, switches, tabs, tables, toasts — **every app-rendered primitive pinned to the live app's classic class set** (ADR-015; verified by `ui-primitives.test.tsx`: no `data-slot`, `Badge` and the Toaster viewport render as `div`, Button focus ring `ring-1`, Card `py-6` header/content split, classic Input/Label/Select/Tabs/Checkbox/Switch/Table/ScrollArea/Progress/Alert/DropdownMenu strings). Finara composites in `ui-bits.tsx`: `StatCard` (always-emerald trend chip; no chip on Savings Progress), `GradientCard` (w-16 icon circles, exact gradients), `SectionCard` (source card surface), `ViewHeader` (three live anatomies: with-actions flex header, compact `div.mb-8`, bare import header), `ClassicFilterIcon` (live-exact angular filter polygon), `EmptyState`, `LoadingRows`, `ErrorNote`, `SurplusBadge`. Long lists get `max-h-* overflow-y-auto` with the `finara-scroll` custom scrollbar. All dialogs are centered modals (`max-w-2xl`; AI Coach `h-[80vh]`) — ADR-012 — plus the lightweight Quick Add chooser at `z-40` under the rotating FAB — ADR-014.
 
 ### 5.4 Motion
 
@@ -516,25 +532,25 @@ CSS-only staggered entrance animations (`.fade-in-up` + `.stagger-1..5`, ADR-013
 |----------|-------|-----------|----------|
 | Lint gate | 1 suite | ESLint 9 + React Compiler rules | repo root |
 | Type gate | 1 suite | `tsc --noEmit` (strict) | repo root |
-| Unit suite | 76 tests / 7 files | Vitest 5 (node env) | `src/lib/__tests__/` |
+| Unit suite | 98 tests / 8 files | Vitest 5 (node env) | `src/lib/__tests__/` |
 | Browser verification | ~40 golden-path checks | agent-browser session per push round | n/a |
 | Visual parity check | theme-matched VLM side-by-side per view | z-ai vision | evidence archive |
 
-Unit coverage: `money` (13 — minor units, formats, monthly-equivalent incl. annual), `expense-filters` (17 — presets, search, sort, badge count), `dashboard-kpis` (14 — goal-progress savings, placeholder-aware trends, largest-expense bucket, mixed recent activity), `categories` (12 — taxonomy sets pinned to the source app), `date-format` (7), `import-export` (6 — export round-trip, per-entity row errors, PascalCase keys), `ui-maps` (7 — sector hexes, goal emoji, priority badges, dots/badges, account icons pinned to the live DOM).
+Unit coverage: `money` (13 — minor units, formats, monthly-equivalent incl. annual), `expense-filters` (17 — presets, search, sort, badge count), `dashboard-kpis` (17 — goal-progress savings, placeholder-aware trends, largest-expense bucket, mixed recent activity, budget remaining/limit-0 footer semantics), `ui-primitives` (16 — live-exact classic shadcn class sets, element types, no data-slot; ADR-015), `categories` (12 — taxonomy sets pinned to the source app), `date-format` (7), `import-export` (6 — export round-trip, per-entity row errors, PascalCase keys), `ui-maps` (10 — sector hexes, goal emoji, priority/activity/expense-row badges, dots, account icons pinned to the live DOM).
 
 ### 7.2 Verified at build time (evidence-backed)
 
-Login → dashboard; all nine views render live data in light AND dark mode (screenshots archived per round); FAB click → Add Expense centered modal in Quick Select mode → quick-select prefill → quick amount → submit → toast + list refresh; expense edit dialog (prefill → save → persisted); native confirm() delete with the exact live text (accept → row removed); income add/edit/delete; goal create + Add Progress + delete; account and investment CRUD with confirm deletes; filters panel (badge "2" default, category apply → filtered count, Clear All → reset); pagination (page 2 active state); AI coach chat returns grounded figures; AI insights render with fallback; GDPR export downloads valid JSON; dark-mode toggle via user menu + mobile button, persists across reload; mobile viewport + full-screen drawer navigation; zero console errors on fresh load; 5-way concurrent seed burst with zero duplication; production `next build` exits 0; theme-matched VLM side-by-side comparisons score 85–95 across views (data/scroll differences excluded by design).
+Login → dashboard; login with wrong credentials → classic red Alert "Invalid email or password" (round-4 fix — the state was previously set but never rendered); all nine views render live data in light AND dark mode (screenshots archived per round); FAB click (plus rotates 45° into an X) → Quick Add chooser → Add Expense/Income compact form → submit → row created + toast + list refresh; FAB click again → dialog closes, icon returns to plus; Expenses header → full Add Expense modal in Quick Select mode → quick-select prefill → quick amount → submit; expense edit dialog (prefill → save → persisted); native confirm() delete with the exact live text (accept → row removed); income add/edit/delete; goal create + Add Progress + delete; account and investment CRUD with confirm deletes; filters panel (badge "2" default, category apply → filtered count, Clear All → reset); pagination (page 2 active state); AI coach chat returns grounded figures; AI insights render with fallback; GDPR export downloads valid JSON; dark-mode toggle via user menu + mobile button, persists across reload; mobile viewport + full-screen drawer navigation; zero console errors on fresh load; 5-way concurrent seed burst with zero duplication; production `next build` exits 0; theme-matched VLM side-by-side comparisons score 95–100 across the three spot-checked views (data/scroll differences excluded by design).
 
 ### 7.3 Coverage Thresholds
 
-Vitest covers the pure domain layer (`src/lib` behavior modules) with 76 tests; thresholds are not enforced numerically yet — the rule is "every behavior change lands with its failing test first" (ADR-009). Playwright E2E over the golden paths is the planned next layer (§10).
+Vitest covers the pure domain layer (`src/lib` behavior modules + the primitive class-set pins) with 98 tests; thresholds are not enforced numerically yet — the rule is "every behavior change lands with its failing test first" (ADR-009). Playwright E2E over the golden paths is the planned next layer (§10).
 
 ### 7.4 Pre-Push Checklist
 
 - [ ] `bun run lint` exits 0
 - [ ] `bun run typecheck` exits 0
-- [ ] `bun run test` — 76 tests, 0 failures
+- [ ] `bun run test` — 98 tests, 0 failures
 - [ ] `bun run build` exits 0
 - [ ] Touched flow exercised in a browser (golden path) with zero console errors
 - [ ] No secrets staged (`git ls-files | grep -E "\.env$|\.key$|ssh-key"` is empty)
@@ -619,10 +635,16 @@ Branch `main` only (this repo's contract). Conventional Commits, atomic scope (`
 | LOW | Analytics Income tab renders empty (all states) | Deliberate replication of a verified source-app quirk | By design (documented in `analytics-view.tsx`) |
 | LOW | Trend chips always render emerald TrendingUp, even for negative MoM | Deliberate replication of a verified source quirk | By design |
 | LOW | Toast library differs from source's sonner styling | Minor visual difference in notifications | Open — swap only if materially different |
+| LOW | Live app showed no toasts on add/delete this round; clone keeps them | Notification-behavior delta, reversible | By design (documented round 4) |
+| LOW | Import file input accepts `.csv,.txt` (live advertises `.csv,.xls,.xlsx`) | The clone's parser is CSV-only; advertising Excel formats would fail at parse time | By design (documented round 4) |
+| LOW | Live toaster double-renders its viewport (base44 quirk); clone renders once | Cosmetic DOM-count delta only | By design (documented round 4) |
+| LOW | Inner gradient pane carries `transition-colors` only on dashboard/expenses | Live-side inconsistency replicated exactly | By design (round 4) |
 
 Resolved in the 2026-09-15 parity remediation (round 2): taxonomy drift in six dialogs, missing dark mode, missing expenses filters/bulk/edit/pagination, missing income/goal/account/investment edit endpoints, KPI semantics (savings-goal progress, placeholder trends), windowed analytics averages, settings export-file restore, test-runner absence (69-test Vitest suite). Plan and audit trail: `docs/plans/2026-09-15-parity-remediation-round2.md`.
 
 Resolved in the 2026-09-15 pixel-parity remediation (round 3): design-system drift (flat canvas → gradient shell, shadow-sm → glass cards, emerald-500 → sage tokens, slate → gray dark ramp), Sheet → centered modal conversion, missing FAB, wrong sidebar icons/logo, dashboard layout (AI Insights position, Quick Actions anatomy, budget dot rows, arrow-icon activity rows), income hero gradient, expenses summary cards + segmented tabs, accounts type icons + balance layout, investments gradient KPIs + sector dot list, goals emoji map + priority badges, analytics controls + empty income tab, import drop area, settings info boxes + tiles, login light theme + logo asset, missing native confirm() deletes, missing entrance animations, `prefers-reduced-motion` support (was a round-2 backlog item), production build script fix. Plan and audit trail: `docs/plans/2026-09-15-parity-remediation-round3.md`.
+
+Resolved in the 2026-09-16 structural-parity remediation (round 4): shadcn primitive snapshot drift (newest → live-exact classic class sets, pinned by 16 new specs — root cause R1), app-shell layout chain (`div.flex > aside + main > pt-16 > gradient pane > max-w-*` — R2), sidebar DOM anatomy (anchor-wrapped nav items, `p` user name/email, solid mobile logo tile — R3), the new Quick Add FAB flow with rotating toggle (ADR-014 — R4), per-view structural details (activity badges/circles, budget limit-0 footer, expense-row badges, analytics title elements and tab contents, goals sm buttons, settings label/grid anatomy, import bare header + dropzone/input/button classes), the login error state never rendered (genuine bug), the vitest `.tsx` include gap, the classic filter glyph after lucide's rename, and the per-view theme-fade quirk. Plan, audit trail, and the full verification record (gates, E2E, DOM re-diff before/after, VLM scores): `docs/plans/2026-09-15-parity-remediation-round4.md`.
 
 ---
 
@@ -631,11 +653,12 @@ Resolved in the 2026-09-15 pixel-parity remediation (round 3): design-system dri
 | File | Lines | Purpose |
 |------|-------|---------|
 | `src/components/finara/add-transaction-dialog.tsx` | ~548 | Centered Add Expense/Income modal: Quick Select mode → manual form, quick amounts, validation (ADR-012) |
-| `src/components/finara/expenses-view.tsx` | ~487 | Summary gradient cards, segmented tabs, search/filters, rows, bulk ops, pagination, FAB |
+| `src/components/finara/expenses-view.tsx` | ~490 | Summary gradient cards, segmented tabs, search/filters, rows, bulk ops, pagination, FAB (classic filter glyph) |
 | `src/components/finara/investments-view.tsx` | ~475 | Gradient KPIs, holdings table, sector dot list (SECTOR_COLORS), add-holding dialog |
-| `src/components/finara/dashboard-view.tsx` | ~434 | KPI cards, action tiles, budget dot rows, arrow-icon activity, AI insights, quick actions, FAB |
-| `src/components/finara/import-view.tsx` | ~421 | 3-step CSV import with client-side parsing + category guessing |
-| `src/components/finara/goals-view.tsx` | ~421 | Purple-tile goal cards, emoji map, priority badges, progress, Add Progress dialog |
+| `src/components/finara/import-view.tsx` | ~421 | 3-step CSV import with client-side parsing + category guessing (bare header, live-exact dropzone/input/button) |
+| `src/components/finara/dashboard-view.tsx` | ~500 | KPI cards, action tiles, budget dot rows, arrow-icon activity, AI insights, quick actions, rotating FAB |
+| `src/components/finara/quick-add-dialog.tsx` | ~210 | Two-step Quick Add chooser + compact form at z-40 under the FAB (ADR-014) |
+| `src/components/finara/goals-view.tsx` | ~421 | Purple-tile goal cards, emoji map, priority badges, progress, Add Progress dialog (sm buttons) |
 | `src/components/finara/income-view.tsx` | ~349 | Emerald hero card, income source cards with monthly equivalents |
 | `src/components/finara/analytics-view.tsx` | ~326 | Segmented tabs, trend chart, category donuts, sector donut (empty Income tab — source quirk) |
 | `src/components/finara/sidebar.tsx` | ~299 | Gradient sidebar + mobile chrome (top bar, Synced badge, full-screen drawer) |
@@ -645,14 +668,15 @@ Resolved in the 2026-09-15 pixel-parity remediation (round 3): design-system dri
 | `src/components/finara/ui-bits.tsx` | ~250 | Source-exact shared composites (StatCard, GradientCard, SectionCard, …) |
 | `src/components/finara/expense-filters-panel.tsx` | ~233 | Live-shaped filters panel (date/category/amount/sort + Clear/Cancel/Apply) |
 | `src/lib/categories.ts` | ~226 | 50/30/20 taxonomy single source of truth (delegates goal emoji to ui-maps) |
-| `src/components/finara/login-view.tsx` | ~214 | Light-theme login card with logo asset, demo credential gate |
+| `src/components/finara/login-view.tsx` | ~214 | Light-theme login card with logo asset, demo credential gate + rendered error Alert (round-4 fix) |
 | `src/lib/seed.ts` | ~197 | Idempotent, lock-guarded demo seed (ADR-005) |
-| `src/components/finara/finara-app.tsx` | ~187 | SPA shell: session store, view switching, dialog wiring, gradient canvas |
+| `src/components/finara/finara-app.tsx` | ~200 | SPA shell: session store, view switching, dialog wiring, per-view gradient panes, FAB toggle |
 | `src/components/finara/ai-coach-dialog.tsx` | ~146 | Centered chat modal (h-[80vh]) with quick actions + grounded replies |
 | `src/lib/types.ts` | ~155 | DTO contract for the whole client/server boundary |
 | `src/app/api/import/route.ts` | ~119 | Batch import (CSV rows + finara-export mode) with row-level validation |
 | `prisma/schema.prisma` | ~96 | 7 models, integer minor-unit money |
-| `src/lib/ui-maps.ts` | ~75 | Live-verified visual maps: sector hexes, goal emoji, badges, icons (ADR-011) |
+| `src/lib/ui-maps.ts` | ~100 | Live-verified visual maps: sector hexes, goal emoji, priority/activity/expense-row badges, icons (ADR-011) |
+| `src/lib/__tests__/ui-primitives.test.tsx` | ~230 | Live-exact classic class-set pins for every app-rendered shadcn primitive (ADR-015) |
 | `src/lib/api.ts` | ~72 | ApiResult envelope + validation guards |
 | `src/lib/money.ts` | ~78 | Minor-units conversion, formatting, `monthlyEquivalent` |
 
