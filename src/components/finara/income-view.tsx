@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -116,7 +117,7 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
         subtitle="Track and manage all your income streams"
         actions={
           <Button onClick={onAddIncome} className="h-9 bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
-            <Plus className="h-4 w-4" aria-hidden /> Add Income Source
+            <Plus className="mr-2 h-5 w-5" aria-hidden /> Add Income Source
           </Button>
         }
       />
@@ -129,19 +130,20 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
         <>
           {/* Hero total card (live: emerald gradient, text-4xl, w-20 icon circle) */}
           <div className="fade-in-up mb-8">
-            <div className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 p-8 text-white shadow-xl">
+            <div className="rounded-xl border-0 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-xl">
+              <div className="p-8">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="mb-2 text-lg font-medium text-emerald-100">Total Monthly Income</p>
                   <p className="text-4xl font-bold">{formatMoney(monthlyTotal)}</p>
                   <p className="mt-2 text-sm text-emerald-100">
-                    From {sources.filter((source) => source.active).length} active source
-                    {sources.filter((source) => source.active).length === 1 ? "" : "s"}
+                    From {sources.filter((source) => source.active).length} active sources
                   </p>
                 </div>
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/20">
                   <TrendingUp className="h-10 w-10" aria-hidden />
                 </div>
+              </div>
               </div>
             </div>
           </div>
@@ -166,14 +168,14 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                   <div className="p-6">
                     <div className="mb-4 flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/30">
-                          <DollarSign className="h-6 w-6 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100">
+                          <DollarSign className="h-6 w-6 text-emerald-600" aria-hidden />
                         </div>
                         <div>
-                          <h3 className="truncate font-bold text-neutral-900 dark:text-white">{source.name}</h3>
-                          <div className="mt-1 inline-flex items-center rounded-md border border-transparent bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
+                          <h3 className="truncate font-bold text-neutral-900">{source.name}</h3>
+                          <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">
                             {incomeCategoryLabel(source.category).toLowerCase()}
-                          </div>
+                          </Badge>
                         </div>
                       </div>
                       <div className="flex gap-1">

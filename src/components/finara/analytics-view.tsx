@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChartColumn, ChartPie, Download, RefreshCw, TrendingUp } from "lucide-react";
+import { Calendar, ChartColumn, ChartPie, Download, RefreshCw, TrendingUp } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -110,8 +110,9 @@ export function AnalyticsView() {
       <ViewHeader
         title="Analytics & Reports"
         subtitle="Real-time insights into your financial performance"
+        actionsClassName="flex-wrap"
         actions={
-          <div className="flex flex-wrap items-center gap-3">
+          <>
             <div className="flex gap-2">
               <Input
                 type="date"
@@ -146,7 +147,7 @@ export function AnalyticsView() {
             <Button variant="outline" onClick={exportCsv} className="h-9 gap-2">
               <Download className="h-4 w-4" aria-hidden /> Export
             </Button>
-          </div>
+          </>
         }
       />
 
@@ -166,9 +167,9 @@ export function AnalyticsView() {
           <TabsContent value="overview" className="space-y-8">
             <div className={cn(CARD_SURFACE, "fade-in-up")}>
               <div className="flex flex-col space-y-1.5 p-6">
-                <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
                   <TrendingUp className="h-5 w-5" aria-hidden /> Income vs Expenses Trend
-                </h2>
+                </div>
               </div>
               <div className="p-6 pt-0">
                 <div className="h-80">
@@ -195,31 +196,39 @@ export function AnalyticsView() {
             </div>
 
             <div className="fade-in-up stagger-1 grid grid-cols-1 gap-6 md:grid-cols-3">
-              <div className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 text-white shadow-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="mb-1 text-sm font-medium text-emerald-100">Avg Monthly Income</p>
-                    <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgIncomeMinor)}</p>
+              <div className="rounded-xl border-0 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg">
+                <div className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="mb-1 text-sm font-medium text-emerald-100">Avg Monthly Income</p>
+                      <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgIncomeMinor)}</p>
+                    </div>
+                    <TrendingUp className="h-8 w-8 text-emerald-200" aria-hidden />
                   </div>
-                  <TrendingUp className="h-8 w-8 text-emerald-200" aria-hidden />
                 </div>
               </div>
-              <div className="rounded-xl bg-gradient-to-r from-red-500 to-red-600 p-6 text-white shadow-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="mb-1 text-sm font-medium text-red-100">Avg Monthly Expenses</p>
-                    <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgExpensesMinor)}</p>
+              <div className="rounded-xl border-0 bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg">
+                <div className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="mb-1 text-sm font-medium text-red-100">Avg Monthly Expenses</p>
+                      <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgExpensesMinor)}</p>
+                    </div>
+                    {/* Live quirk: the expenses average tile flips the trending-up
+                        glyph 180° (renders as a down-arrow) in red-200. */}
+                    <TrendingUp className="h-8 w-8 rotate-180 text-red-200" aria-hidden />
                   </div>
-                  <TrendingUp className="h-8 w-8 text-red-200" aria-hidden />
                 </div>
               </div>
-              <div className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white shadow-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="mb-1 text-sm font-medium text-blue-100">Avg Monthly Savings</p>
-                    <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgSavingsMinor)}</p>
+              <div className="rounded-xl border-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg">
+                <div className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="mb-1 text-sm font-medium text-blue-100">Avg Monthly Savings</p>
+                      <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgSavingsMinor)}</p>
+                    </div>
+                    <Calendar className="h-8 w-8 text-blue-200" aria-hidden />
                   </div>
-                  <TrendingUp className="h-8 w-8 text-blue-200" aria-hidden />
                 </div>
               </div>
             </div>
@@ -228,9 +237,9 @@ export function AnalyticsView() {
           <TabsContent value="expenses" className="space-y-8">
             <div className={cn(CARD_SURFACE, "fade-in-up")}>
               <div className="flex flex-col space-y-1.5 p-6">
-                <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
                   <ChartPie className="h-5 w-5" aria-hidden /> Spending by Category
-                </h2>
+                </div>
               </div>
               <div className="p-6 pt-0">
                 <div className="h-80">
@@ -259,9 +268,9 @@ export function AnalyticsView() {
 
             <div className={cn(CARD_SURFACE, "fade-in-up stagger-1")}>
               <div className="flex flex-col space-y-1.5 p-6">
-                <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
                   <ChartColumn className="h-5 w-5" aria-hidden /> Top Spending Categories
-                </h2>
+                </div>
               </div>
               <div className="p-6 pt-0">
                 <div className="h-80">
@@ -289,18 +298,17 @@ export function AnalyticsView() {
             </div>
           </TabsContent>
 
-          {/* Source parity quirk (live-verified 2026-09-15): the source app's
-              Income analytics tab renders no content in both empty and data
-              states. We intentionally mirror that behavior — see the round-3
-              remediation plan, finding A.13. */}
-          <TabsContent value="income" className="space-y-8" />
+          {/* Source parity quirk (live-verified round 4): the Income tab has a
+              trigger but NO content element at all — live renders only three
+              TabsContent divs (overview / expenses / investments). Clicking
+              Income shows the empty pane in both apps. */}
 
           <TabsContent value="investments" className="space-y-8">
             <div className={cn(CARD_SURFACE, "fade-in-up")}>
               <div className="flex flex-col space-y-1.5 p-6">
-                <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
                   <ChartPie className="h-5 w-5" aria-hidden /> Portfolio Allocation by Sector
-                </h2>
+                </div>
               </div>
               <div className="p-6 pt-0">
                 <div className="h-80">

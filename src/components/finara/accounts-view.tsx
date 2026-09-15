@@ -143,7 +143,7 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
                       <TypeIcon className="h-6 w-6" aria-hidden />
                     </div>
                     <div>
-                      <div className="text-lg font-semibold tracking-tight text-neutral-900 dark:text-white">{account.name}</div>
+                      <div className="text-lg font-semibold tracking-tight">{account.name}</div>
                       <p className="text-sm text-neutral-500 dark:text-neutral-400">{account.institution}</p>
                     </div>
                   </div>
@@ -181,15 +181,17 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
                   <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
                     Last updated: {formatDate(account.lastSyncedAt, "MM/dd/yyyy")}
                   </p>
-                  <Button
-                    variant="outline"
-                    className="mt-4 w-full"
-                    onClick={() => {
+                  <a
+                    href="/Import"
+                    onClick={(event) => {
+                      event.preventDefault();
                       onNavigate?.("import");
                     }}
                   >
-                    Import Transactions
-                  </Button>
+                    <Button variant="outline" className="mt-4 w-full">
+                      Import Transactions
+                    </Button>
+                  </a>
                 </div>
               </div>
             );
@@ -198,7 +200,7 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit Account" : "Add Account"}</DialogTitle>
             <DialogDescription>

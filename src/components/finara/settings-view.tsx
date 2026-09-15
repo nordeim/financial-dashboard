@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Bell, Download, Save, Shield, Upload, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Bell, Download, FileText, Save, Shield, TriangleAlert, Upload, User } from "lucide-react";
 import { mutate, useQuery } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { CURRENCIES, DATE_FORMATS } from "@/lib/categories";
@@ -20,12 +21,13 @@ const TOGGLES = [
   { key: "monthlyReports", label: "Monthly Reports", description: "Receive monthly spending summaries" },
 ] as const;
 
-/** Live-verified data summary tiles (title on top, colored pill beneath). */
+/** Live-verified data summary tiles (title on top, colored pill beneath;
+ *  the Protected pill carries a small shield glyph — live-exact). */
 const DATA_SUMMARY = [
-  { title: "Protected", pill: "Encrypted", pillClass: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" },
-  { title: "Synced", pill: "Multi-Device", pillClass: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" },
-  { title: "Private", pill: "Your Eyes Only", pillClass: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300" },
-  { title: "GDPR", pill: "Compliant", pillClass: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300" },
+  { title: "Protected", pill: "Encrypted", icon: true, pillClass: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" },
+  { title: "Synced", pill: "Multi-Device", icon: false, pillClass: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" },
+  { title: "Private", pill: "Your Eyes Only", icon: false, pillClass: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300" },
+  { title: "GDPR", pill: "Compliant", icon: false, pillClass: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300" },
 ] as const;
 
 export function SettingsView() {
@@ -122,13 +124,14 @@ export function SettingsView() {
           {/* Profile Settings (live: user icon header + two selects) */}
           <div className={cn(CARD_SURFACE, "fade-in-up")}>
             <div className="flex flex-col space-y-1.5 p-6">
-              <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+              <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
                 <User className="h-5 w-5" aria-hidden /> Profile Settings
-              </h2>
+              </div>
             </div>
-            <div className="grid grid-cols-1 gap-4 p-6 pt-0 md:grid-cols-2">
+            <div className="space-y-4 p-6 pt-0">
+              <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="setting-currency">Default Currency</Label>
+                <Label htmlFor="setting-currency" className="leading-none">Default Currency</Label>
                 <Select value={form.currency} onValueChange={(value) => setForm({ ...form, currency: value })}>
                   <SelectTrigger id="setting-currency">
                     <SelectValue />
@@ -143,7 +146,7 @@ export function SettingsView() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="setting-date-format">Date Format</Label>
+                <Label htmlFor="setting-date-format" className="leading-none">Date Format</Label>
                 <Select value={form.dateFormat} onValueChange={(value) => setForm({ ...form, dateFormat: value })}>
                   <SelectTrigger id="setting-date-format">
                     <SelectValue />
@@ -157,15 +160,16 @@ export function SettingsView() {
                   </SelectContent>
                 </Select>
               </div>
+              </div>
             </div>
           </div>
 
           {/* Notifications (live: bell icon, text-base labels, space-y-6 rows) */}
           <div className={cn(CARD_SURFACE, "fade-in-up stagger-1")}>
             <div className="flex flex-col space-y-1.5 p-6">
-              <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+              <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
                 <Bell className="h-5 w-5" aria-hidden /> Notifications
-              </h2>
+              </div>
             </div>
             <div className="space-y-6 p-6 pt-0">
               {TOGGLES.map((toggle) => (
@@ -189,14 +193,14 @@ export function SettingsView() {
           {/* Export Your Data (live: blue info box + full-width blue button) */}
           <div className={cn(CARD_SURFACE, "fade-in-up stagger-2")}>
             <div className="flex flex-col space-y-1.5 p-6">
-              <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+              <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
                 <Download className="h-5 w-5" aria-hidden /> Export Your Data
-              </h2>
+              </div>
             </div>
             <div className="space-y-4 p-6 pt-0">
               <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
                 <div className="flex items-start gap-3">
-                  <Shield className="h-5 w-5 shrink-0 text-blue-600 dark:text-blue-300" aria-hidden />
+                  <Shield className="mt-0.5 h-5 w-5 text-blue-600 dark:text-blue-400" aria-hidden />
                   <div>
                     <h4 className="mb-1 font-semibold text-blue-800 dark:text-blue-200">GDPR Compliant Export</h4>
                     <p className="text-sm text-blue-700 dark:text-blue-300">
@@ -214,14 +218,14 @@ export function SettingsView() {
           {/* Import Data (live: amber warning box + visible file input) */}
           <div className={cn(CARD_SURFACE, "fade-in-up stagger-3")}>
             <div className="flex flex-col space-y-1.5 p-6">
-              <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+              <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
                 <Upload className="h-5 w-5" aria-hidden /> Import Data
-              </h2>
+              </div>
             </div>
             <div className="space-y-4 p-6 pt-0">
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
                 <div className="flex items-start gap-3">
-                  <Shield className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-300" aria-hidden />
+                  <TriangleAlert className="mt-0.5 h-5 w-5 text-amber-600 dark:text-amber-400" aria-hidden />
                   <div>
                     <h4 className="mb-1 font-semibold text-amber-800 dark:text-amber-200">Import Warning</h4>
                     <p className="text-sm text-amber-700 dark:text-amber-300">
@@ -231,12 +235,12 @@ export function SettingsView() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="importFile">Select Finara Export File</Label>
+                <Label htmlFor="importFile" className="leading-none">Select Finara Export File</Label>
                 <input
                   ref={importInputRef}
                   type="file"
                   accept=".json,application/json"
-                  className="h-9 w-full cursor-pointer rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                  className="flex h-9 w-full cursor-pointer rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                   id="importFile"
                   aria-label="Select a Finara export file to import"
                   disabled={importing}
@@ -252,29 +256,27 @@ export function SettingsView() {
           {/* Your Data Summary (live: text-2xl titles + colored pills) */}
           <div className={cn(CARD_SURFACE, "fade-in-up stagger-4")}>
             <div className="flex flex-col space-y-1.5 p-6">
-              <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
-                <Shield className="h-5 w-5" aria-hidden /> Your Data Summary
-              </h2>
+              <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                <FileText className="h-5 w-5" aria-hidden /> Your Data Summary
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 p-6 pt-0 md:grid-cols-4">
+            <div className="p-6 pt-0">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               {DATA_SUMMARY.map((tile) => (
                 <div key={tile.title} className="text-center">
                   <div className="mb-1 text-2xl font-bold text-gray-900 dark:text-white">{tile.title}</div>
-                  <div
-                    className={cn(
-                      "inline-flex items-center rounded-md border border-transparent px-2.5 py-0.5 text-xs font-semibold",
-                      tile.pillClass,
-                    )}
-                  >
+                  <Badge variant="secondary" className={tile.pillClass}>
+                    {tile.icon ? <Shield className="mr-1 h-3 w-3" aria-hidden /> : null}
                     {tile.pill}
-                  </div>
+                  </Badge>
                 </div>
               ))}
+              </div>
             </div>
           </div>
 
           <div className="flex justify-end">
-            <Button onClick={() => void handleSave()} className="gap-2 bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90" disabled={saving}>
+            <Button onClick={() => void handleSave()} className="bg-primary-sage shadow hover:bg-primary-sage/90" disabled={saving}>
               <Save className="h-4 w-4" aria-hidden /> {saving ? "Saving…" : "Save Settings"}
             </Button>
           </div>

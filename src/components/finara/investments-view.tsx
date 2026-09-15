@@ -165,22 +165,26 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
         <>
           {/* KPI row (live: blue + emerald gradients, white return card, w-12 bare icons) */}
           <div className="fade-in-up grid grid-cols-1 gap-6 md:grid-cols-3">
-            <div className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white shadow-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="mb-1 text-sm font-medium text-blue-100">Portfolio Value</p>
-                  <p className="text-3xl font-bold">{formatMoney(portfolioValue)}</p>
+            <div className="rounded-xl border-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg">
+              <div className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="mb-1 text-sm font-medium text-blue-100">Portfolio Value</p>
+                    <p className="text-3xl font-bold">{formatMoney(portfolioValue)}</p>
+                  </div>
+                  <Wallet className="h-12 w-12 text-blue-200" aria-hidden />
                 </div>
-                <Wallet className="h-12 w-12" aria-hidden />
               </div>
             </div>
-            <div className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 text-white shadow-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="mb-1 text-sm font-medium text-emerald-100">Total Gain/Loss</p>
-                  <p className="text-3xl font-bold">{formatMoney(totalGain)}</p>
+            <div className="rounded-xl border-0 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg">
+              <div className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="mb-1 text-sm font-medium text-emerald-100">Total Gain/Loss</p>
+                    <p className="text-3xl font-bold">{formatMoney(totalGain)}</p>
+                  </div>
+                  <TrendingUp className="h-12 w-12 text-emerald-200" aria-hidden />
                 </div>
-                <TrendingUp className="h-12 w-12" aria-hidden />
               </div>
             </div>
             <div className={cn(CARD_SURFACE)}>
@@ -203,9 +207,9 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
             <div className="lg:col-span-2">
               <div className={cn(CARD_SURFACE)}>
                 <div className="flex flex-col space-y-1.5 p-6">
-                  <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                  <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
                     <Wallet className="h-5 w-5" aria-hidden /> Portfolio Holdings
-                  </h2>
+                  </div>
                 </div>
                 <div className="p-6 pt-0">
                   {holdings.length === 0 ? (
@@ -275,9 +279,9 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
             <div>
               <div className={cn(CARD_SURFACE)}>
                 <div className="flex flex-col space-y-1.5 p-6">
-                  <h2 className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                  <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
                     <ChartPie className="h-5 w-5" aria-hidden /> Sector Allocation
-                  </h2>
+                  </div>
                 </div>
                 <div className="p-6 pt-0">
                   {sectorData.length === 0 ? (
@@ -324,7 +328,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit Investment" : "Add Investment"}</DialogTitle>
             <DialogDescription>

@@ -226,15 +226,18 @@ export function ImportView() {
   };
 
   return (
-    <div className="space-y-8">
-      <ViewHeader title="Import Transactions" subtitle="Upload a CSV from your bank to quickly add expenses." />
+    <>
+      {/* Live renders the import header bare: h1 + p.mb-8 with no wrapper
+          (the live view never adopted the standard header component), and
+          no view-root div — the card follows the header directly. */}
+      <ViewHeader title="Import Transactions" subtitle="Upload a CSV from your bank to quickly add expenses." bare />
 
       {/* Live-exact plain card surface (border + bg-card + shadow — not the glass surface). */}
       <div className="fade-in-up rounded-xl border bg-card text-card-foreground shadow">
         <div className="flex flex-col space-y-1.5 p-6">
-          <h2 className="font-semibold leading-none tracking-tight">
+          <div className="font-semibold leading-none tracking-tight">
             {step === 1 ? "Step 1: Upload File" : step === 2 ? "Step 2: Review & Categorize" : "Step 3: Done"}
-          </h2>
+          </div>
         </div>
         <div className="space-y-4 p-6 pt-0">
           {parseError ? (
@@ -252,7 +255,7 @@ export function ImportView() {
 
           {step === 1 ? (
             <div
-              className="border-2 border-dashed p-6 text-center"
+              className="rounded-lg border-2 border-dashed p-6 text-center"
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
                 event.preventDefault();
@@ -262,7 +265,7 @@ export function ImportView() {
             >
               <CloudUpload className="mx-auto h-12 w-12 text-gray-400" aria-hidden />
               <label
-                className="cursor-pointer text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                className="cursor-pointer text-sm font-medium leading-none text-indigo-600 hover:text-indigo-500 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 htmlFor="file-upload"
               >
                 <span>Upload a file</span>
@@ -270,9 +273,8 @@ export function ImportView() {
                   ref={fileInputRef}
                   type="file"
                   accept=".csv,.txt,text/csv"
-                  className="sr-only"
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm sr-only"
                   id="file-upload"
-                  aria-label="Choose a CSV file to import"
                   onChange={(event) => {
                     const file = event.target.files?.[0];
                     if (file) void handleFile(file);
@@ -284,15 +286,14 @@ export function ImportView() {
                   <CheckCircle2 className="h-4 w-4" aria-hidden /> {pendingFile.name}
                 </p>
               ) : null}
-              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">CSV, XLS, XLSX up to 10MB</p>
+              <p className="text-xs text-gray-500">CSV, XLS, XLSX up to 10MB</p>
             </div>
           ) : null}
 
           <Button
-            type="button"
             disabled={!pendingFile || extracting}
             onClick={() => void extract()}
-            className="h-9"
+            className="shadow"
           >
             {extracting ? (
               <>
@@ -416,6 +417,6 @@ export function ImportView() {
             </div>
           ) : null}
       </div>
-    </div>
+    </>
   );
 }

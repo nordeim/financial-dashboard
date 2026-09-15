@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -185,16 +186,14 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                         </span>
                       </div>
                       <div>
-                        <div className="truncate text-lg font-bold text-neutral-900 dark:text-neutral-100">{goal.name}</div>
+                        <div className="truncate text-lg font-bold tracking-tight text-neutral-900 dark:text-neutral-100">{goal.name}</div>
                         <div className="mt-1 flex items-center gap-2">
-                          <span
-                            className={cn(
-                              "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold",
-                              PRIORITY_BADGE[goal.priority ?? "medium"] ?? PRIORITY_BADGE.medium,
-                            )}
+                          <Badge
+                            variant="secondary"
+                            className={PRIORITY_BADGE[goal.priority ?? "medium"] ?? PRIORITY_BADGE.medium}
                           >
                             {(goal.priority ?? "medium").toLowerCase()}
-                          </span>
+                          </Badge>
                         </div>
                       </div>
                     </div>
@@ -202,7 +201,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-8 w-8 text-neutral-400 hover:text-blue-600"
+                        className="h-8 w-8 text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400"
                         onClick={() => openEdit(goal)}
                         aria-label={`Edit ${goal.name}`}
                       >
@@ -211,7 +210,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-8 w-8 text-neutral-400 hover:text-red-600"
+                        className="h-8 w-8 text-neutral-400 hover:text-red-600 dark:hover:text-red-400"
                         onClick={() => void deleteGoal(goal)}
                         aria-label={`Delete ${goal.name}`}
                       >
@@ -227,7 +226,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                       <span className="font-medium text-neutral-800 dark:text-neutral-100">{progress.toFixed(1)}%</span>
                     </div>
                     <div
-                      className="h-2 overflow-hidden rounded-full bg-primary/20"
+                      className="relative h-2 w-full overflow-hidden rounded-full bg-primary/20"
                       role="progressbar"
                       aria-valuenow={Math.round(progress)}
                       aria-valuemin={0}
@@ -235,8 +234,8 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                       aria-label={`${goal.name} progress: ${Math.round(progress)}%`}
                     >
                       <div
-                        className="h-full bg-primary transition-all"
-                        style={{ width: `${Math.min(progress, 100)}%` }}
+                        className="h-full w-full flex-1 bg-primary transition-all"
+                        style={{ transform: `translateX(-${100 - Math.min(progress, 100)}%)` }}
                       />
                     </div>
                     <div className="flex justify-between text-sm text-neutral-500 dark:text-neutral-400">
@@ -245,7 +244,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <Clock className="h-4 w-4 text-neutral-500 dark:text-neutral-400" aria-hidden />
+                    <Clock className="h-4 w-4 text-neutral-400" aria-hidden />
                     <span className="text-neutral-600 dark:text-neutral-300">
                       {remaining !== null ? `${remaining} days remaining` : "No deadline set"}
                     </span>
@@ -255,7 +254,8 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                   </div>
                   <Button
                     variant="outline"
-                    className="mt-4 h-8 w-full text-xs"
+                    size="sm"
+                    className="mt-4 w-full"
                     onClick={() => {
                       setContributing(goal);
                       setContribution("");
@@ -272,7 +272,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit Goal" : "Create New Goal"}</DialogTitle>
             <DialogDescription>
@@ -376,7 +376,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
       </Dialog>
 
       <Dialog open={contributing !== null} onOpenChange={(open) => (open ? null : setContributing(null))}>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Add Progress</DialogTitle>
             <DialogDescription>
