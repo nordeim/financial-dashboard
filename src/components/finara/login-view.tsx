@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,7 +39,7 @@ export function LoginView({ onSignIn }: { onSignIn: (email: string) => void }) {
       if (email.trim().toLowerCase() === DEMO_EMAIL && password === DEMO_PASSWORD) {
         onSignIn(email.trim());
       } else {
-        setError("Invalid email or password. Use the demo credentials shown below.");
+        setError("Invalid email or password");
         setSubmitting(false);
       }
     }, 450);
@@ -151,6 +152,11 @@ export function LoginView({ onSignIn }: { onSignIn: (email: string) => void }) {
                         </div>
                       </div>
                     </div>
+                    {error ? (
+                      <Alert className="rounded-xl border-red-200 bg-red-50/70">
+                        <AlertDescription className="text-red-700">{error}</AlertDescription>
+                      </Alert>
+                    ) : null}
                     <div className="space-y-3">
                       <Button
                         type="submit"
