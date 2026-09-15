@@ -9,18 +9,21 @@ import { cn } from "@/lib/utils"
 
 const ToastProvider = ToastPrimitives.Provider
 
+// Viewport renders as a DIV (live parity, round 4): the live app's toast
+// container is a div, not Radix's default <ol>. `asChild` swaps the element
+// while keeping the viewport's focus/hotkey behavior.
 const ToastViewport = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Viewport>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>
 >(({ className, ...props }, ref) => (
-  <ToastPrimitives.Viewport
-    ref={ref}
-    className={cn(
-      "fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]",
-      className
-    )}
-    {...props}
-  />
+  <ToastPrimitives.Viewport ref={ref} asChild {...props}>
+    <div
+      className={cn(
+        "fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]",
+        className
+      )}
+    />
+  </ToastPrimitives.Viewport>
 ))
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName
 
