@@ -5,6 +5,8 @@
  * order is user-visible parity.
  */
 
+import { GOAL_EMOJI } from "@/lib/ui-maps";
+
 export const EXPENSE_CATEGORIES = ["Needs", "Wants", "Savings"] as const;
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
 
@@ -158,22 +160,8 @@ export function goalCategoryLabel(id: string | null | undefined): string {
 }
 
 export function goalCategoryEmoji(id: string | null | undefined): string {
-  switch (id) {
-    case "emergency":
-      return "🛡️";
-    case "vacation":
-      return "🏖️";
-    case "home":
-      return "🏠";
-    case "car":
-      return "🚗";
-    case "education":
-      return "📚";
-    case "retirement":
-      return "🌴";
-    default:
-      return "🎯";
-  }
+  // Live-verified emoji map (2026-09-15): see src/lib/ui-maps.ts GOAL_EMOJI.
+  return GOAL_EMOJI[id ?? "other"] ?? "🎯";
 }
 
 export const GOAL_PRIORITIES: readonly OptionDef[] = [
