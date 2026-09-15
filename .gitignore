@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build output
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Database (runtime state — regenerate with `bun run db:push`)
+db/*.db
+db/*.db-journal
+db/*.sqlite*
+
+# Environment — never commit real secrets
+.env
+.env.local
+.env*.local
+!.env.example
+
+# Logs
+dev.log
+server.log
+*.log
+
+# Keys — a deploy key must never live inside the repo
+*.key
+ssh-key.txt
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

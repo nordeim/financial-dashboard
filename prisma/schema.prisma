@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Connected financial accounts (checking, savings, credit, investment, cash).
+model Account {
+  id           String   @id @default(cuid())
+  name         String
+  type         String // checking | savings | credit | investment | cash
+  institution  String
+  balanceMinor Int      @default(0)
+  currency     String   @default("USD")
+  lastSyncedAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// Recurring or one-time income streams.
+model IncomeSource {
+  id              String    @id @default(cuid())
+  name            String
+  amountMinor     Int
+  frequency       String // monthly | biweekly | weekly | one-time
+  active          Boolean   @default(true)
+  nextPaymentDate DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// Expenses follow the 50/30/20 rule split: Needs / Wants / Savings.
+model Expense {
+  id          String   @id @default(cuid())
+  description String
+  amountMinor Int
+  category    String // Needs | Wants | Savings
+  subcategory String // Rent/Mortgage, Groceries, Utilities, ...
+  date        DateTime
+  notes       String?
+  recurring   Boolean  @default(false)
+  accountId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Monthly budget ceilings per 50/30/20 category (optionally per subcategory).
+model Budget {
+  id                String   @id @default(cuid())
+  category          String // Needs | Wants | Savings
+  subcategory       String?
+  monthlyLimitMinor Int
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// Savings goals with target amount and optional deadline.
+model Goal {
+  id                 String    @id @default(cuid())
+  name               String
+  targetAmountMinor  Int
+  currentAmountMinor Int       @default(0)
+  deadline           DateTime?
+  category           String? // Emergency Fund, Vacation, ...
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+// Investment portfolio holdings.
+model Investment {
+  id                String   @id @default(cuid())
+  symbol            String
+  name              String
+  shares            Float
+  avgPriceMinor     Int
+  currentPriceMinor Int
+  sector            String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// Key-value application settings (currency, date format, notifications).
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
