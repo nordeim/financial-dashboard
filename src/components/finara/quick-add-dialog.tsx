@@ -124,7 +124,7 @@ export function QuickAddDialog({
         <div className="p-6">
           <div className="mb-6 flex items-center justify-between">
             <DialogTitle asChild>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Quick Add</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Quick Add</h3>
             </DialogTitle>
             <button
               type="button"

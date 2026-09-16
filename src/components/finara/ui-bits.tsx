@@ -29,14 +29,11 @@ export function ViewHeader({
   subtitle,
   actions,
   bare = false,
-  actionsClassName,
 }: {
   title: string;
   subtitle: string;
   actions?: ReactNode;
   bare?: boolean;
-  /** Extra classes for the actions row (analytics passes flex-wrap — live-exact). */
-  actionsClassName?: string;
 }) {
   if (bare) {
     return (
@@ -60,7 +57,9 @@ export function ViewHeader({
         <h1 className="mb-2 text-3xl font-bold text-primary-navy lg:text-4xl dark:text-white">{title}</h1>
         <p className="text-neutral-600 dark:text-neutral-400">{subtitle}</p>
       </div>
-      {actions ? <div className={cn("flex gap-3", actionsClassName)}>{actions}</div> : null}
+      {/* Round-5: live renders header actions directly in the flex row (no
+          wrapper) — analytics passes its own flex-wrap wrapper (live-exact). */}
+      {actions}
     </div>
   );
 }
@@ -174,7 +173,7 @@ export function GradientCard({
         <p className={cn("text-lg", titleTint(gradient))}>{subtitle}</p>
       </div>
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20">
-        <Icon className="h-8 w-8 text-white" aria-hidden />
+        <Icon className="h-8 w-8" aria-hidden />
       </div>
     </div>
   );

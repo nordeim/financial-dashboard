@@ -109,7 +109,7 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
         subtitle="Manage your connected bank accounts"
         actions={
           <Button onClick={openCreate} className="h-9 bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
-            <Plus className="h-4 w-4" aria-hidden /> Add Account
+            <Plus className="mr-2 h-5 w-5" aria-hidden /> Add Account
           </Button>
         }
       />
@@ -200,9 +200,9 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit Account" : "Add Account"}</DialogTitle>
+            <DialogTitle className="font-semibold leading-none tracking-tight">{editing ? "Edit Account" : "Add Account"}</DialogTitle>
             <DialogDescription>
               {editing ? "Update the account details." : "Connect a bank account to track its balance."}
             </DialogDescription>

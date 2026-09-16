@@ -226,9 +226,9 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
       )}
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-emerald-600" aria-hidden /> Edit Income Source
             </DialogTitle>
             <DialogDescription>Update the amount, frequency or category.</DialogDescription>

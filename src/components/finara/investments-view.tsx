@@ -152,7 +152,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
         subtitle="Track your investment portfolio performance"
         actions={
           <Button onClick={openCreate} className="h-9 bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
-            <Plus className="h-4 w-4" aria-hidden /> Add Investment
+            <Plus className="mr-2 h-5 w-5" aria-hidden /> Add Investment
           </Button>
         }
       />
@@ -164,7 +164,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
       ) : (
         <>
           {/* KPI row (live: blue + emerald gradients, white return card, w-12 bare icons) */}
-          <div className="fade-in-up grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="fade-in-up grid grid-cols-1 gap-6 md:grid-cols-3 mb-8">
             <div className="rounded-xl border-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg">
               <div className="p-6">
                 <div className="flex items-center justify-between">
@@ -196,7 +196,8 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                       {totalReturn.toFixed(2)}%
                     </p>
                   </div>
-                  <ChartColumn className={cn("h-12 w-12", totalGain >= 0 ? "text-emerald-600" : "text-red-600")} aria-hidden />
+                  {/* Live: the Total Return icon is neutral in both themes (round-5). */}
+                  <ChartColumn className="h-12 w-12 text-neutral-400 dark:text-neutral-500" aria-hidden />
                 </div>
               </div>
             </div>
@@ -328,9 +329,9 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit Investment" : "Add Investment"}</DialogTitle>
+            <DialogTitle className="font-semibold leading-none tracking-tight">{editing ? "Edit Investment" : "Add Investment"}</DialogTitle>
             <DialogDescription>
               {editing ? "Update this holding." : "Track a stock, ETF, bond or crypto position."}
             </DialogDescription>

@@ -147,7 +147,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
         subtitle="Set and track your financial objectives"
         actions={
           <Button onClick={openCreate} className="h-9 bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
-            <Plus className="h-4 w-4" aria-hidden /> New Goal
+            <Plus className="mr-2 h-5 w-5" aria-hidden /> New Goal
           </Button>
         }
       />
@@ -170,7 +170,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
           />
         </div>
       ) : (
-        <div className="fade-in-up grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="fade-in-up grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
           {goals.map((goal) => {
             const progress = percent(goal.currentAmountMinor, goal.targetAmountMinor);
             const complete = goal.currentAmountMinor >= goal.targetAmountMinor;
@@ -272,9 +272,9 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit Goal" : "Create New Goal"}</DialogTitle>
+            <DialogTitle className="font-semibold leading-none tracking-tight">{editing ? "Edit Goal" : "Create New Goal"}</DialogTitle>
             <DialogDescription>
               {editing ? "Update your savings objective." : "Set a target amount and deadline."}
             </DialogDescription>
@@ -376,9 +376,9 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
       </Dialog>
 
       <Dialog open={contributing !== null} onOpenChange={(open) => (open ? null : setContributing(null))}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-h-[90vh] max-w-sm overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add Progress</DialogTitle>
+            <DialogTitle className="font-semibold leading-none tracking-tight">Add Progress</DialogTitle>
             <DialogDescription>
               Add saved funds toward {contributing?.name ?? "this goal"}.
             </DialogDescription>

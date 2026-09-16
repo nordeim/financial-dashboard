@@ -132,7 +132,7 @@ export function DashboardView({
       ) : (
         <>
           {/* KPI row (live: md:2 / lg:4, gap-6) */}
-          <div className="fade-in-up stagger-1 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="fade-in-up stagger-1 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
             <StatCard
               label="Monthly Income"
               value={formatMoney(data.kpis.monthlyIncomeMinor)}
@@ -163,7 +163,7 @@ export function DashboardView({
           </div>
 
           {/* Action tiles (live: only Bank Sync + Portfolio are interactive) */}
-          <div className="fade-in-up stagger-2 grid grid-cols-1 gap-6 md:grid-cols-4">
+          <div className="fade-in-up stagger-2 grid gap-6 md:grid-cols-4 mb-8">
             <GradientCard
               title="Largest Expense Category"
               value={data.kpis.largestExpenseCategory ?? "N/A"}
