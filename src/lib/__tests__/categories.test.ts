@@ -8,6 +8,7 @@ import {
   INCOME_CATEGORIES,
   INCOME_FREQUENCIES,
   INVESTMENT_TYPES,
+  QUICK_SELECT_SUBCATEGORIES,
   SECTORS,
   SUBCATEGORIES,
   subcategoriesFor,
@@ -47,6 +48,23 @@ describe("expense taxonomy (source-app parity)", () => {
       "Transportation",
       "Healthcare",
     ]);
+  });
+
+  it("renders the live quick-select tile labels while resolving to real subcategory ids", () => {
+    // Live tile copy (round-5 capture): the rent tile reads "Rent/Mortgage"
+    // while the subcategory it stores (and the select displays) stays "Rent".
+    expect(QUICK_SELECT_SUBCATEGORIES.map((s) => s.label)).toEqual([
+      "Rent/Mortgage",
+      "Groceries",
+      "Utilities",
+      "Transportation",
+      "Healthcare",
+    ]);
+    for (const entry of QUICK_SELECT_SUBCATEGORIES) {
+      const target = SUBCATEGORIES.find((s) => s.id === entry.id);
+      expect(target, `quick-select id ${entry.id} must resolve`).toBeDefined();
+      expect(target?.emoji).toBe(entry.emoji);
+    }
   });
 
   it("labels unknown subcategories as Other", () => {

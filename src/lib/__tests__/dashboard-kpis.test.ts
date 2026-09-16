@@ -150,12 +150,27 @@ describe("recent activity", () => {
       incomeSources: [{ name: "Salary", amountMinor: 500000, frequency: "monthly" }],
       goals: [],
       now: NOW,
-      recentIncomeEvents: [{ name: "Salary", amountMinor: 500000, date: new Date(2026, 8, 15) }],
+      recentIncomeEvents: [{ name: "Salary", amountMinor: 500000, category: "primary", date: new Date(2026, 8, 15) }],
     });
     expect(result.recentActivity).toHaveLength(3);
     expect(result.recentActivity[0]?.kind).toBe("income");
     expect(result.recentActivity[0]?.description).toBe("Salary");
     expect(result.recentActivity[2]?.description).toBe("Water bill");
+  });
+
+  it("carries the income source's category onto the activity item (live badge text)", () => {
+    const result = computeDashboardKpis({
+      expenses: [],
+      incomeSources: [{ name: "Salary", amountMinor: 500000, frequency: "monthly" }],
+      goals: [],
+      now: NOW,
+      recentIncomeEvents: [
+        { name: "Salary", amountMinor: 500000, category: "primary", date: new Date(2026, 8, 15) },
+        { name: "Rental", amountMinor: 95000, category: "passive", date: new Date(2026, 8, 14) },
+      ],
+    });
+    expect(result.recentActivity[0]?.category).toBe("primary");
+    expect(result.recentActivity[1]?.category).toBe("passive");
   });
 
   it("caps the feed at six entries", () => {

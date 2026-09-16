@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -232,5 +233,36 @@ describe("Progress (classic live set)", () => {
     const all = decode(html);
     expect(all).toContain("relative w-full overflow-hidden rounded-full");
     expect(all).toContain("h-full w-full flex-1 bg-primary transition-all");
+  });
+});
+
+describe("DialogTitle (classic live set, round-5)", () => {
+  // Round-5 live capture: every live modal title carries a DIFFERENT class
+  // set (Quick Add: text-lg font-semibold text-gray-900 dark:text-white;
+  // full modals: font-semibold leading-none tracking-tight + caller classes).
+  // DialogTitle is therefore a pure Radix semantics wrapper — it injects no
+  // base classes; call sites own the live-exact strings. DialogContent itself
+  // is portal-dependent and is verified by the browser DOM re-diff (base must
+  // NOT carry max-h-[90vh]/overflow-y-auto — only the Add Expense modal and
+  // the edit form dialogs pass them explicitly).
+  it("renders exactly the caller's classes — no injected base", () => {
+    const html = render(
+      <Dialog>
+        <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
+          AI Financial Coach
+        </DialogTitle>
+      </Dialog>,
+    );
+    const all = decode(html);
+    expect(all).toContain(
+      'class="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white"',
+    );
+    // The Quick Add title set must survive verbatim as well.
+    const quick = render(
+      <Dialog>
+        <DialogTitle className="text-lg font-semibold text-gray-900 dark:text-white">Quick Add</DialogTitle>
+      </Dialog>,
+    );
+    expect(decode(quick)).toContain('class="text-lg font-semibold text-gray-900 dark:text-white"');
   });
 });
