@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -200,13 +200,20 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+        {/* Round-6 live matrix: Add Account = max-w-md, NO max-h/scroll,
+            bg-card surface, black/60 overlay, plain title (no icon, no close
+            button), no description, stacked fields Name → Bank → Type →
+            Balance, p-6 pt-0 body, pt-4 button row (live-probed). */}
+        <DialogContent
+          className="max-w-md bg-card"
+          backdropClassName="bg-black/60"
+          showCloseButton={false}
+          aria-describedby={undefined}
+        >
           <DialogHeader>
             <DialogTitle className="font-semibold leading-none tracking-tight">{editing ? "Edit Account" : "Add Account"}</DialogTitle>
-            <DialogDescription>
-              {editing ? "Update the account details." : "Connect a bank account to track its balance."}
-            </DialogDescription>
           </DialogHeader>
+          <div className="p-6 pt-0">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="account-name">Account Name</Label>
@@ -220,33 +227,31 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
                
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="account-type">Account Type</Label>
-                <Select value={form.type} onValueChange={(value) => setForm((current) => ({ ...current, type: value }))}>
-                  <SelectTrigger id="account-type">
-                    <SelectValue>{accountTypeLabel(form.type)}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ACCOUNT_TYPES.map((type) => (
-                      <SelectItem key={type.id} value={type.id}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="account-bank">Bank Name</Label>
-                <Input
-                  id="account-bank"
-                  value={form.institution}
-                  onChange={(event) => setForm((current) => ({ ...current, institution: event.target.value }))}
-                  placeholder="e.g. Chase"
-                  maxLength={80}
+            <div className="space-y-2">
+              <Label htmlFor="account-bank">Bank Name</Label>
+              <Input
+                id="account-bank"
+                value={form.institution}
+                onChange={(event) => setForm((current) => ({ ...current, institution: event.target.value }))}
+                placeholder="e.g. Chase"
+                maxLength={80}
                  
-                />
-              </div>
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="account-type">Account Type</Label>
+              <Select value={form.type} onValueChange={(value) => setForm((current) => ({ ...current, type: value }))}>
+                <SelectTrigger id="account-type">
+                  <SelectValue>{accountTypeLabel(form.type)}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {ACCOUNT_TYPES.map((type) => (
+                    <SelectItem key={type.id} value={type.id}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="account-balance">Current Balance</Label>
@@ -263,7 +268,7 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
                
               />
             </div>
-            <div className="flex justify-end gap-2 pt-1">
+            <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancel
               </Button>
@@ -280,6 +285,7 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
               </Button>
             </div>
           </form>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Clock, DollarSign, Loader2, Pen, Plus, Target, Trash2 } from "lucide-react";
+import { Clock, DollarSign, Loader2, Pen, Plus, Target, Trash2, TrendingUp } from "lucide-react";
 import { mutate, useQuery } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney, percent, toMinorUnits } from "@/lib/money";
@@ -272,18 +272,25 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+        {/* Round-6 live matrix: New/Edit Goal = max-w-md, NO max-h/scroll,
+            dark:bg-gray-900 dark:text-white card, target icon, NO close
+            button, no description, p-6 pt-0 body. Labels carry
+            dark:text-neutral-300 and inputs dark:bg-gray-800 dark:text-white
+            dark:border-gray-700 (live-probed). */}
+        <DialogContent className="max-w-md dark:bg-gray-900 dark:text-white" showCloseButton={false} aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle className="font-semibold leading-none tracking-tight">{editing ? "Edit Goal" : "Create New Goal"}</DialogTitle>
-            <DialogDescription>
-              {editing ? "Update your savings objective." : "Set a target amount and deadline."}
-            </DialogDescription>
+            <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
+              <Target className="h-5 w-5" aria-hidden />
+              {editing ? "Edit Goal" : "Create New Goal"}
+            </DialogTitle>
           </DialogHeader>
+          <div className="p-6 pt-0">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="goal-title">Goal Title</Label>
+              <Label htmlFor="goal-title" className="dark:text-neutral-300">Goal Title</Label>
               <Input
                 id="goal-title"
+                className="dark:bg-gray-800 dark:text-white dark:border-gray-700"
                 value={form.name}
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
                 required
@@ -292,13 +299,14 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="goal-target">Target Amount</Label>
+              <Label htmlFor="goal-target" className="dark:text-neutral-300">Target Amount</Label>
               <Input
                 id="goal-target"
                 type="number"
                 inputMode="decimal"
                 min="0"
                 step="0.01"
+                className="dark:bg-gray-800 dark:text-white dark:border-gray-700"
                 value={form.target}
                 onChange={(event) => setForm((current) => ({ ...current, target: event.target.value }))}
                 placeholder="0.00"
@@ -308,10 +316,11 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="goal-deadline">Target Date</Label>
+                <Label htmlFor="goal-deadline" className="dark:text-neutral-300">Target Date</Label>
                 <Input
                   id="goal-deadline"
                   type="date"
+                  className="dark:bg-gray-800 dark:text-white dark:border-gray-700"
                   value={form.deadline}
                   onChange={(event) => setForm((current) => ({ ...current, deadline: event.target.value }))}
                   required
@@ -319,12 +328,12 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="goal-category">Category</Label>
+                <Label htmlFor="goal-category" className="dark:text-neutral-300">Category</Label>
                 <Select
                   value={form.category}
                   onValueChange={(value) => setForm((current) => ({ ...current, category: value }))}
                 >
-                  <SelectTrigger id="goal-category">
+                  <SelectTrigger id="goal-category" className="dark:bg-gray-800 dark:text-white dark:border-gray-700">
                     <SelectValue>{goalCategoryLabel(form.category)}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -338,12 +347,12 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="goal-priority">Priority</Label>
+              <Label htmlFor="goal-priority" className="dark:text-neutral-300">Priority</Label>
               <Select
                 value={form.priority}
                 onValueChange={(value) => setForm((current) => ({ ...current, priority: value }))}
               >
-                <SelectTrigger id="goal-priority">
+                <SelectTrigger id="goal-priority" className="dark:bg-gray-800 dark:text-white dark:border-gray-700">
                   <SelectValue>{goalPriorityLabel(form.priority)}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -372,17 +381,22 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
               </Button>
             </div>
           </form>
+          </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={contributing !== null} onOpenChange={(open) => (open ? null : setContributing(null))}>
-        <DialogContent className="max-h-[90vh] max-w-sm overflow-y-auto">
+        {/* Round-6 live matrix: Add Progress = max-w-sm, NO max-h/scroll,
+            dark:bg-gray-900 dark:text-white card, trending-up icon, NO close
+            button, no description, p-6 pt-0 body. */}
+        <DialogContent className="max-w-sm dark:bg-gray-900 dark:text-white" showCloseButton={false} aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle className="font-semibold leading-none tracking-tight">Add Progress</DialogTitle>
-            <DialogDescription>
-              Add saved funds toward {contributing?.name ?? "this goal"}.
-            </DialogDescription>
+            <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
+              <TrendingUp className="h-5 w-5" aria-hidden />
+              Add Progress
+            </DialogTitle>
           </DialogHeader>
+          <div className="p-6 pt-0">
           <form
             onSubmit={(event) => {
               event.preventDefault();
@@ -391,13 +405,14 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
             className="space-y-4"
           >
             <div className="space-y-2">
-              <Label htmlFor="goal-contribution">Amount to Add</Label>
+              <Label htmlFor="goal-contribution" className="dark:text-neutral-300">Amount to Add</Label>
               <Input
                 id="goal-contribution"
                 type="number"
                 inputMode="decimal"
                 min="0"
                 step="0.01"
+                className="dark:bg-gray-800 dark:text-white dark:border-gray-700"
                 value={contribution}
                 onChange={(event) => setContribution(event.target.value)}
                 placeholder="0.00"
@@ -414,6 +429,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
               </Button>
             </div>
           </form>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

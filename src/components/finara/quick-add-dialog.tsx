@@ -120,6 +120,11 @@ export function QuickAddDialog({
         overlayClassName="z-40"
         className="max-w-md"
         aria-describedby={undefined}
+        onPointerDown={(event) => {
+          // Live probe (round 6): the Quick Add chooser DOES dismiss on an
+          // overlay click (unlike the full modals, which stay open).
+          if (event.target === event.currentTarget) close(false);
+        }}
       >
         <div className="p-6">
           <div className="mb-6 flex items-center justify-between">

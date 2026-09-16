@@ -6,9 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { DollarSign, Loader2, Pen, Plus, Trash2, TrendingUp } from "lucide-react";
+import { DollarSign, Loader2, Pen, Plus, Trash2, TrendingUp, X } from "lucide-react";
 import { mutate, useQuery } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney, monthlyEquivalent, toMinorUnits } from "@/lib/money";
@@ -226,13 +226,25 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
       )}
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
+        {/* Round-6 live matrix: Edit Income Source = max-w-lg + scroll, dollar
+            icon, header row + in-flow close, no description, p-6 pt-0 body. */}
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto" showCloseButton={false} aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-emerald-600" aria-hidden /> Edit Income Source
-            </DialogTitle>
-            <DialogDescription>Update the amount, frequency or category.</DialogDescription>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
+                <DollarSign className="h-5 w-5" aria-hidden /> Edit Income Source
+              </DialogTitle>
+              <button
+                type="button"
+                onClick={() => setEditOpen(false)}
+                aria-label="Close"
+                className="inline-flex h-9 w-9 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+              >
+                <X className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
           </DialogHeader>
+          <div className="p-6 pt-0">
           <form onSubmit={submitEdit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="edit-income-name">Income Source</Label>
@@ -345,6 +357,7 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
               </Button>
             </div>
           </form>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

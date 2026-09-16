@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bot, Send } from "lucide-react";
+import { Bot, Send, X } from "lucide-react";
 import { mutate } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import type { AiChatMessage } from "@/lib/types";
@@ -64,12 +64,23 @@ export function AiCoachDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/* Live-exact: centered max-w-2xl, h-[80vh], bot-icon header, prose
           assistant bubbles, slate user bubbles, outline suggestion chips. */}
-      <DialogContent className="flex h-[80vh] max-w-2xl flex-col">
+      <DialogContent className="flex h-[80vh] max-w-2xl flex-col" showCloseButton={false} aria-describedby={undefined}>
         <DialogHeader className="shrink-0">
-          <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-            <Bot className="h-5 w-5" aria-hidden />
-            AI Financial Coach
-          </DialogTitle>
+          {/* Round-6: live header row — title + in-flow close button. */}
+          <div className="flex items-center justify-between">
+            <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
+              <Bot className="h-5 w-5" aria-hidden />
+              AI Financial Coach
+            </DialogTitle>
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              aria-label="Close"
+              className="inline-flex h-9 w-9 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+            >
+              <X className="h-4 w-4" aria-hidden />
+            </button>
+          </div>
         </DialogHeader>
 
         {/* Live body wrapper: p-6 pt-0 flex-1 flex flex-col min-h-0. */}
@@ -97,7 +108,10 @@ export function AiCoachDialog({
                         <div className="text-sm prose prose-sm prose-slate dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
                           <Markdown
                             components={{
-                              p: (props) => (
+                              // react-markdown v10 passes a `node` prop to
+                              // custom components — strip it or it leaks onto
+                              // the DOM as node="[object Object]" (round-6).
+                              p: ({ node: _node, ...props }) => (
                                 <p className="my-1 leading-relaxed text-slate-700 dark:text-slate-300" {...props} />
                               ),
                             }}

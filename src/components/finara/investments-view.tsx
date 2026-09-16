@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BarChart3, ChartColumn, ChartPie, Loader2, Pen, Plus, Trash2, TrendingUp, Wallet } from "lucide-react";
+import { BarChart3, ChartColumn, ChartPie, Loader2, Pen, Plus, Trash2, TrendingUp, Wallet, X } from "lucide-react";
 import { mutate, useQuery } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney } from "@/lib/money";
@@ -329,13 +329,26 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+        {/* Round-6 live matrix: Add/Edit Investment = max-w-md + scroll,
+            trending-up icon, header row + in-flow close, no description. */}
+        <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto" showCloseButton={false} aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle className="font-semibold leading-none tracking-tight">{editing ? "Edit Investment" : "Add Investment"}</DialogTitle>
-            <DialogDescription>
-              {editing ? "Update this holding." : "Track a stock, ETF, bond or crypto position."}
-            </DialogDescription>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
+                <TrendingUp className="h-5 w-5" aria-hidden />
+                {editing ? "Edit Investment" : "Add Investment"}
+              </DialogTitle>
+              <button
+                type="button"
+                onClick={() => setDialogOpen(false)}
+                aria-label="Close"
+                className="inline-flex h-9 w-9 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+              >
+                <X className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
           </DialogHeader>
+          <div className="p-6 pt-0">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
@@ -473,6 +486,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
               </Button>
             </div>
           </form>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
