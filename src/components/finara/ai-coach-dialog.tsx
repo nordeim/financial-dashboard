@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Markdown from "react-markdown";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bot, Loader2, Send } from "lucide-react";
+import { Bot, Send } from "lucide-react";
 import { mutate } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import type { AiChatMessage } from "@/lib/types";
@@ -61,85 +62,101 @@ export function AiCoachDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* Live-exact: centered max-w-2xl, h-[80vh], bot-icon header. */}
+      {/* Live-exact: centered max-w-2xl, h-[80vh], bot-icon header, prose
+          assistant bubbles, slate user bubbles, outline suggestion chips. */}
       <DialogContent className="flex h-[80vh] max-w-2xl flex-col">
         <DialogHeader className="shrink-0">
-          <DialogTitle className="flex items-center gap-2 text-primary-navy dark:text-white">
+          <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
             <Bot className="h-5 w-5" aria-hidden />
             AI Financial Coach
           </DialogTitle>
-          <DialogDescription>Ask anything about your finances — answers use your live data.</DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1">
-          <div ref={scrollRef} className="space-y-4 pb-4">
-            {messages.map((message, index) => (
-              <div key={index} className={message.role === "user" ? "flex justify-end gap-3" : "flex justify-start gap-3"}>
-                {message.role === "assistant" ? (
-                  <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
-                    <div className="h-1.5 w-1.5 rounded-full bg-slate-400 dark:bg-slate-500" aria-hidden />
+        {/* Live body wrapper: p-6 pt-0 flex-1 flex flex-col min-h-0. */}
+        <div className="flex min-h-0 flex-1 flex-col p-6 pt-0">
+          <ScrollArea className="flex-1 pr-4">
+            <div ref={scrollRef} className="space-y-4 pb-4">
+              {messages.map((message, index) =>
+                message.role === "user" ? (
+                  <div key={index} className="flex justify-end gap-3">
+                    <div className="flex max-w-[85%] flex-col items-end">
+                      <div className="rounded-2xl bg-slate-800 px-4 py-2.5 text-white dark:bg-slate-600">
+                        <p className="text-sm leading-relaxed">{message.content}</p>
+                      </div>
+                    </div>
                   </div>
-                ) : null}
-                <div
-                  className={
-                    message.role === "user"
-                      ? "max-w-[85%] rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm text-white shadow-sm"
-                      : "max-w-[85%] rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                  }
-                >
-                  {message.content}
-                </div>
-              </div>
-            ))}
-            {sending ? (
-              <div className="flex justify-start gap-3">
-                <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
-                  <div className="h-1.5 w-1.5 rounded-full bg-slate-400 dark:bg-slate-500" aria-hidden />
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-400 dark:border-slate-600 dark:bg-slate-700">
-                  AI is thinking...
-                </div>
-              </div>
-            ) : null}
-          </div>
-        </ScrollArea>
-
-        {messages.length <= 1 ? (
-          <div>
-            <p className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">Quick questions:</p>
-            <div className="flex flex-wrap gap-2">
-              {SUGGESTED_QUESTIONS.map((question) => (
-                <button
-                  key={question}
-                  type="button"
-                  onClick={() => void send(question)}
-                  className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-violet-700 dark:hover:bg-violet-950"
-                >
-                  {question}
-                </button>
-              ))}
+                ) : (
+                  <div key={index} className="flex justify-start gap-3">
+                    <div className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
+                      <div className="h-1.5 w-1.5 rounded-full bg-slate-400 dark:bg-slate-500" aria-hidden />
+                    </div>
+                    <div className="max-w-[85%]">
+                      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 dark:border-slate-600 dark:bg-slate-700">
+                        {/* Live renders the reply as markdown inside a prose block;
+                            each paragraph carries the live-exact classes. */}
+                        <div className="text-sm prose prose-sm prose-slate dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                          <Markdown
+                            components={{
+                              p: (props) => (
+                                <p className="my-1 leading-relaxed text-slate-700 dark:text-slate-300" {...props} />
+                              ),
+                            }}
+                          >
+                            {message.content}
+                          </Markdown>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ),
+              )}
             </div>
-          </div>
-        ) : null}
+          </ScrollArea>
 
-        <form
-          className="mt-4 mb-4 flex items-center gap-2"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void send(draft);
-          }}
-        >
-          <Input
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder="Ask me about your finances..."
-            aria-label="Ask the AI coach about your finances"
-            maxLength={500}
-          />
-          <Button type="submit" size="icon" className="bg-primary-sage text-white shadow hover:bg-primary-sage/90" disabled={!draft.trim() || sending} aria-label="Send message">
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Send className="h-4 w-4" aria-hidden />}
-          </Button>
-        </form>
+          {messages.length <= 1 ? (
+            <div className="mb-4 mt-4">
+              <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">Quick questions:</p>
+              <div className="flex flex-wrap gap-2">
+                {SUGGESTED_QUESTIONS.map((question) => (
+                  <Button
+                    key={question}
+                    type="button"
+                    variant="outline"
+                    onClick={() => void send(question)}
+                    className="h-8 rounded-md px-3 text-xs"
+                  >
+                    {question}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          <form
+            className="mt-4 flex gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void send(draft);
+            }}
+          >
+            <Input
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              placeholder="Ask me about your finances..."
+              aria-label="Ask the AI coach about your finances"
+              maxLength={500}
+              className="flex-1"
+            />
+            <Button
+              type="submit"
+              size="icon"
+              disabled={!draft.trim() || sending}
+              aria-label="Send message"
+            >
+              <Send className="h-4 w-4" aria-hidden />
+            </Button>
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
