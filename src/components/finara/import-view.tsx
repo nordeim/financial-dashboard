@@ -347,9 +347,9 @@ export function ImportView() {
                   <TableBody>
                     {rows.map((row, index) => (
                       <TableRow key={index}>
-                        <TableCell className="text-xs tabular-nums text-slate-500">{row.date}</TableCell>
+                        <TableCell className="text-xs text-slate-500">{row.date}</TableCell>
                         <TableCell className="max-w-56 truncate text-sm">{row.description}</TableCell>
-                        <TableCell className="text-right text-sm font-semibold tabular-nums">{row.amount}</TableCell>
+                        <TableCell className="text-right text-sm font-semibold">{row.amount}</TableCell>
                         <TableCell>
                           <Select value={row.category} onValueChange={(value) => updateRow(index, { category: value })}>
                             <SelectTrigger className="h-8 w-28 text-xs" aria-label={`Category for row ${index + 1}`}>

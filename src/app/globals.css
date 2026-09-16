@@ -6,7 +6,12 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
+  /* Round-5 parity: the live app's root `font-sans` resolves to the Tailwind
+     default system stack (its Inter @import is overridden for all in-app
+     content — computed-style verified on live h1/button/chart text). The
+     next/font Inter variable stays loaded on <body>, mirroring the live
+     app's own (overridden) Inter import. */
+  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
