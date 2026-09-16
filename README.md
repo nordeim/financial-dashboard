@@ -23,7 +23,7 @@ Finara solves the "where did my money go?" problem with a single, real-time surf
 | 🧭 **Analytics** | 3/6/12-month windows with From/To date pickers, segmented 4-tab control (Overview/Expenses/Income/Investments), windowed monthly averages, income vs expenses trend, category donuts, sector allocation (Income tab renders empty, mirroring a verified source quirk) |
 | 🤖 **AI Coach & Insights** | Chat grounded in your live financial snapshot; dashboard insight cards with deterministic fallback |
 | 🔐 **GDPR Export & Restore** | One-click full JSON export; Settings page round-trips a Finara export file back into the database (finara-export import mode) |
-| 🧪 **Unit Tests** | Vitest suite (101 tests) covering money math, taxonomy, KPI computation (incl. income activity categories), filters, date formats, export normalization, source-exact UI maps, quick-select tile labels, and the pinned shadcn primitive class sets |
+| 🧪 **Unit Tests** | Vitest suite (122 tests) covering money math, taxonomy, KPI computation (incl. income activity categories), filters, date formats, export normalization, source-exact UI maps, quick-select tile labels, the pinned shadcn primitive class sets, the live-probed semantic design tokens, and the login-page class sets |
 | 🌙 **Responsive** | Sidebar on desktop, full-screen mobile drawer with Synced badge; WCAG-minded focus states and aria labels; staggered CSS entrance animations (`prefers-reduced-motion` safe) |
 
 ## Architecture
@@ -73,7 +73,7 @@ Requires **Bun ≥ 1.3** (or Node.js ≥ 20 with npm — commands below use `bun
 
 - `bun run lint` → exits 0, no output.
 - `bun run typecheck` → exits 0, no output.
-- `bun run test` → 101 tests passing (Vitest).
+- `bun run test` → 122 tests passing (Vitest).
 - First visit to any API route (e.g. the dashboard) auto-seeds a six-month demo history: 4 accounts, 4 income sources, ~96 expenses, 3 budgets, 3 goals, 8 holdings. Seeding is idempotent and concurrency-safe (DB-level unique-key lock + completion marker).
 
 ## Demo Credentials
@@ -102,7 +102,7 @@ financial-dashboard/
 │   └── 📂 lib/                            # money, categories, types, analytics, seed, api,
 │                                          # dashboard-kpis, expense-filters, date-format,
 │                                          # import-export, ui-maps (pure domain modules, TDD)
-│                                          # + __tests__/ (Vitest, 101 tests)
+│                                          # + __tests__/ (Vitest, 122 tests)
 ├── 📂 prisma/
 │   └── 📄 schema.prisma                   # 7 models, money as integer minor units
 ├── 📂 db/                                 # SQLite runtime storage (gitignored)
@@ -175,6 +175,15 @@ and ADR-018. Charts render the live config: both grid directions, visible axis/t
 lines (`#64748b`), `dark:stroke-gray-600` grid / `dark:stroke-gray-400` axes (dark grid
 computes `rgb(75,85,99)` — live-probed), default legend icon, lowercase hex strokes.
 
+Round 6 (ADR-019) additionally pins **the shadcn semantic theme and the Tailwind utility
+scales** to the live app's computed truth: the semantic tokens resolve to the classic
+shadcn *neutral* values (light `--background #ffffff`, `--muted-foreground #737373`,
+`--border/--input #e5e5e5`, `--ring #0a0a0a`; dark `#0a0a0a` / `#a3a3a3` / `#262626`),
+the radius scale renders the v3 values (`rounded-md` 6px, `rounded-lg` 8px, `rounded-xl`
+12px), and `backdrop-blur-sm` renders 4px — all live-probed via computed styles in both
+themes and pinned by `src/lib/__tests__/design-tokens.test.ts`. Do not "modernize" these
+to the v4/oklch defaults.
+
 ## Testing & Verification
 
 The full gate (run before every push):
@@ -182,11 +191,11 @@ The full gate (run before every push):
 ```bash
 bun run lint        # ESLint 9 — must exit 0
 bun run typecheck   # tsc --noEmit — must exit 0
-bun run test        # Vitest — 101 unit tests, must all pass
+bun run test        # Vitest — 122 unit tests, must all pass
 bun run build       # next build — must exit 0
 ```
 
-The Vitest suite covers the pure domain layer with TDD-maintained specs: money math (minor units, monthly-equivalent normalization incl. annual), taxonomy sets (categories, frequencies, currencies, sectors, quick-select tile labels), dashboard KPI computation (goal-progress savings, placeholder-aware trends, largest-expense bucket, budget remaining/limit-0 footer semantics, income activity categories for the Recent Activity badges), expense filter/sort/pagination logic, date formats, Finara export normalization, the source-exact UI maps (sector hexes, goal emoji, priority/activity/expense-row badges, account icons), and the shadcn primitive class-set pins (classic live-exact strings, element types, no `data-slot`, DialogTitle as a pure semantics wrapper). Browser verification is performed end-to-end before each push round (login incl. the invalid-credentials error alert, all nine views in light + dark, FAB Quick Add round-trip with the rotating toggle, full quick-select + manual add/edit/confirm-delete, income/goal/account/investment CRUD, filters, pagination, AI coach, CSV import, export restore, dark-mode toggle + persistence, mobile drawer, zero console errors), followed by computed-style probes (system font stack, chart grid/axis colors in both themes) and a signature-multiset DOM re-diff against the captured live app (round-5: every residual delta classifies into the documented buckets — infra, a11y additions, lucide artifacts, live's duplicated toaster, seed-data counts). A formal Playwright E2E suite remains a backlog item — see Project_Architecture_Document.md §10.
+The Vitest suite covers the pure domain layer with TDD-maintained specs: money math (minor units, monthly-equivalent normalization incl. annual), taxonomy sets (categories, frequencies, currencies, sectors, quick-select tile labels), dashboard KPI computation (goal-progress savings, placeholder-aware trends, largest-expense bucket, budget remaining/limit-0 footer semantics, income activity categories for the Recent Activity badges), expense filter/sort/pagination logic, date formats, Finara export normalization, the source-exact UI maps (sector hexes, goal emoji, priority/activity/expense-row badges, account icons), the shadcn primitive class-set pins (classic live-exact strings, element types, no `data-slot`, DialogTitle as a pure semantics wrapper, the dialog card base without `relative`), the live-probed semantic design tokens (classic shadcn neutral theme, light + dark, plus the v3 radius/blur scale pins), and the login-page class sets (raw Google button, ringed span logo, py-2 ring-2 inputs, slate-500 field icons). Browser verification is performed end-to-end before each push round (login incl. the invalid-credentials error alert, all nine views in light + dark, FAB Quick Add round-trip with the rotating toggle, full quick-select + manual add/edit/confirm-delete, income/goal/account/investment CRUD, filters, pagination, AI coach, CSV import, export restore, dark-mode toggle + persistence, mobile drawer, zero console errors), followed by computed-style probes (system font stack, semantic tokens, radii, blur, chart grid/axis colors in both themes) and a signature-multiset DOM re-diff against the captured live app (round-6: every residual delta classifies into the documented buckets — infra, a11y additions, lucide artifacts, live's duplicated toaster, seed-data counts, the login demo-credentials affordance). A formal Playwright E2E suite remains a backlog item — see Project_Architecture_Document.md §10.
 
 ## Security
 
