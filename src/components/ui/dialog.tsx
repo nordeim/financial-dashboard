@@ -22,9 +22,29 @@ const DialogPortal = DialogPrimitive.Portal
 
 const DialogClose = DialogPrimitive.Close
 
+// Round-6 (ADR-019): the live card carries NO `relative` — every live
+// modal's close button sits IN the header row (see quick-add-dialog.tsx for
+// the pattern), not absolutely positioned. Exported for the pin spec
+// (ui-primitives.test.tsx). Width/max-h/dark-card overrides stay per call
+// site via className (live dialog matrix: Add Expense max-w-2xl + scroll,
+// income max-w-lg + scroll, investment max-w-md + scroll, goal max-w-md,
+// account max-w-md bg-card + black/60 overlay, progress max-w-sm).
+export const DIALOG_CARD_BASE =
+  "w-full max-w-2xl rounded-xl border bg-white text-card-foreground shadow dark:bg-gray-800"
+
+// Round-6 live probe (2026-09-17): the live overlay itself carries
+// bg-black/50 (`fixed inset-0 bg-black/50 flex items-center justify-center
+// p-4 z-50`) and clicking it does NOT dismiss the full modals (Add Expense
+// stayed open through a real overlay click; only the Quick Add chooser
+// dismisses — it wires its own onPointerDown). The backdrop therefore lives
+// ON the overlay, not as a separate Radix Close button.
+const DIALOG_OVERLAY_BASE =
+  "fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+
 function DialogContent({
   className,
   overlayClassName,
+  backdropClassName,
   children,
   showCloseButton = true,
   ...props
@@ -33,31 +53,17 @@ function DialogContent({
   className?: string
   /** Classes for the full-screen overlay (z-index overrides live here). */
   overlayClassName?: string
+  /** Classes for the backdrop layer (live Add Account renders bg-black/60). */
+  backdropClassName?: string
   showCloseButton?: boolean
 }) {
   return (
     <DialogPortal>
       <DialogPrimitive.Content
-        className={cn(
-          "fixed inset-0 z-50 flex items-center justify-center p-4 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-          overlayClassName
-        )}
+        className={cn(DIALOG_OVERLAY_BASE, backdropClassName, overlayClassName)}
         {...props}
       >
-        <DialogPrimitive.Close
-          tabIndex={-1}
-          aria-hidden
-          className="absolute inset-0 bg-black/50"
-        />
-        <div
-          className={cn(
-            // Base matches the live card surface; max-h/overflow are opt-in
-            // per dialog (round-5): only the Add Expense modal carries
-            // max-h-[90vh] overflow-y-auto on live.
-            "relative w-full max-w-2xl rounded-xl border bg-white text-card-foreground shadow dark:bg-gray-800",
-            className
-          )}
-        >
+        <div className={cn(DIALOG_CARD_BASE, className)}>
           {children}
           {showCloseButton && (
             <DialogPrimitive.Close className="absolute right-6 top-6 inline-flex h-9 w-9 items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">

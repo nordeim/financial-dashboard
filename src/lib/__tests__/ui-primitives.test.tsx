@@ -266,3 +266,27 @@ describe("DialogTitle (classic live set, round-5)", () => {
     expect(decode(quick)).toContain('class="text-lg font-semibold text-gray-900 dark:text-white"');
   });
 });
+
+describe("DialogContent card base (round-6, ADR-019)", () => {
+  // Round-6 live capture (2026-09-17): every live modal card renders
+  // `rounded-xl border text-card-foreground shadow w-full max-w-2xl bg-white
+  // dark:bg-gray-800 …` — with NO `relative` (the close button sits IN the
+  // header row, not absolutely positioned). The base is exported so this pin
+  // survives without a portal; width/max-h/dark-card overrides stay per
+  // call site via className.
+  it("exports the live-exact card base with no `relative`", async () => {
+    const dialog = await import("@/components/ui/dialog");
+    const base = (dialog as unknown as { DIALOG_CARD_BASE: string }).DIALOG_CARD_BASE;
+    expect(typeof base).toBe("string");
+    expect(base).toContain("rounded-xl");
+    expect(base).toContain("border");
+    expect(base).toContain("text-card-foreground");
+    expect(base).toContain("shadow");
+    expect(base).toContain("w-full");
+    expect(base).toContain("bg-white");
+    expect(base).toContain("dark:bg-gray-800");
+    expect(base).not.toContain("relative");
+    // The merged default width stays max-w-2xl (Add Expense); callers narrow it.
+    expect(base).toContain("max-w-2xl");
+  });
+});
