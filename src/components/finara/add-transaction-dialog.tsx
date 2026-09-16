@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, TrendingDown, TrendingUp } from "lucide-react";
+import { Loader2, DollarSign, Receipt } from "lucide-react";
 import { mutate } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { toMinorUnits } from "@/lib/money";
@@ -121,8 +121,10 @@ export function AddTransactionDialog({
     const def = QUICK_SELECT_SUBCATEGORIES.find((entry) => entry.id === subcategoryId);
     setExpenseForm((current) => ({
       ...current,
+      // Live pre-fills the description with the tile label (round-5 probe).
+      description: def ? def.label : current.description,
       subcategory: subcategoryId,
-      category: def?.category ?? "Needs",
+      category: def ? "Needs" : current.category,
     }));
     setMode("manual");
   };
@@ -235,19 +237,14 @@ export function AddTransactionDialog({
     >
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-primary-navy dark:text-white">
+          <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
             {isExpense ? (
-              <TrendingDown className="h-5 w-5" aria-hidden />
+              <Receipt className="h-5 w-5" aria-hidden />
             ) : (
-              <TrendingUp className="h-5 w-5" aria-hidden />
+              <DollarSign className="h-5 w-5" aria-hidden />
             )}
             {isExpense ? (isEditing ? "Edit Expense" : "Add Expense") : "Add Income Source"}
           </DialogTitle>
-          <DialogDescription>
-            {isExpense
-              ? "Pick a category for one-tap entry, or fill the form manually."
-              : "Add a new income stream to your monthly totals."}
-          </DialogDescription>
         </DialogHeader>
 
         {isExpense && mode === "quick" ? (
@@ -256,17 +253,18 @@ export function AddTransactionDialog({
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {QUICK_SELECT_SUBCATEGORIES.map((entry) => (
-                  <button
+                  <Button
                     key={entry.id}
                     type="button"
+                    variant="outline"
                     onClick={() => applyQuickSelect(entry.id)}
-                    className="flex h-16 w-full flex-col gap-1 border border-gray-200 bg-white px-4 py-2 text-left shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
+                    className="h-16 w-full flex-col gap-1 text-left items-center justify-center bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600"
                   >
                     <span className="text-lg" aria-hidden>
                       {entry.emoji}
                     </span>
                     <span className="text-xs font-medium text-gray-900 dark:text-gray-100">{entry.label}</span>
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>

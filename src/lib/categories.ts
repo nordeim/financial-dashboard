@@ -68,13 +68,16 @@ export function subcategoriesFor(category: ExpenseCategory): SubcategoryDef[] {
   return SUBCATEGORIES.filter((s) => s.category === category);
 }
 
-/** Emoji quick-select grid shown first in the Add Expense sheet (five Needs). */
-export const QUICK_SELECT_SUBCATEGORIES: readonly SubcategoryDef[] = [
-  SUBCATEGORIES[0], // Rent
-  SUBCATEGORIES[1], // Groceries
-  SUBCATEGORIES[2], // Utilities
-  SUBCATEGORIES[3], // Transportation
-  SUBCATEGORIES[4], // Healthcare
+/** Emoji quick-select grid shown first in the Add Expense sheet (five Needs).
+ *  Tile copy is live-exact (round-5): the rent tile reads "Rent/Mortgage"
+ *  while the subcategory id it stores ("rent") keeps the "Rent" label used
+ *  by the selects and row badges. */
+export const QUICK_SELECT_SUBCATEGORIES: readonly { id: string; label: string; emoji: string }[] = [
+  { id: "rent", label: "Rent/Mortgage", emoji: "🏠" },
+  { id: "groceries", label: "Groceries", emoji: "🛒" },
+  { id: "utilities", label: "Utilities", emoji: "⚡" },
+  { id: "transportation", label: "Transportation", emoji: "🚗" },
+  { id: "healthcare", label: "Healthcare", emoji: "🏥" },
 ] as const;
 
 export interface OptionDef {
