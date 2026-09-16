@@ -51,7 +51,10 @@ function DialogContent({
         />
         <div
           className={cn(
-            "relative w-full max-w-2xl rounded-xl border bg-white text-card-foreground shadow dark:bg-gray-800 max-h-[90vh] overflow-y-auto",
+            // Base matches the live card surface; max-h/overflow are opt-in
+            // per dialog (round-5): only the Add Expense modal carries
+            // max-h-[90vh] overflow-y-auto on live.
+            "relative w-full max-w-2xl rounded-xl border bg-white text-card-foreground shadow dark:bg-gray-800",
             className
           )}
         >
@@ -92,10 +95,11 @@ function DialogTitle({
 }: React.ComponentProps<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
-      className={cn(
-        "text-lg font-semibold leading-none tracking-tight",
-        className
-      )}
+      // Round-5: no injected base — every live modal title carries a
+      // different set (Quick Add: text-lg font-semibold …; full modals:
+      // font-semibold leading-none tracking-tight …). Call sites own the
+      // exact strings; this stays a pure Radix semantics wrapper.
+      className={cn(className)}
       {...props}
     />
   )
