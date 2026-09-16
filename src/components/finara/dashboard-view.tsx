@@ -485,7 +485,7 @@ export function DashboardView({
       {/* FAB (live: fixed bottom-6 right-6 sage circle; opens the Quick Add
           chooser whose z-40 overlay keeps this button on top as the toggle,
           rotating the plus 45° into an X while open). */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-6 right-6 z-50" tabIndex={0}>
         <Button
           onClick={onQuickAdd}
           aria-label="Add transaction"

@@ -228,7 +228,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
             <div className="space-y-4">
               <div className="flex gap-3">
                 <div className="relative flex-1">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden />
                 <Input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
@@ -467,7 +467,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
 
       {/* Floating action button (live: fixed bottom-6 right-6, sage circle;
           opens the Quick Add chooser; plus rotates 45° into an X while open). */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-6 right-6 z-50" tabIndex={0}>
         <Button
           onClick={onQuickAdd}
           aria-label="Add transaction"
