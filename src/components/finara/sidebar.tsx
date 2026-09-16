@@ -119,12 +119,12 @@ function UserMenu({
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => toggleTheme()}>
-          {isDark ? <Sun className="h-4 w-4" aria-hidden /> : <Moon className="h-4 w-4" aria-hidden />}
+          {isDark ? <Sun className="mr-2 h-4 w-4" aria-hidden /> : <Moon className="mr-2 h-4 w-4" aria-hidden />}
           {isDark ? "Light Mode" : "Dark Mode"}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => onSignOut()} className="text-red-500 focus:text-red-500">
-          <LogOut className="h-4 w-4" aria-hidden />
+          <LogOut className="mr-2 h-4 w-4" aria-hidden />
           Sign Out
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -213,16 +213,12 @@ export function Sidebar({
 export function MobileTopNav({
   active,
   onNavigate,
-  userName,
-  userEmail,
   menuOpen,
   onToggleMenu,
   onSignOut,
 }: {
   active: ViewId;
   onNavigate: (view: ViewId) => void;
-  userName: string;
-  userEmail: string;
   menuOpen: boolean;
   onToggleMenu: () => void;
   onSignOut: () => void;
@@ -266,7 +262,7 @@ export function MobileTopNav({
               aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
               className="h-9 w-9 text-gray-700 dark:text-gray-300"
             >
-              <Menu className="h-4 w-4" aria-hidden />
+              <Menu className="h-5 w-5" aria-hidden />
             </Button>
           </div>
         </div>
@@ -282,9 +278,18 @@ export function MobileTopNav({
                 <NavItem key={item.id} item={item} active={item.id === active} onNavigate={handleNavigate} compact />
               ))}
             </nav>
-            <div className="space-y-3 border-t border-slate-700/30 p-4">
-              <SyncedBadge />
-              <UserMenu userName={userName} userEmail={userEmail} onSignOut={onSignOut} />
+            {/* Live drawer bottom (round-5): a direct full-width Sign Out
+                button — no Synced badge, no user menu (the badge lives in the
+                mobile top bar; Dark Mode has its own top-bar toggle). */}
+            <div className="border-t border-slate-700/30 p-4">
+              <Button
+                variant="outline"
+                onClick={onSignOut}
+                className="w-full text-white border-slate-600 hover:bg-white/10 hover:text-white"
+              >
+                <LogOut className="mr-2 h-4 w-4" aria-hidden />
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>

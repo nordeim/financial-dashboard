@@ -147,8 +147,6 @@ export function FinaraApp() {
         <MobileTopNav
           active={view}
           onNavigate={navigate}
-          userName={session.name}
-          userEmail={session.email}
           menuOpen={mobileMenuOpen}
           onToggleMenu={() => setMobileMenuOpen((open) => !open)}
           onSignOut={handleSignOut}
