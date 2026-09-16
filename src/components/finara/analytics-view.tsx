@@ -110,9 +110,10 @@ export function AnalyticsView() {
       <ViewHeader
         title="Analytics & Reports"
         subtitle="Real-time insights into your financial performance"
-        actionsClassName="flex-wrap"
         actions={
-          <>
+          /* Live wraps the analytics actions in its own flex row (round-5
+             capture: div.flex.gap-3.flex-wrap) — the only view with a wrapper. */
+          <div className="flex flex-wrap gap-3">
             <div className="flex gap-2">
               <Input
                 type="date"
@@ -147,7 +148,7 @@ export function AnalyticsView() {
             <Button variant="outline" onClick={exportCsv} className="h-9 gap-2">
               <Download className="h-4 w-4" aria-hidden /> Export
             </Button>
-          </>
+          </div>
         }
       />
 
@@ -175,27 +176,31 @@ export function AnalyticsView() {
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={dateRangeTrend} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-                      <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#64748B" }} tickLine={false} axisLine={false} />
+                      {/* Live chart config (round-5 capture): both grid directions,
+                          visible axis + tick lines (#64748b), dark-mode grid via
+                          dark:stroke-gray-600 on each line (className propagates
+                          through recharts filterProps), lowercase hex throughout. */}
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-gray-600" />
+                      <XAxis dataKey="month" stroke="#64748b" className="dark:stroke-gray-400" tick={{ fill: "#64748b" }} />
                       <YAxis
-                        tick={{ fontSize: 12, fill: "#64748B" }}
-                        tickLine={false}
-                        axisLine={false}
+                        stroke="#64748b"
+                        className="dark:stroke-gray-400"
+                        tick={{ fill: "#64748b" }}
                         tickFormatter={(value: number) => formatMoney(value)}
                         width={84}
                       />
                       <Tooltip formatter={(value: number | string) => formatMoney(Number(value))} contentStyle={tooltipStyle} />
-                      <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
-                      <Line type="monotone" dataKey="incomeMinor" name="Income" stroke="#10B981" strokeWidth={2} dot={{ r: 3 }} />
-                      <Line type="monotone" dataKey="expensesMinor" name="Expenses" stroke="#EF4444" strokeWidth={2} dot={{ r: 3 }} />
-                      <Line type="monotone" dataKey="netMinor" name="Net Savings" stroke="#3B82F6" strokeWidth={2} dot={{ r: 3 }} />
+                      <Legend wrapperStyle={{ fontSize: 12 }} />
+                      <Line type="monotone" dataKey="incomeMinor" name="Income" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="expensesMinor" name="Expenses" stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="netMinor" name="Net Savings" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
               </div>
             </div>
 
-            <div className="fade-in-up stagger-1 grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="fade-in-up stagger-1 grid gap-6 md:grid-cols-3">
               <div className="rounded-xl border-0 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg">
                 <div className="p-6">
                   <div className="flex items-center justify-between">
@@ -276,15 +281,15 @@ export function AnalyticsView() {
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={topCategories} layout="vertical" margin={{ top: 8, right: 16, left: 8, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-gray-600" horizontal={false} />
                       <XAxis
                         type="number"
-                        tick={{ fontSize: 12, fill: "#64748B" }}
-                        tickLine={false}
-                        axisLine={false}
+                        stroke="#64748b"
+                        className="dark:stroke-gray-400"
+                        tick={{ fill: "#64748b" }}
                         tickFormatter={(value: number) => formatMoneyCompact(value)}
                       />
-                      <YAxis type="category" dataKey="label" tick={{ fontSize: 11, fill: "#64748B" }} tickLine={false} axisLine={false} width={140} />
+                      <YAxis type="category" dataKey="label" stroke="#64748b" className="dark:stroke-gray-400" tick={{ fill: "#64748b" }} width={140} />
                       <Tooltip formatter={(value: number | string) => formatMoney(Number(value))} contentStyle={tooltipStyle} />
                       <Bar dataKey="amountMinor" name="Spending" radius={[0, 6, 6, 0]}>
                         {topCategories.map((entry, index) => (
