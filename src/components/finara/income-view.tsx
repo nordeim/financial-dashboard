@@ -174,7 +174,8 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                         <div>
                           <h3 className="truncate font-bold text-neutral-900">{source.name}</h3>
                           <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">
-                            {incomeCategoryLabel(source.category).toLowerCase()}
+                            {/* Live renders the raw category id ("primary") on the card badge. */}
+                            {source.category}
                           </Badge>
                         </div>
                       </div>
