@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, DollarSign, Receipt } from "lucide-react";
+import { Loader2, DollarSign, Receipt, X } from "lucide-react";
 import { mutate } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { toMinorUnits } from "@/lib/money";
@@ -235,36 +235,60 @@ export function AddTransactionDialog({
         onOpenChange(next);
       }}
     >
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+      {/* Round-6 live matrix: Add Expense = max-w-2xl + scroll; Add Income
+          Source = max-w-lg + scroll. The close button lives in the header row
+          (live anatomy — see quick-add-dialog.tsx), so the content-level
+          absolute close is off. */}
+      <DialogContent
+        className={isExpense ? "max-h-[90vh] max-w-2xl overflow-y-auto" : "max-h-[90vh] max-w-lg overflow-y-auto"}
+        showCloseButton={false}
+        aria-describedby={undefined}
+      >
         <DialogHeader>
-          <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-            {isExpense ? (
-              <Receipt className="h-5 w-5" aria-hidden />
-            ) : (
-              <DollarSign className="h-5 w-5" aria-hidden />
-            )}
-            {isExpense ? (isEditing ? "Edit Expense" : "Add Expense") : "Add Income Source"}
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
+              {isExpense ? (
+                <Receipt className="h-5 w-5" aria-hidden />
+              ) : (
+                <DollarSign className="h-5 w-5" aria-hidden />
+              )}
+              {isExpense ? (isEditing ? "Edit Expense" : "Add Expense") : "Add Income Source"}
+            </DialogTitle>
+            <button
+              type="button"
+              onClick={() => {
+                resetForms();
+                onOpenChange(false);
+              }}
+              aria-label="Close"
+              className="inline-flex h-9 w-9 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+            >
+              <X className="h-4 w-4" aria-hidden />
+            </button>
+          </div>
         </DialogHeader>
 
+        {/* Live body wrapper: CardContent p-6 pt-0 around every mode. */}
+        <div className="p-6 pt-0">
         {isExpense && mode === "quick" ? (
           <div className="mb-6">
             <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Quick Select Category</h3>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {QUICK_SELECT_SUBCATEGORIES.map((entry) => (
-                  <Button
-                    key={entry.id}
-                    type="button"
-                    variant="outline"
-                    onClick={() => applyQuickSelect(entry.id)}
-                    className="h-16 w-full flex-col gap-1 text-left items-center justify-center bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600"
-                  >
-                    <span className="text-lg" aria-hidden>
-                      {entry.emoji}
-                    </span>
-                    <span className="text-xs font-medium text-gray-900 dark:text-gray-100">{entry.label}</span>
-                  </Button>
+                  <div key={entry.id} tabIndex={0}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => applyQuickSelect(entry.id)}
+                      className="flex h-16 w-full flex-col gap-1 text-left items-center justify-center bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600"
+                    >
+                      <span className="text-lg" aria-hidden>
+                        {entry.emoji}
+                      </span>
+                      <span className="text-xs font-medium text-gray-900 dark:text-gray-100">{entry.label}</span>
+                    </Button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -307,17 +331,19 @@ export function AddTransactionDialog({
             </div>
 
             <div>
-              <p className="mb-2 text-sm font-medium leading-none">Quick Add Amount</p>
+              <Label className="text-sm font-medium leading-none">Quick Add Amount</Label>
               <div className="flex flex-wrap gap-2">
                 {EXPENSE_QUICK_AMOUNTS.map((units) => (
-                  <button
-                    key={units}
-                    type="button"
-                    onClick={() => addQuickAmount(units, "expense")}
-                    className="h-9 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
-                  >
-                    + USD{units}
-                  </button>
+                  <div key={units} tabIndex={0}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => addQuickAmount(units, "expense")}
+                      className="h-9 px-4 py-2"
+                    >
+                      + USD{units}
+                    </Button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -449,17 +475,19 @@ export function AddTransactionDialog({
             </div>
 
             <div>
-              <p className="mb-2 text-sm font-medium leading-none">Quick Add Amount</p>
+              <Label className="text-sm font-medium leading-none">Quick Add Amount</Label>
               <div className="flex flex-wrap gap-2">
                 {INCOME_QUICK_AMOUNTS.map((units) => (
-                  <button
-                    key={units}
-                    type="button"
-                    onClick={() => addQuickAmount(units, "income")}
-                    className="h-9 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
-                  >
-                    + ${units.toFixed(2)}
-                  </button>
+                  <div key={units} tabIndex={0}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => addQuickAmount(units, "income")}
+                      className="h-9 px-4 py-2"
+                    >
+                      + ${units.toFixed(2)}
+                    </Button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -540,6 +568,7 @@ export function AddTransactionDialog({
             </div>
           </form>
         )}
+        </div>
       </DialogContent>
     </Dialog>
   );
