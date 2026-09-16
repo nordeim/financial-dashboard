@@ -44,7 +44,7 @@ export async function getDashboard(): Promise<DashboardDto> {
     recentIncomeEvents: incomeSources
       .map((source): IncomeEventInput | null => {
         const reference = source.nextPaymentDate ?? source.createdAt;
-        return { name: source.name, amountMinor: source.amountMinor, date: reference };
+        return { name: source.name, amountMinor: source.amountMinor, category: source.category, date: reference };
       })
       .filter((event): event is IncomeEventInput => event !== null),
   });

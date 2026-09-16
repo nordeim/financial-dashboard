@@ -44,6 +44,8 @@ export interface GoalInput {
 export interface IncomeEventInput {
   name: string;
   amountMinor: number;
+  /** Income source category (primary/secondary/passive/other) — feeds the Recent Activity badge. */
+  category: string;
   date: Date;
 }
 
@@ -156,7 +158,7 @@ export function computeDashboardKpis(input: {
       kind: "income" as const,
       description: event.name,
       amountMinor: event.amountMinor,
-      category: null,
+      category: event.category,
       subcategory: null,
       date: event.date.toISOString(),
     })),
