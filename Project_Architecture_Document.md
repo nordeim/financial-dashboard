@@ -1,9 +1,9 @@
-# Finara (Financial Dashboard) — Master Project Architecture Document (PAD) v1.3
+# Finara (Financial Dashboard) — Master Project Architecture Document (PAD) v1.4
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
-**Companion Documents:** `README.md` (user onboarding), `AGENTS.md` (agent instructions), `CLAUDE.md` (Claude Code conventions), `docs/Finara_Dashboard.png` (visual reference of the original app), `docs/plans/2026-09-15-parity-remediation-round2.md` (round-2 parity audit), `docs/plans/2026-09-15-parity-remediation-round3.md` (round-3 pixel-parity audit), `docs/plans/2026-09-15-parity-remediation-round4.md` (round-4 structural-parity audit + plan this revision implements, incl. the execution & verification record)
-**Last Updated:** 2026-09-16 (v1.3 — structural parity remediation round 4: ADR-014..015, live-exact classic shadcn class sets, app-shell/sidebar DOM anatomy, Quick Add FAB flow, per-view structural details, login error-state fix, 98-test suite; v1.2 — pixel-parity remediation round 3: ADR-011..013, source-exact design system, centered dialogs + native confirms, ui-maps module, CSS entrance animations; v1.1 — parity remediation round 2: ADR-008..010, pure domain layer + Vitest, taxonomy alignment, dark mode, filters/bulk/edit/pagination, export restore)
+**Companion Documents:** `README.md` (user onboarding), `AGENTS.md` (agent instructions), `CLAUDE.md` (Claude Code conventions), `docs/Finara_Dashboard.png` (visual reference of the original app), `docs/plans/2026-09-15-parity-remediation-round2.md` (round-2 parity audit), `docs/plans/2026-09-15-parity-remediation-round3.md` (round-3 pixel-parity audit), `docs/plans/2026-09-15-parity-remediation-round4.md` (round-4 structural-parity audit), `docs/plans/2026-09-16-parity-remediation-round5.md` (round-5 computed-style parity audit + plan this revision implements, incl. the execution & verification record)
+**Last Updated:** 2026-09-16 (v1.4 — computed-style parity remediation round 5: ADR-016..018, live system-font truth, live chart configuration, Tailwind v3 palette pin, dialog title/content class sets, AI Coach live anatomy, mobile drawer Sign Out, income badge categories + raw-id card badges, 101-test suite; v1.3 — structural parity remediation round 4: ADR-014..015, live-exact classic shadcn class sets, app-shell/sidebar DOM anatomy, Quick Add FAB flow, per-view structural details, login error-state fix, 98-test suite; v1.2 — pixel-parity remediation round 3: ADR-011..013, source-exact design system, centered dialogs + native confirms, ui-maps module, CSS entrance animations; v1.1 — parity remediation round 2: ADR-008..010, pure domain layer + Vitest, taxonomy alignment, dark mode, filters/bulk/edit/pagination, export restore)
 **Audience:** Senior Engineers, Tech Leads, DevOps, and Onboarding Engineers
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
@@ -166,10 +166,31 @@ Finara is a personal-finance dashboard: income, expenses, 50/30/20 budgets, acco
 **ADR-015: shadcn primitives pinned to the live app's classic class sets (round 4)**
 
 - **Context:** The vendored `src/components/ui/*` had drifted to the newest shadcn snapshot (`data-slot` attributes, `transition-all`, `focus-visible:ring-[3px]`, `shadow-xs`, Card `gap-6 py-6` grids, Table `whitespace-nowrap`, Toaster as `ol`, …) while the live app renders the classic sets — this was root cause R1 of the round-4 diff, touching every view.
-- **Decision:** All app-rendered primitives (`button, badge, card, input, label, select, tabs, checkbox, switch, table, scroll-area, progress, alert, toast/toaster, dropdown-menu, separator`) were reverted to the live-exact classic class strings and pinned by `src/lib/__tests__/ui-primitives.test.tsx` (16 specs: exact base strings for every variant/size, `Badge`/Toaster render as `div`, no `data-slot` anywhere). Radix behavior, `cn()` merging, and React 19 function components are preserved; `vitest.config.ts` now includes `.tsx` specs. Icons renamed upstream render as live-exact inline SVG where the shape changed (e.g. the classic angular `filter` polygon in `ClassicFilterIcon` — modern lucide aliases `Filter` to the rounded `Funnel`).
+- **Decision:** All app-rendered primitives (`button, badge, card, input, label, select, tabs, checkbox, switch, table, scroll-area, progress, alert, toast/toaster, dropdown-menu, separator`) were reverted to the live-exact classic class strings and pinned by `src/lib/__tests__/ui-primitives.test.tsx` (16 specs: exact base strings for every variant/size, `Badge`/Toaster render as `div`, no `data-slot` anywhere). Radix behavior, `cn()` merging, and React 19 function components are preserved; `vitest.config.ts` now includes `.tsx` specs. Icons renamed upstream render as live-exact inline SVG where the shape changed (e.g. the classic angular `filter` polygon in `ClassicFilterIcon` — modern lucide aliases `Filter` to the rounded `Funnel`). In round 5, `DialogTitle` became a pure Radix semantics wrapper (no injected base — call sites own the live-exact strings, since every live modal title carries a different set).
 - **Rationale:** The primitives are the multiply-leveraged layer of the UI: pinning their strings once fixes every view's signatures and prevents silent re-drift; the spec suite turns "do not upgrade shadcn primitives" into an executable rule.
 - **Consequences:** (+) Per-view structural diff dropped to only documented deltas (see the round-4 plan §E.2); primitive regressions now fail CI. (−) `npx shadcn add`/`diff` would fight the pins (documented in AGENTS.md invariants); unused vendored primitives outside the pinned set (popover, tooltip, …) still carry newer internals — they are not app-rendered.
 - **Alternatives Rejected:** Keeping the newest snapshot and overriding per call site (whack-a-mole across nine views); forking shadcn into a private registry (overkill for a pinned clone).
+
+**ADR-016: The effective typeface is the live app's computed system stack, not Inter (round 5)**
+
+- **Context:** Round-5 computed-style probes showed the live app renders everything in the Tailwind default system stack (`ui-sans-serif, system-ui, sans-serif, …`) — its root `font-sans` overrides the Inter `@import` on `<body>`. The clone mapped `--font-sans: var(--font-inter)`, rendering Inter everywhere.
+- **Decision:** Set `--font-sans` to the Tailwind default stack in `globals.css`; keep `next/font` Inter loaded on `<body>` exactly like live's loaded-but-overridden import. Computed-style ground truth beats declared intent: what the user's screen shows is the parity target, not what either stylesheet declares.
+- **Consequences:** Typography parity verified by probing computed `font-family` on h1/button/chart ticks; any future font change must re-probe the live app first.
+- **Alternatives rejected:** keeping Inter (visibly different letterforms vs system-ui on every surface); dropping the Inter load entirely (would diverge from live's network/DOM shape).
+
+**ADR-017: Charts render the live configuration (round 5)**
+
+- **Context:** The audit found the clone's Recharts config hid axis/tick lines, disabled vertical grid, forced 12px ticks, used uppercase hex, and didn't restyle the grid in dark mode; live shows both grid directions, visible `#64748b` axis/tick lines, SVG-default 16px ticks, `dark:stroke-gray-600` on every grid line (dark grid computes `rgb(75,85,99)`), `dark:stroke-gray-400` on the axis `<g>`, and the default legend icon.
+- **Decision:** Copy the live props verbatim: `CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-gray-600"`, axes `stroke="#64748b" className="dark:stroke-gray-400" tick={{ fill: "#64748b" }}`, no fontSize, default legend icon, lowercase hex strokes. `className` propagates onto each grid `<line>` through recharts' `filterProps` (verified against recharts 2.15.4 source + dark-mode computed probe).
+- **Consequences:** Chart acceptance = DOM presence of vertical/horizontal grid groups, axis-line/tick-line elements, and computed dark stroke `rgb(75,85,99)`.
+- **Alternatives rejected:** keeping the "cleaner" hidden-axis look (visual divergence); inlining SVG to match live's path data exactly (maintenance cost, no visual gain).
+
+**ADR-018: Tailwind palette pinned to the v3 hex values the live app renders (round 5)**
+
+- **Context:** Tailwind v4 regenerated the default palette; several steps drift visibly from the v3 values the live app renders (blue-600 `#155dfc` vs `#2563eb` Δ17; red-500 Δ24; emerald-400 Δ52; purple-600 Δ35; gray/slate ramps ~1-4/255). Live dark probes confirmed v3 values end-to-end: grid `rgb(75,85,99)`, border-gray-600 `rgb(75,85,99)`, bg-gray-700 `rgb(55,65,81)`, bg-gray-800/80 `rgba(31,41,55,.8)`, text-gray-400 `rgb(156,163,175)`.
+- **Decision:** `globals.css` defines `--color-<family>-<step>` for every token the UI uses (102 across 14 families) in an unlayered `:root` block — unlayered author CSS beats Tailwind's `@layer theme` and its `@supports (color:lab())` re-definitions without `!important`. The existing unlayered `.dark` text/border overrides keep winning over layered utilities, replicating live's slate-mapped dark text ramp.
+- **Consequences:** Utilities render pixel-identical v3 colors in both themes; the pin is a parity contract (do not "modernize"). Regenerating the pin requires the used-token inventory (`rg` over `src/`) + the v3 reference values.
+- **Alternatives rejected:** downgrading to Tailwind v3 (framework regression for a color-only concern); accepting the drift (fails computed-color parity on large surfaces like KPI gradients).
 
 ---
 
@@ -462,7 +483,7 @@ DTOs in `src/lib/types.ts` are the wire contract: dates serialize as ISO strings
 
 ### 5.1 Typographic System
 
-Inter (400/500/600/700/800) via `next/font/google`, exposed as `--font-inter`. Hierarchy (source-exact): page titles `text-3xl lg:text-4xl font-bold text-primary-navy dark:text-white`, KPI values `text-2xl/3xl bold tabular-nums`, labels `text-sm medium neutral-600`, captions `text-xs neutral-500`. All money uses tabular numerals.
+The **effective typeface is the Tailwind default system stack** (`ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", …`) — ADR-016. The live app's Inter `@import` is overridden by its root `font-sans` for all in-app content (computed-style verified on live h1/button/chart text); the clone mirrors this exactly: `next/font` Inter (400–800) stays loaded on `<body>` as `--font-inter`, but `--font-sans` resolves to the system stack. Hierarchy (source-exact): page titles `text-3xl lg:text-4xl font-bold text-primary-navy dark:text-white`, KPI values `text-2xl/3xl bold`, labels `text-sm medium neutral-600`, captions `text-xs neutral-500`. No tabular numerals anywhere (live computes `font-variant-numeric: normal`); chart tick labels render the SVG-default 16px like live (no explicit fontSize).
 
 ### 5.2 Color Tokens
 
@@ -479,6 +500,8 @@ Two layers coexist in `src/app/globals.css`: the shadcn semantic tokens (oklch l
 | Sector palette | 9 fixed hexes in `src/lib/ui-maps.ts` (per sector NAME) | Sector dot list + donut | — |
 
 Dark mode swaps to the source app's gray ramp (gray-800/700/600 overrides in `.dark`), not slate.
+
+A third layer pins the **Tailwind palette itself to v3 hex values** (ADR-018): every `--color-<family>-<step>` token the UI uses (102 across 14 families) is redefined in an unlayered `:root` block so utilities render the exact colors the live app's Tailwind v3 renders (v4's regenerated ramp drifts on both chromatic and gray steps). The chart config is likewise live-exact (ADR-017): both grid directions, visible `#64748b` axis/tick lines, `dark:stroke-gray-600` grid (dark computes `rgb(75,85,99)`), `dark:stroke-gray-400` axis groups, default legend icon, lowercase hex line strokes.
 
 ### 5.3 Component Primitives
 
@@ -532,11 +555,11 @@ CSS-only staggered entrance animations (`.fade-in-up` + `.stagger-1..5`, ADR-013
 |----------|-------|-----------|----------|
 | Lint gate | 1 suite | ESLint 9 + React Compiler rules | repo root |
 | Type gate | 1 suite | `tsc --noEmit` (strict) | repo root |
-| Unit suite | 98 tests / 8 files | Vitest 5 (node env) | `src/lib/__tests__/` |
-| Browser verification | ~40 golden-path checks | agent-browser session per push round | n/a |
-| Visual parity check | theme-matched VLM side-by-side per view | z-ai vision | evidence archive |
+| Unit suite | 101 tests / 8 files | Vitest 5 (node env) | `src/lib/__tests__/` |
+| Browser verification | ~40 golden-path checks (round-5 E2E: 36/36) | agent-browser session per push round | n/a |
+| Visual parity check | computed-style probes + signature-multiset DOM re-diff per view | agent-browser | evidence archive |
 
-Unit coverage: `money` (13 — minor units, formats, monthly-equivalent incl. annual), `expense-filters` (17 — presets, search, sort, badge count), `dashboard-kpis` (17 — goal-progress savings, placeholder-aware trends, largest-expense bucket, mixed recent activity, budget remaining/limit-0 footer semantics), `ui-primitives` (16 — live-exact classic shadcn class sets, element types, no data-slot; ADR-015), `categories` (12 — taxonomy sets pinned to the source app), `date-format` (7), `import-export` (6 — export round-trip, per-entity row errors, PascalCase keys), `ui-maps` (10 — sector hexes, goal emoji, priority/activity/expense-row badges, dots, account icons pinned to the live DOM).
+Unit coverage: `money` (13 — minor units, formats, monthly-equivalent incl. annual), `expense-filters` (17 — presets, search, sort, badge count), `dashboard-kpis` (18 — goal-progress savings, placeholder-aware trends, largest-expense bucket, mixed recent activity incl. income categories for the Recent Activity badges, budget remaining/limit-0 footer semantics), `ui-primitives` (17 — live-exact classic shadcn class sets, element types, no data-slot, DialogTitle as a pure semantics wrapper; ADR-015), `categories` (13 — taxonomy sets pinned to the source app incl. quick-select tile labels "Rent/Mortgage"), `date-format` (7), `import-export` (6 — export round-trip, per-entity row errors, PascalCase keys), `ui-maps` (10 — sector hexes, goal emoji, priority/activity/expense-row badges, dots, account icons pinned to the live DOM).
 
 ### 7.2 Verified at build time (evidence-backed)
 
@@ -544,13 +567,13 @@ Login → dashboard; login with wrong credentials → classic red Alert "Invalid
 
 ### 7.3 Coverage Thresholds
 
-Vitest covers the pure domain layer (`src/lib` behavior modules + the primitive class-set pins) with 98 tests; thresholds are not enforced numerically yet — the rule is "every behavior change lands with its failing test first" (ADR-009). Playwright E2E over the golden paths is the planned next layer (§10).
+Vitest covers the pure domain layer (`src/lib` behavior modules + the primitive class-set pins) with 101 tests; thresholds are not enforced numerically yet — the rule is "every behavior change lands with its failing test first" (ADR-009). Playwright E2E over the golden paths is the planned next layer (§10).
 
 ### 7.4 Pre-Push Checklist
 
 - [ ] `bun run lint` exits 0
 - [ ] `bun run typecheck` exits 0
-- [ ] `bun run test` — 98 tests, 0 failures
+- [ ] `bun run test` — 101 tests, 0 failures
 - [ ] `bun run build` exits 0
 - [ ] Touched flow exercised in a browser (golden path) with zero console errors
 - [ ] No secrets staged (`git ls-files | grep -E "\.env$|\.key$|ssh-key"` is empty)
@@ -645,6 +668,8 @@ Resolved in the 2026-09-15 parity remediation (round 2): taxonomy drift in six d
 Resolved in the 2026-09-15 pixel-parity remediation (round 3): design-system drift (flat canvas → gradient shell, shadow-sm → glass cards, emerald-500 → sage tokens, slate → gray dark ramp), Sheet → centered modal conversion, missing FAB, wrong sidebar icons/logo, dashboard layout (AI Insights position, Quick Actions anatomy, budget dot rows, arrow-icon activity rows), income hero gradient, expenses summary cards + segmented tabs, accounts type icons + balance layout, investments gradient KPIs + sector dot list, goals emoji map + priority badges, analytics controls + empty income tab, import drop area, settings info boxes + tiles, login light theme + logo asset, missing native confirm() deletes, missing entrance animations, `prefers-reduced-motion` support (was a round-2 backlog item), production build script fix. Plan and audit trail: `docs/plans/2026-09-15-parity-remediation-round3.md`.
 
 Resolved in the 2026-09-16 structural-parity remediation (round 4): shadcn primitive snapshot drift (newest → live-exact classic class sets, pinned by 16 new specs — root cause R1), app-shell layout chain (`div.flex > aside + main > pt-16 > gradient pane > max-w-*` — R2), sidebar DOM anatomy (anchor-wrapped nav items, `p` user name/email, solid mobile logo tile — R3), the new Quick Add FAB flow with rotating toggle (ADR-014 — R4), per-view structural details (activity badges/circles, budget limit-0 footer, expense-row badges, analytics title elements and tab contents, goals sm buttons, settings label/grid anatomy, import bare header + dropzone/input/button classes), the login error state never rendered (genuine bug), the vitest `.tsx` include gap, the classic filter glyph after lucide's rename, and the per-view theme-fade quirk. Plan, audit trail, and the full verification record (gates, E2E, DOM re-diff before/after, VLM scores): `docs/plans/2026-09-15-parity-remediation-round4.md`.
+
+Resolved in the 2026-09-16 computed-style parity remediation (round 5): empty Recent-Activity income badges (`IncomeEventInput` gained `category`, green/orange/gray badges now resolve), income card badge text ("primary income" → raw id "primary"), effective typeface (Inter → the live app's computed Tailwind system stack, ADR-016), chart configuration (both grid directions, visible axis/tick lines, SVG-default 16px ticks, `dark:stroke-gray-600`/`dark:stroke-gray-400`, default legend icon, lowercase hex — ADR-017), Tailwind v4 palette drift (102 tokens pinned to the live app's v3 values, live-probed — ADR-018), dialog primitives (DialogTitle = pure semantics wrapper; `max-h-[90vh] overflow-y-auto` only on the long modals), Add Expense/Income modal details (Receipt/DollarSign title icons, no DialogDescription, centered quick-select tiles, "Rent/Mortgage" tile label, description pre-fill), AI Coach live anatomy (slate-800 user bubble, prose-markdown assistant bubble, outline chips, default send button, no visible thinking bubble), mobile drawer bottom (direct Sign Out button), header/grid/icon class-exact pass (no action wrapper, `mb-8` grid margins, `h-5 w-5 mr-2` icons, neutral Total Return icon, gradient-tile icon color inheritance). Plan, audit trail, and the full verification record (gates 101/101, 36/36 E2E checks, computed-style probes, DOM re-diff classification): `docs/plans/2026-09-16-parity-remediation-round5.md`.
 
 ---
 
