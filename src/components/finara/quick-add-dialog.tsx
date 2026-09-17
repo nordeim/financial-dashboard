@@ -135,9 +135,9 @@ export function QuickAddDialog({
               type="button"
               onClick={() => close(false)}
               aria-label="Close"
-              className="inline-flex h-9 w-9 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-9 w-9"
             >
-              <X className="h-4 w-4" />
+              <X className="w-4 h-4" />
             </button>
           </div>
 
@@ -149,7 +149,7 @@ export function QuickAddDialog({
                 onClick={() => start("income")}
                 className="h-12 w-full justify-start gap-3"
               >
-                <TrendingUp className="h-5 w-5 text-emerald-500" aria-hidden />
+                <TrendingUp className="w-5 h-5 text-emerald-500" aria-hidden />
                 <span>Add Income</span>
               </Button>
               <Button
@@ -157,7 +157,7 @@ export function QuickAddDialog({
                 onClick={() => start("expense")}
                 className="h-12 w-full justify-start gap-3"
               >
-                <TrendingDown className="h-5 w-5 text-red-500" aria-hidden />
+                <TrendingDown className="w-5 h-5 text-red-500" aria-hidden />
                 <span>Add Expense</span>
               </Button>
             </div>

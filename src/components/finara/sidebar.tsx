@@ -56,11 +56,11 @@ function BrandMark({ compact = false }: { compact?: boolean }) {
     <div className="flex items-center gap-3">
       <div
         className={cn(
-          "flex items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/20 backdrop-blur-sm",
-          compact ? "h-8 w-8" : "h-10 w-10",
+          compact ? "w-8 h-8" : "w-10 h-10",
+          "bg-emerald-500/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-emerald-400/30",
         )}
       >
-        <DollarSign className={cn("text-emerald-400", compact ? "h-5 w-5" : "h-6 w-6")} aria-hidden />
+        <DollarSign className={cn("text-emerald-400", compact ? "w-5 h-5" : "w-6 h-6")} aria-hidden />
       </div>
       {compact ? (
         <h2 className="text-lg font-bold text-primary-navy dark:text-white">Finara</h2>
@@ -78,7 +78,7 @@ function BrandMark({ compact = false }: { compact?: boolean }) {
 function SyncedBadge() {
   return (
     <div className="inline-flex items-center gap-1 rounded-md border border-green-300 px-2.5 py-0.5 text-xs font-semibold text-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:border-green-600 dark:text-green-400">
-      <Wifi className="h-3 w-3" aria-hidden />
+      <Wifi className="w-3 h-3" aria-hidden />
       Synced
     </div>
   );
@@ -103,15 +103,15 @@ function UserMenu({
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="flex h-9 w-full items-center gap-3 rounded-xl bg-white/10 p-3 text-left backdrop-blur-sm dark:bg-gray-800/50"
+          className="h-9 flex items-center gap-3 p-3 rounded-xl bg-white/10 dark:bg-gray-800/50 backdrop-blur-sm w-full text-left"
           aria-label={`${userName} ${userEmail}`}
         >
-          <span className="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-full">
+          <span className="relative flex shrink-0 overflow-hidden rounded-full w-8 h-8">
             <span className="flex h-full w-full items-center justify-center rounded-full bg-muted">{initial}</span>
           </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-white dark:text-gray-200">{userName}</p>
-            <p className="truncate text-xs text-slate-400 dark:text-gray-400">{userEmail}</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-white dark:text-gray-200 truncate">{userName}</p>
+            <p className="text-xs text-slate-400 dark:text-gray-400 truncate">{userEmail}</p>
           </div>
         </Button>
       </DropdownMenuTrigger>
@@ -119,13 +119,13 @@ function UserMenu({
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => toggleTheme()}>
-          {isDark ? <Sun className="mr-2 h-4 w-4" aria-hidden /> : <Moon className="mr-2 h-4 w-4" aria-hidden />}
-          {isDark ? "Light Mode" : "Dark Mode"}
+          {isDark ? <Sun className="w-4 h-4 mr-2" aria-hidden /> : <Moon className="w-4 h-4 mr-2" aria-hidden />}
+          <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => onSignOut()} className="text-red-500 focus:text-red-500">
-          <LogOut className="mr-2 h-4 w-4" aria-hidden />
-          Sign Out
+          <LogOut className="w-4 h-4 mr-2" aria-hidden />
+          <span>Sign Out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -238,7 +238,7 @@ export function MobileTopNav({
         <div className="flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500">
-              <DollarSign className="h-5 w-5 text-white" aria-hidden />
+              <DollarSign className="w-5 h-5 text-white" aria-hidden />
             </div>
             <h2 className="text-lg font-bold text-primary-navy dark:text-white">Finara</h2>
           </div>
@@ -251,7 +251,7 @@ export function MobileTopNav({
               aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
               className="h-8 w-8 text-gray-700 dark:text-gray-300"
             >
-              {isDark ? <Sun className="h-4 w-4" aria-hidden /> : <Moon className="h-4 w-4" aria-hidden />}
+              {isDark ? <Sun className="w-4 h-4" aria-hidden /> : <Moon className="w-4 h-4" aria-hidden />}
             </Button>
             <Button
               variant="ghost"
@@ -262,7 +262,7 @@ export function MobileTopNav({
               aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
               className="h-9 w-9 text-gray-700 dark:text-gray-300"
             >
-              <Menu className="h-5 w-5" aria-hidden />
+              <Menu className="w-5 h-5" aria-hidden />
             </Button>
           </div>
         </div>
@@ -287,7 +287,7 @@ export function MobileTopNav({
                 onClick={onSignOut}
                 className="w-full text-white border-slate-600 hover:bg-white/10 hover:text-white"
               >
-                <LogOut className="mr-2 h-4 w-4" aria-hidden />
+                <LogOut className="w-4 h-4 mr-2" aria-hidden />
                 Sign Out
               </Button>
             </div>

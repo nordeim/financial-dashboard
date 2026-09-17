@@ -69,16 +69,16 @@ export function AiCoachDialog({
           {/* Round-6: live header row — title + in-flow close button. */}
           <div className="flex items-center justify-between">
             <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-              <Bot className="h-5 w-5" aria-hidden />
+              <Bot className="w-5 h-5" aria-hidden />
               AI Financial Coach
             </DialogTitle>
             <button
               type="button"
               onClick={() => onOpenChange(false)}
               aria-label="Close"
-              className="inline-flex h-9 w-9 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-9 w-9"
             >
-              <X className="h-4 w-4" aria-hidden />
+              <X className="w-4 h-4" aria-hidden />
             </button>
           </div>
         </DialogHeader>
@@ -98,7 +98,7 @@ export function AiCoachDialog({
                   </div>
                 ) : (
                   <div key={index} className="flex justify-start gap-3">
-                    <div className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
+                    <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center mt-0.5">
                       <div className="h-1.5 w-1.5 rounded-full bg-slate-400 dark:bg-slate-500" aria-hidden />
                     </div>
                     <div className="max-w-[85%]">
@@ -167,7 +167,7 @@ export function AiCoachDialog({
               disabled={!draft.trim() || sending}
               aria-label="Send message"
             >
-              <Send className="h-4 w-4" aria-hidden />
+              <Send className="w-4 h-4" aria-hidden />
             </Button>
           </form>
         </div>
