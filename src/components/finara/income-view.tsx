@@ -117,7 +117,7 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
         subtitle="Track and manage all your income streams"
         actions={
           <Button onClick={onAddIncome} className="h-9 bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
-            <Plus className="mr-2 h-5 w-5" aria-hidden /> Add Income Source
+            <Plus className="w-5 h-5 mr-2" aria-hidden /> Add Income Source
           </Button>
         }
       />
@@ -141,7 +141,7 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                   </p>
                 </div>
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/20">
-                  <TrendingUp className="h-10 w-10" aria-hidden />
+                  <TrendingUp className="w-10 h-10" aria-hidden />
                 </div>
               </div>
               </div>
@@ -156,7 +156,7 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                 body="Start by adding your income sources to track your financial progress"
                 action={
                   <Button onClick={onAddIncome} className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
-                    <Plus className="h-4 w-4" aria-hidden /> Add Your First Income Source
+                    <Plus className="w-4 h-4" aria-hidden /> Add Your First Income Source
                   </Button>
                 }
               />
@@ -168,8 +168,8 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                   <div className="p-6">
                     <div className="mb-4 flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100">
-                          <DollarSign className="h-6 w-6 text-emerald-600" aria-hidden />
+                        <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                          <DollarSign className="w-6 h-6 text-emerald-600" aria-hidden />
                         </div>
                         <div>
                           <h3 className="truncate font-bold text-neutral-900">{source.name}</h3>
@@ -183,20 +183,20 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-8 w-8 text-neutral-400 hover:text-blue-600"
+                          className="w-8 h-8 text-neutral-400 hover:text-blue-600"
                           onClick={() => startEdit(source)}
                           aria-label={`Edit ${source.name}`}
                         >
-                          <Pen className="h-4 w-4" aria-hidden />
+                          <Pen className="w-4 h-4" aria-hidden />
                         </Button>
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-8 w-8 text-neutral-400 hover:text-red-600"
+                          className="w-8 h-8 text-neutral-400 hover:text-red-600"
                           onClick={() => void deleteSource(source)}
                           aria-label={`Delete ${source.name}`}
                         >
-                          <Trash2 className="h-4 w-4" aria-hidden />
+                          <Trash2 className="w-4 h-4" aria-hidden />
                         </Button>
                       </div>
                     </div>
@@ -232,24 +232,24 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-                <DollarSign className="h-5 w-5" aria-hidden /> Edit Income Source
+                <DollarSign className="w-5 h-5" aria-hidden /> Edit Income Source
               </DialogTitle>
               <button
                 type="button"
                 onClick={() => setEditOpen(false)}
                 aria-label="Close"
-                className="inline-flex h-9 w-9 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-9 w-9"
               >
-                <X className="h-4 w-4" aria-hidden />
+                <X className="w-4 h-4" aria-hidden />
               </button>
             </div>
           </DialogHeader>
           <div className="p-6 pt-0">
           <form onSubmit={submitEdit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-income-name">Income Source</Label>
+              <Label htmlFor="source_name">Income Source</Label>
               <Input
-                id="edit-income-name"
+                id="source_name"
                 value={form.name}
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
                 required
@@ -258,9 +258,9 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-income-amount">Amount (USD)</Label>
+              <Label htmlFor="amount">Amount (USD)</Label>
               <Input
-                id="edit-income-amount"
+                id="amount"
                 type="number"
                 inputMode="decimal"
                 min="0"
@@ -272,33 +272,35 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
               />
             </div>
             <div>
-              <p className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">Quick Add Amount</p>
+              <Label className="text-sm font-medium leading-none">Quick Add Amount</Label>
               <div className="flex flex-wrap gap-2">
                 {INCOME_QUICK_AMOUNTS.map((units) => (
-                  <button
-                    key={units}
-                    type="button"
-                    onClick={() =>
-                      setForm((current) => {
-                        const currentUnits = Number.parseFloat(current.amount) || 0;
-                        return { ...current, amount: String(Math.round((currentUnits + units) * 100) / 100) };
-                      })
-                    }
-                    className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:bg-emerald-950"
-                  >
-                    + ${units.toFixed(2)}
-                  </button>
+                  <div key={units} tabIndex={0}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        setForm((current) => {
+                          const currentUnits = Number.parseFloat(current.amount) || 0;
+                          return { ...current, amount: String(Math.round((currentUnits + units) * 100) / 100) };
+                        })
+                      }
+                      className="h-8 rounded-md px-3 text-xs"
+                    >
+                      + ${units.toFixed(2)}
+                    </Button>
+                  </div>
                 ))}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-income-frequency">Frequency</Label>
+                <Label htmlFor="frequency">Frequency</Label>
                 <Select
                   value={form.frequency}
                   onValueChange={(value) => setForm((current) => ({ ...current, frequency: value }))}
                 >
-                  <SelectTrigger id="edit-income-frequency">
+                  <SelectTrigger id="frequency">
                     <SelectValue>{FREQUENCY_LABELS[form.frequency] ?? "Monthly"}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -311,12 +313,12 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-income-category">Category</Label>
+                <Label htmlFor="category">Category</Label>
                 <Select
                   value={form.category}
                   onValueChange={(value) => setForm((current) => ({ ...current, category: value }))}
                 >
-                  <SelectTrigger id="edit-income-category">
+                  <SelectTrigger id="category">
                     <SelectValue>{incomeCategoryLabel(form.category)}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -329,30 +331,27 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                 </Select>
               </div>
             </div>
-            <div className="flex items-center justify-between rounded-lg border border-slate-200 px-4 py-3 dark:border-slate-700">
-              <div>
-                <Label htmlFor="edit-income-active" className="text-sm">
-                  Active Income Source
-                </Label>
-                <p className="text-xs text-slate-400">Counts toward your monthly income total</p>
-              </div>
+            <div className="flex items-center space-x-2 pt-2">
               <Switch
-                id="edit-income-active"
+                id="is_active"
                 checked={form.active}
                 onCheckedChange={(checked) => setForm((current) => ({ ...current, active: checked }))}
               />
+              <Label htmlFor="is_active" className="text-sm font-medium leading-none">
+                Active Income Source
+              </Label>
             </div>
-            <div className="flex items-center justify-end gap-2 pt-1">
-              <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
+            <div className="flex gap-3 pt-4">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setEditOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90" disabled={submitting}>
+              <Button type="submit" className="flex-1 bg-primary-sage text-white shadow hover:bg-primary-sage/90" disabled={submitting}>
                 {submitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden /> Saving…
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden /> Saving…
                   </>
                 ) : (
-                  "Save Changes"
+                  "Update Income"
                 )}
               </Button>
             </div>

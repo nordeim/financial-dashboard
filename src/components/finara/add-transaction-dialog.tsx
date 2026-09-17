@@ -248,9 +248,9 @@ export function AddTransactionDialog({
           <div className="flex items-center justify-between">
             <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
               {isExpense ? (
-                <Receipt className="h-5 w-5" aria-hidden />
+                <Receipt className="w-5 h-5" aria-hidden />
               ) : (
-                <DollarSign className="h-5 w-5" aria-hidden />
+                <DollarSign className="w-5 h-5" aria-hidden />
               )}
               {isExpense ? (isEditing ? "Edit Expense" : "Add Expense") : "Add Income Source"}
             </DialogTitle>
@@ -261,9 +261,9 @@ export function AddTransactionDialog({
                 onOpenChange(false);
               }}
               aria-label="Close"
-              className="inline-flex h-9 w-9 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-9 w-9"
             >
-              <X className="h-4 w-4" aria-hidden />
+              <X className="w-4 h-4" aria-hidden />
             </button>
           </div>
         </DialogHeader>
@@ -274,7 +274,7 @@ export function AddTransactionDialog({
           <div className="mb-6">
             <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Quick Select Category</h3>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {QUICK_SELECT_SUBCATEGORIES.map((entry) => (
                   <div key={entry.id} tabIndex={0}>
                     <Button
@@ -304,9 +304,9 @@ export function AddTransactionDialog({
         ) : isExpense ? (
           <form onSubmit={handleExpenseSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="txn-description">Description</Label>
+              <Label htmlFor="title">Description</Label>
               <Input
-                id="txn-description"
+                id="title"
                 value={expenseForm.description}
                 onChange={(event) => setExpenseForm((current) => ({ ...current, description: event.target.value }))}
                 placeholder="e.g., Coffee, Train ticket"
@@ -316,9 +316,9 @@ export function AddTransactionDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="txn-amount">Amount (USD)</Label>
+              <Label htmlFor="amount">Amount (USD)</Label>
               <Input
-                id="txn-amount"
+                id="amount"
                 type="number"
                 inputMode="decimal"
                 min="0"
@@ -348,11 +348,11 @@ export function AddTransactionDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="txn-category">Category</Label>
+                <Label htmlFor="category">Category</Label>
                 <Select value={expenseForm.category} onValueChange={handleCategoryChange}>
-                  <SelectTrigger id="txn-category">
+                  <SelectTrigger id="category">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -365,12 +365,12 @@ export function AddTransactionDialog({
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="txn-subcategory">Subcategory</Label>
+                <Label htmlFor="subcategory">Subcategory</Label>
                 <Select
                   value={expenseForm.subcategory}
                   onValueChange={(value) => setExpenseForm((current) => ({ ...current, subcategory: value }))}
                 >
-                  <SelectTrigger id="txn-subcategory">
+                  <SelectTrigger id="subcategory">
                     <SelectValue>{subcategoryLabel(expenseForm.subcategory)}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -385,9 +385,9 @@ export function AddTransactionDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="txn-date">Date</Label>
+              <Label htmlFor="date">Date</Label>
               <Input
-                id="txn-date"
+                id="date"
                 type="date"
                 value={expenseForm.date}
                 onChange={(event) => setExpenseForm((current) => ({ ...current, date: event.target.value }))}
@@ -396,9 +396,9 @@ export function AddTransactionDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="txn-notes">Notes (optional)</Label>
+              <Label htmlFor="notes">Notes (optional)</Label>
               <Input
-                id="txn-notes"
+                id="notes"
                 value={expenseForm.notes}
                 onChange={(event) => setExpenseForm((current) => ({ ...current, notes: event.target.value }))}
                 placeholder="Any extra details..."
@@ -408,11 +408,11 @@ export function AddTransactionDialog({
 
             <div className="flex items-center space-x-2">
               <Switch
-                id="txn-recurring"
+                id="is_recurring"
                 checked={expenseForm.recurring}
                 onCheckedChange={(checked) => setExpenseForm((current) => ({ ...current, recurring: checked }))}
               />
-              <Label htmlFor="txn-recurring" className="text-sm font-medium leading-none">
+              <Label htmlFor="is_recurring" className="text-sm font-medium leading-none">
                 This is a recurring expense
               </Label>
             </div>
@@ -437,8 +437,10 @@ export function AddTransactionDialog({
               <Button type="submit" className="flex-1 bg-primary-sage text-white shadow hover:bg-primary-sage/90" disabled={submitting}>
                 {submitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden /> Saving…
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden /> Saving…
                   </>
+                ) : isEditing ? (
+                  "Update Expense"
                 ) : (
                   "Add Expense"
                 )}
@@ -448,9 +450,9 @@ export function AddTransactionDialog({
         ) : (
           <form onSubmit={handleIncomeSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="income-name">Income Source</Label>
+              <Label htmlFor="source_name">Income Source</Label>
               <Input
-                id="income-name"
+                id="source_name"
                 value={incomeForm.name}
                 onChange={(event) => setIncomeForm((current) => ({ ...current, name: event.target.value }))}
                 placeholder="e.g. Salary, freelance project"
@@ -460,9 +462,9 @@ export function AddTransactionDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="income-amount">Amount (USD)</Label>
+              <Label htmlFor="amount">Amount (USD)</Label>
               <Input
-                id="income-amount"
+                id="amount"
                 type="number"
                 inputMode="decimal"
                 min="0"
@@ -483,7 +485,7 @@ export function AddTransactionDialog({
                       type="button"
                       variant="outline"
                       onClick={() => addQuickAmount(units, "income")}
-                      className="h-9 px-4 py-2"
+                      className="h-8 rounded-md px-3 text-xs"
                     >
                       + ${units.toFixed(2)}
                     </Button>
@@ -492,14 +494,14 @@ export function AddTransactionDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="income-frequency">Frequency</Label>
+                <Label htmlFor="frequency">Frequency</Label>
                 <Select
                   value={incomeForm.frequency}
                   onValueChange={(value) => setIncomeForm((current) => ({ ...current, frequency: value }))}
                 >
-                  <SelectTrigger id="income-frequency">
+                  <SelectTrigger id="frequency">
                     <SelectValue>{FREQUENCY_LABELS[incomeForm.frequency] ?? "Monthly"}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -512,12 +514,12 @@ export function AddTransactionDialog({
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="income-category">Category</Label>
+                <Label htmlFor="category">Category</Label>
                 <Select
                   value={incomeForm.category}
                   onValueChange={(value) => setIncomeForm((current) => ({ ...current, category: value }))}
                 >
-                  <SelectTrigger id="income-category">
+                  <SelectTrigger id="category">
                     <SelectValue>
                       {INCOME_CATEGORIES.find((option) => option.id === incomeForm.category)?.label ?? "Primary Income"}
                     </SelectValue>
@@ -533,13 +535,13 @@ export function AddTransactionDialog({
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 pt-2">
               <Switch
-                id="income-active"
+                id="is_active"
                 checked={incomeForm.active}
                 onCheckedChange={(checked) => setIncomeForm((current) => ({ ...current, active: checked }))}
               />
-              <Label htmlFor="income-active" className="text-sm font-medium leading-none">
+              <Label htmlFor="is_active" className="text-sm font-medium leading-none">
                 Active Income Source
               </Label>
             </div>
@@ -559,8 +561,10 @@ export function AddTransactionDialog({
               <Button type="submit" className="flex-1 bg-primary-sage text-white shadow hover:bg-primary-sage/90" disabled={submitting}>
                 {submitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden /> Saving…
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden /> Saving…
                   </>
+                ) : isEditing ? (
+                  "Update Income"
                 ) : (
                   "Add Income"
                 )}
