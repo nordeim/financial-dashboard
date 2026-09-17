@@ -1,6 +1,6 @@
 # Finara — Smart Finance Tracker
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black) ![React](https://img.shields.io/badge/React-19-61DAFB) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6) ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4) ![Prisma](https://img.shields.io/badge/Prisma-6-2D3748) ![SQLite](https://img.shields.io/badge/SQLite-3-003B57)
+![Next.js](https://img.shields.io/badge/Next.js-16-black) ![React](https://img.shields.io/badge/React-19-61DAFB) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6) ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4) ![Prisma](https://img.shields.io/badge/Prisma-6-2D3748) ![SQLite](https://img.shields.io/badge/SQLite-3-003B57) ![CI](https://github.com/nordeim/financial-dashboard/actions/workflows/ci.yml/badge.svg)
 
 A personal-finance dashboard web application: income, expenses, 50/30/20 budgets, accounts, investments, savings goals, CSV bank import, analytics reports, and AI-powered insights — modeled as a faithful, production-grade clone of the Finara dashboard.
 
@@ -23,7 +23,8 @@ Finara solves the "where did my money go?" problem with a single, real-time surf
 | 🧭 **Analytics** | 3/6/12-month windows, segmented 4-tab control (Overview/Expenses/Income/Investments), windowed monthly averages, income vs expenses trend, category donuts, sector allocation, all-transaction CSV export (`financial-report-<date>.csv` — live parity); From/To date inputs render but are inert (verified source quirk), Income tab renders empty (verified source quirk) |
 | 🤖 **AI Coach & Insights** | Chat grounded in your live financial snapshot; dashboard insight cards with deterministic fallback |
 | 🔐 **GDPR Export & Restore** | One-click full JSON export; Settings page round-trips a Finara export file back into the database (finara-export import mode) |
-| 🧪 **Unit Tests** | Vitest suite (270 tests) covering money math (incl. signed minor units — negatives end-to-end, the `-$0.00` −0 edge), taxonomy, KPI computation (incl. income activity categories), filters (incl. the null default min), date formats, export normalization (incl. the live snake_case GDPR shape), source-exact UI maps, quick-select tile labels, the pinned shadcn primitive class sets (incl. the round-11 Select-popup pins), the live-probed semantic design tokens (incl. the round-10 primary-family re-pin), the login-page class sets, the round-7 dialog form-body + icon-order source contracts, the round-8 view-surface order contracts, the round-9 functional-parity contracts (settings propagation, export shapes, inert From/To, import error card, AI-coach orders), the round-10 theme-lifecycle contracts (sign-out reset, sign-in server-theme apply, toggle persistence), and the round-11 interactive-state contracts (no `min="0"` anywhere, investment form attrs + optional current price, goal complete-state — emerald ring + Complete badge + Add Progress removal at ≥ 100%, goal POST/PATCH uncapped, borderless ghost chart tooltip, legend census 1/0/0/0) |
+| 🧪 **Unit Tests** | Vitest suite (275 tests) covering money math (incl. signed minor units — negatives end-to-end, the `-$0.00` −0 edge), taxonomy, KPI computation (incl. income activity categories), filters (incl. the null default min), date formats, export normalization (incl. the live snake_case GDPR shape + negative-amount restore), source-exact UI maps, quick-select tile labels, the pinned shadcn primitive class sets (incl. the round-11 Select-popup pins), the live-probed semantic design tokens (incl. the round-10 primary-family re-pin), the login-page class sets, the round-7 dialog form-body + icon-order source contracts, the round-8 view-surface order contracts (incl. the round-12 bare `Finara` login title), the round-9 functional-parity contracts (settings propagation, export shapes, inert From/To, import error card, AI-coach orders), the round-10 theme-lifecycle contracts (sign-out reset, sign-in server-theme apply, toggle persistence), the round-11 interactive-state contracts (no `min="0"` anywhere, investment form attrs + optional current price, goal complete-state — emerald ring + Complete badge + Add Progress removal at ≥ 100%, goal POST/PATCH uncapped, borderless ghost chart tooltip, legend census 1/0/0/0), and the round-12 contracts (unauth deep-link title settling + the non-modal Quick Add chooser pin) |
+| 🎭 **E2E Suite** | Playwright E2E (66 specs, 11 files) running against the production build on :3100 with a hermetic `db/e2e.db` — locks the golden paths: login round trips + titles, theme lifecycle, dashboard, expense CRUD + filters + bulk bar, FAB Quick Add + toggle, income/goal/account/investment CRUD, analytics tabs + ghost tooltip + inert From/To, CSV import + settings-independent exports + GDPR round-trip, EUR/dd-MM-yyyy propagation, mobile drawer, and a zero-console-errors sweep over all 9 views |
 | 🌙 **Responsive** | Sidebar on desktop, full-screen mobile drawer with Synced badge; WCAG-minded focus states and aria labels; staggered CSS entrance animations (`prefers-reduced-motion` safe) |
 
 ## Architecture
@@ -73,7 +74,8 @@ Requires **Bun ≥ 1.3** (or Node.js ≥ 20 with npm — commands below use `bun
 
 - `bun run lint` → exits 0, no output.
 - `bun run typecheck` → exits 0, no output.
-- `bun run test` → 270 tests passing (Vitest).
+- `bun run test` → 275 tests passing (Vitest).
+- `bun run test:e2e` → builds the app and runs 66 Playwright specs against the production build on :3100 (hermetic `db/e2e.db`; the dev DB is never touched).
 - First visit to any API route (e.g. the dashboard) auto-seeds a six-month demo history: 4 accounts, 4 income sources, ~96 expenses, 3 budgets, 3 goals, 8 holdings. Seeding is idempotent and concurrency-safe (DB-level unique-key lock + completion marker).
 
 ## Demo Credentials
@@ -103,13 +105,18 @@ financial-dashboard/
 │   └── 📂 lib/                            # money, categories, types, analytics, seed, api,
 │                                          # dashboard-kpis, expense-filters, date-format,
 │                                          # import-export, ui-maps (pure domain modules, TDD)
-│                                          # + __tests__/ (Vitest, 270 tests)
+│                                          # + __tests__/ (Vitest, 275 tests)
 ├── 📂 prisma/
 │   └── 📄 schema.prisma                   # 7 models, money as integer minor units
-├── 📂 db/                                 # SQLite runtime storage (gitignored)
+├── 📂 db/                                 # SQLite runtime storage (gitignored; e2e.db is
+│                                          # recreated per E2E run)
 ├── 📂 docs/                               # Wrapper script, push runbook, reference image,
-│                                          # plans/ (remediation plans)
+│                                          # plans/ (remediation plans), session logs
+├── 📂 e2e/                                # Playwright E2E suite (11 spec files, 66 specs)
+│                                          # + helpers.ts + fixtures/
 ├── 📂 public/                             # finara-logo.png (login logo asset)
+├── 📂 .github/workflows/                  # CI: lint → typecheck → unit → E2E on every push/PR
+├── 📄 playwright.config.ts                # E2E runner (prod build :3100, hermetic e2e.db)
 ├── 📄 vitest.config.ts                    # Vitest runner (node env, @ alias)
 ├── 📄 AGENTS.md                           # Agent instructions
 ├── 📄 CLAUDE.md                           # Claude Code project instructions
@@ -240,11 +247,11 @@ The full gate (run before every push):
 ```bash
 bun run lint        # ESLint 9 — must exit 0
 bun run typecheck   # tsc --noEmit — must exit 0
-bun run test        # Vitest — 270 unit tests, must all pass
-bun run build       # next build — must exit 0
+bun run test        # Vitest — 275 unit tests, must all pass
+bun run test:e2e    # next build + Playwright — 66 browser specs, must all pass
 ```
 
-The Vitest suite covers the pure domain layer with TDD-maintained specs: money math (minor units, monthly-equivalent normalization incl. annual, signed negatives + the −0 edge), taxonomy sets (categories, frequencies, currencies, sectors, quick-select tile labels), dashboard KPI computation (goal-progress savings, placeholder-aware trends, largest-expense bucket, budget remaining/limit-0 footer semantics, income activity categories for the Recent Activity badges), expense filter/sort logic (incl. the null default min), date formats, Finara export normalization (incl. the live snake_case GDPR shape + investments restore), the source-exact UI maps (sector hexes, goal emoji, priority/activity/expense-row badges, account icons), the shadcn primitive class-set pins (classic live-exact strings, element types, no `data-slot`, DialogTitle as a pure semantics wrapper, the dialog card base without `relative`, the Select popup surfaces), the live-probed semantic design tokens (classic shadcn neutral theme, light + dark, incl. the round-10 primary-family re-pin, plus the v3 radius/blur scale pins), the login-page class sets (raw Google button, ringed span logo, py-2 ring-2 inputs, slate-500 field icons), the dialog form-body + icon-order source contracts, the view-surface order contracts, the round-9 functional-parity contracts, the round-10 theme-lifecycle contracts, and the round-11 interactive-state contracts. Browser verification is performed end-to-end before each push round (login incl. the invalid-credentials error alert, all nine views in light + dark, FAB Quick Add round-trip with the rotating toggle, full quick-select + manual add/edit/confirm-delete, income/goal/account/investment CRUD, filters, AI coach, CSV import, export restore, settings propagation incl. currency/date-format round-trips, the theme lifecycle — sign-out reset, sign-in server-theme apply, toggle persistence — plus the mobile Menu↔X swap, the negative-amount flows end-to-end, the goal complete/overshoot states, the borderless chart tooltip in both themes, and VLM side-by-side sweeps, zero console errors), followed by computed-style probes (system font stack, semantic tokens, radii, blur, chart grid/axis colors, tooltip computed styles + pixel-crop analysis in both themes) and a signature-multiset DOM re-diff against the captured live app (round-6: every residual delta classifies into the documented buckets — infra, a11y additions, lucide artifacts, live's duplicated toaster, seed-data counts, the login demo-credentials affordance). A formal Playwright E2E suite remains a backlog item — see Project_Architecture_Document.md §10.
+The Vitest suite covers the pure domain layer with TDD-maintained specs: money math (minor units, monthly-equivalent normalization incl. annual, signed negatives + the −0 edge), taxonomy sets (categories, frequencies, currencies, sectors, quick-select tile labels), dashboard KPI computation (goal-progress savings, placeholder-aware trends, largest-expense bucket, budget remaining/limit-0 footer semantics, income activity categories for the Recent Activity badges), expense filter/sort logic (incl. the null default min), date formats, Finara export normalization (incl. the live snake_case GDPR shape + investments restore), the source-exact UI maps (sector hexes, goal emoji, priority/activity/expense-row badges, account icons), the shadcn primitive class-set pins (classic live-exact strings, element types, no `data-slot`, DialogTitle as a pure semantics wrapper, the dialog card base without `relative`, the Select popup surfaces), the live-probed semantic design tokens (classic shadcn neutral theme, light + dark, incl. the round-10 primary-family re-pin, plus the v3 radius/blur scale pins), the login-page class sets (raw Google button, ringed span logo, py-2 ring-2 inputs, slate-500 field icons), the dialog form-body + icon-order source contracts, the view-surface order contracts, the round-9 functional-parity contracts, the round-10 theme-lifecycle contracts, and the round-11 interactive-state contracts (plus the round-12 additions: the bare `Finara` login-surface title — direct visit AND unauth deep-link redirect, with the unauth deep link settling on it — and the import path accepting negative amounts like every other layer). The **Playwright E2E suite** (`bun run test:e2e`, 66 specs / 11 files under `e2e/`) automates the browser golden paths against the production build on :3100 with a hermetic `db/e2e.db`: login round trips incl. the invalid-credentials alert and document titles, the theme lifecycle (ADR-023), dashboard KPIs, expense CRUD + filters + bulk bar, the FAB Quick Add round-trip + the FAB-as-close-toggle contract (non-modal chooser), income/goal (incl. the complete-state ring)/account/investment CRUD, analytics tabs + the borderless ghost tooltip + the inert From/To, CSV import incl. the live error card, exports verified **settings-independent** (EUR + dd/MM/yyyy leave the ISO-date/raw-decimal CSV and GDPR JSON byte-shaped — round-12 live probe), the GDPR restore round-trip, EUR/dd-MM/yyyy propagation, the mobile drawer + Menu↔X swap, and a zero-console-errors/warnings sweep over all nine views. Deeper probes stay manual per round (computed styles, pixel crops, VLM side-by-side sweeps, signature-multiset DOM re-diffs against the captured live app — every residual delta classifies into the documented buckets: infra, a11y additions, lucide artifacts, live's duplicated toaster, seed-data counts, the login demo-credentials affordance). CI (`.github/workflows/ci.yml`) runs the full chain — lint → typecheck → unit → build + E2E — on every push to main and every PR.
 
 ## Security
 
@@ -264,7 +271,7 @@ python3 docs/ssh_git_wrapper_v3.py \
   --branch main
 ```
 
-Run `bun run lint && bun run typecheck && bun run test` green first; commit before pushing (the wrapper pushes commits, not the working tree).
+Run `bun run lint && bun run typecheck && bun run test && bun run test:e2e` green first (CI runs the same chain); commit before pushing (the wrapper pushes commits, not the working tree).
 
 ## License
 
