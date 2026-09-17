@@ -60,7 +60,8 @@ describe("Button (classic live set)", () => {
     expect(cls).toContain(
       "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
     );
-    expect(cls).toContain("bg-primary text-primary-foreground hover:bg-primary/90");
+    // Round 8: the live default variant carries `shadow` (plan F6).
+    expect(cls).toContain("bg-primary text-primary-foreground shadow hover:bg-primary/90");
     expect(cls).toContain("h-9 px-4 py-2");
   });
 

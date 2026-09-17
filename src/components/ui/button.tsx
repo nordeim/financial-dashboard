@@ -12,7 +12,12 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        // Round 8 (live-probed 2026-09-17): the live default variant carries
+        // `shadow` — proven by the import sample-data button rendering
+        // `bg-primary text-primary-foreground shadow hover:bg-primary/90
+        // h-9 px-4 py-2` with no className, and the settings export/save
+        // tail decompositions. See docs/plans/2026-09-17-parity-remediation-round8.md §A F6.
+        default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
