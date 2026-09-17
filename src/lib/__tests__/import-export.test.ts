@@ -121,3 +121,21 @@ describe("normalizeFinaraExport", () => {
     expect(result.accounts).toEqual([]);
   });
 });
+
+describe("round 12: signed amounts in the import path (ADR-024 — the import layer was missed)", () => {
+  it("anyMinor accepts negative amounts (finara-export restore keeps negative rows)", () => {
+    // The live entity APIs accept negatives (round-11 probes) and ADR-024
+    // made negatives valid end-to-end — the finara-export restore mode must
+    // not be the one layer that silently drops them.
+    const result = normalizeFinaraExport({
+      data: {
+        expenses: [
+          { title: "Refund", date: "2026-09-15", amount: -5.5, category: "wants", subcategory: "dining" },
+        ],
+      },
+    });
+    expect(result.expenses).toHaveLength(1);
+    expect(result.expenses[0]!.amountMinor).toBe(-550);
+    expect(result.errors).toEqual([]);
+  });
+});

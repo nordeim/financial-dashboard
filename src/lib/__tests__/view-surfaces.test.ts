@@ -88,8 +88,11 @@ describe("routes module (F10)", () => {
     expect(parseRoute("/Import").title).toBe("Import | Finara");
   });
 
-  it("parses /login", () => {
-    expect(parseRoute("/login").kind).toBe("login");
+  it("parses /login with the bare live title (round-12 probe — round-8 left it unprobed)", () => {
+    // Live renders title "Finara" on /login in BOTH the direct-visit and the
+    // unauth-redirect cases (probed 2026-09-17, captures/r12) — not
+    // "Login | Finara" and not the deep-link title the redirect came from.
+    expect(parseRoute("/login")).toEqual({ kind: "login", title: "Finara" });
   });
 
   it("unknown paths are not-found with the raw segment + camelCase-split title", () => {

@@ -525,3 +525,52 @@ describe("round 11 F2: negative-amount acceptance (live accepts at every layer)"
     expect(src.investmentsView).not.toContain("portfolioPercent != null && portfolioPercent > 0");
   });
 });
+
+describe("round 12: login-surface title contract (live-probed — round-8 left the login title unprobed)", () => {
+  const app = read("src/components/finara/finara-app.tsx");
+
+  it("unauthenticated deep links apply the login ROUTE, not just the URL rewrite (title follows)", () => {
+    // Live probe 2026-09-17 (captures/r12): loading /Goals or any deep link
+    // logged out redirects to /login?from_url=… AND titles the page bare
+    // "Finara" — the source app's login surface always carries the bare
+    // title. The clone's redirect effect only rewrote the URL, leaving the
+    // deep-link title ("Goals | Finara") in place. The render-time
+    // adjustment (the documented guarded-setState pattern) keeps the route
+    // and title truthful.
+    expect(app).toContain('route.kind !== "login" && !readSessionCache()');
+    expect(app).toContain('applyRoute(parseRoute("/login"))');
+    // The title itself is synced post-commit (the App Router hydrates <title>
+    // from the React tree and resets render-phase document.title writes).
+    expect(app).toContain('document.title = route.title;');
+  });
+
+  it("the redirect effect re-arms on route changes so browser-back re-gates like the live", () => {
+    expect(app).toMatch(/\}, \[session, route\]\);/);
+  });
+});
+
+describe("round 12: import route accepts signed amounts (ADR-024 layer missed by round 11)", () => {
+  it("the rows-mode amount validation keeps the integer guard but drops the negativity rejection", () => {
+    const importRoute = read("src/app/api/import/route.ts");
+    expect(importRoute).not.toContain("amountMinor < 0");
+    expect(importRoute).toContain("Number.isInteger");
+  });
+});
+
+describe("round 12: the FAB stays clickable while its chooser is open (live-probed)", () => {
+  it("the Quick Add chooser renders NON-MODAL — no Radix body pointer-events lock", () => {
+    // Live probe (captures/r12): with the chooser open, elementFromPoint at
+    // the FAB's center resolves INSIDE the FAB (z-50 stays above the z-40
+    // chooser and remains the close toggle). The clone's Radix modal lock
+    // set pointer-events:none on <body>, deadening the FAB — modal={false}
+    // removes the lock (the live's chooser is plain divs, no lock).
+    const quickAdd = read("src/components/finara/quick-add-dialog.tsx");
+    expect(quickAdd).toContain("modal={false}");
+    // Non-modal Radix ALSO dismisses on outside focus — the FAB takes focus
+    // on mousedown, so its click would close-then-reopen the chooser
+    // (traced: onOpenChange(false) fires before the click toggle). Both
+    // outside paths are suppressed; the FAB is the only outside actor.
+    expect(quickAdd).toContain("onInteractOutside={(event) => {");
+    expect(quickAdd).toContain("event.preventDefault();");
+  });
+});
