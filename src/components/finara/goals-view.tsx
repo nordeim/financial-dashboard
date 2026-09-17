@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {Clock, DollarSign, Loader2, Pen, Plus, Target, TrendingUp} from "lucide-react";
+import {CircleCheckBig, Clock, DollarSign, Loader2, Pen, Plus, Target, TrendingUp} from "lucide-react";
 import { mutate, useQuery, useSettings } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney, percent, toMinorUnits } from "@/lib/money";
@@ -174,10 +174,17 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
         <div className="fade-in-up grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {goals.map((goal) => {
             const progress = percent(goal.currentAmountMinor, goal.targetAmountMinor);
-            const complete = goal.currentAmountMinor >= goal.targetAmountMinor;
+            // Progress-based (round-11 live probe): a negative-target goal
+            // never shows Complete (live: 0.0% / $0.00 / -$500.00, no badge).
+            const complete = progress >= 100;
             const remaining = daysRemaining(goal.deadline);
             return (
-              <div key={goal.id} className={CARD_HOVER}>
+              <div
+                key={goal.id}
+                /* Round-11 live probe: complete cards carry the emerald ring
+                   (verified post-reload at exactly 100% and at 150%). */
+                className={cn(CARD_HOVER, complete && "ring-2 ring-emerald-200 dark:ring-emerald-700")}
+              >
                 <div className="flex flex-col space-y-1.5 p-6 pb-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
@@ -195,6 +202,18 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                           >
                             {(goal.priority ?? "medium").toLowerCase()}
                           </Badge>
+                          {complete && (
+                            /* Live Complete badge (round-11 DOM capture):
+                               default variant (border-transparent shadow
+                               hover:bg-primary/80) + emerald palette + lucide
+                               circle-check-big w-3 h-3 mr-1, no aria-hidden. */
+                            <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-700 dark:text-emerald-100">
+                              {/* no JSX space after the icon — live DOM is
+                                  "</svg>Complete", the gap is mr-1 only */}
+                              <CircleCheckBig className="w-3 h-3 mr-1" />
+                              {"Complete"}
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -253,18 +272,22 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                   <div className="text-xs text-neutral-500 dark:text-neutral-400">
                     Target: {formatDate(goal.deadline ?? "", dateFormat)}
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full mt-4"
-                    onClick={() => {
-                      setContributing(goal);
-                      setContribution("");
-                    }}
-                    disabled={complete}
-                  >
-                    <DollarSign className="w-4 h-4 mr-1" aria-hidden /> {complete ? "Goal reached" : "Add Progress"}
-                  </Button>
+                  {/* Live REMOVES Add Progress when a goal is complete
+                     (round-11 corrected evidence, post-reload at 100% and
+                     150% — the button is gone, not disabled). */}
+                  {!complete && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-4"
+                      onClick={() => {
+                        setContributing(goal);
+                        setContribution("");
+                      }}
+                    >
+                      <DollarSign className="w-4 h-4 mr-1" aria-hidden /> Add Progress
+                    </Button>
+                  )}
                 </div>
               </div>
             );
@@ -305,7 +328,6 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                 id="target_amount"
                 type="number"
                 inputMode="decimal"
-                min="0"
                 step="0.01"
                 className="dark:bg-gray-800 dark:text-white dark:border-gray-700"
                 value={form.target}
@@ -411,7 +433,6 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                 id="amount"
                 type="number"
                 inputMode="decimal"
-                min="0"
                 step="0.01"
                 className="dark:bg-gray-800 dark:text-white dark:border-gray-700"
                 value={contribution}
