@@ -1,0 +1,73 @@
+# Round-12 CI pipeline (PAD §10 HIGH) — full gate on every push to main and
+# every PR: lint → typecheck → unit (vitest) → E2E (Playwright, production
+# build served on :3100 against a dedicated db/e2e.db).
+#
+# Notes:
+# - Bun blocks dependency postinstall scripts, so the Prisma client is
+#   generated explicitly via `bun run db:generate` after install.
+# - No .env is needed: `next build` marks every API route dynamic (never
+#   evaluated at build time), and the unit suite is pure; the Playwright
+#   webServer sets its own absolute DATABASE_URL (db/e2e.db).
+# - `--with-deps` installs Chromium's system libraries (GitHub runners
+#   support passwordless sudo for the apt step).
+# - Browser cache key = installed Playwright version, so a @playwright/test
+#   bump re-downloads only when the browser build changes.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.x
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: bun run db:generate
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Unit tests
+        run: bun run test
+
+      - name: Get installed Playwright version
+        id: playwright-version
+        run: echo "version=$(bunx playwright --version | cut -d ' ' -f 2)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+
+      - name: Install Chromium
+        run: bunx playwright install --with-deps chromium
+
+      - name: E2E tests (build + Playwright)
+        run: bun run test:e2e
+
+      - name: Upload Playwright report (failure only)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
