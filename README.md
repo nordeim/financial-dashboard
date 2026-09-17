@@ -23,7 +23,7 @@ Finara solves the "where did my money go?" problem with a single, real-time surf
 | 🧭 **Analytics** | 3/6/12-month windows with From/To date pickers, segmented 4-tab control (Overview/Expenses/Income/Investments), windowed monthly averages, income vs expenses trend, category donuts, sector allocation (Income tab renders empty, mirroring a verified source quirk) |
 | 🤖 **AI Coach & Insights** | Chat grounded in your live financial snapshot; dashboard insight cards with deterministic fallback |
 | 🔐 **GDPR Export & Restore** | One-click full JSON export; Settings page round-trips a Finara export file back into the database (finara-export import mode) |
-| 🧪 **Unit Tests** | Vitest suite (122 tests) covering money math, taxonomy, KPI computation (incl. income activity categories), filters, date formats, export normalization, source-exact UI maps, quick-select tile labels, the pinned shadcn primitive class sets, the live-probed semantic design tokens, and the login-page class sets |
+| 🧪 **Unit Tests** | Vitest suite (156 tests) covering money math, taxonomy, KPI computation (incl. income activity categories), filters, date formats, export normalization, source-exact UI maps, quick-select tile labels, the pinned shadcn primitive class sets, the live-probed semantic design tokens, the login-page class sets, and the round-7 dialog form-body + icon-order source contracts |
 | 🌙 **Responsive** | Sidebar on desktop, full-screen mobile drawer with Synced badge; WCAG-minded focus states and aria labels; staggered CSS entrance animations (`prefers-reduced-motion` safe) |
 
 ## Architecture
@@ -73,7 +73,7 @@ Requires **Bun ≥ 1.3** (or Node.js ≥ 20 with npm — commands below use `bun
 
 - `bun run lint` → exits 0, no output.
 - `bun run typecheck` → exits 0, no output.
-- `bun run test` → 122 tests passing (Vitest).
+- `bun run test` → 156 tests passing (Vitest).
 - First visit to any API route (e.g. the dashboard) auto-seeds a six-month demo history: 4 accounts, 4 income sources, ~96 expenses, 3 budgets, 3 goals, 8 holdings. Seeding is idempotent and concurrency-safe (DB-level unique-key lock + completion marker).
 
 ## Demo Credentials
@@ -102,7 +102,7 @@ financial-dashboard/
 │   └── 📂 lib/                            # money, categories, types, analytics, seed, api,
 │                                          # dashboard-kpis, expense-filters, date-format,
 │                                          # import-export, ui-maps (pure domain modules, TDD)
-│                                          # + __tests__/ (Vitest, 122 tests)
+│                                          # + __tests__/ (Vitest, 156 tests)
 ├── 📂 prisma/
 │   └── 📄 schema.prisma                   # 7 models, money as integer minor units
 ├── 📂 db/                                 # SQLite runtime storage (gitignored)
@@ -184,6 +184,14 @@ the radius scale renders the v3 values (`rounded-md` 6px, `rounded-lg` 8px, `rou
 themes and pinned by `src/lib/__tests__/design-tokens.test.ts`. Do not "modernize" these
 to the v4/oklch defaults.
 
+Round 7 (ADR-020) pins **the dialog form bodies and the icon class order** to the live
+DOM: income quick-amount chips render compact (`h-8 px-3 text-xs`) while expense chips
+stay default-size, form grids render `gap-4`, buttons rows are `flex gap-3 pt-4` with
+`flex-1` (Add Account keeps `justify-end` + a default primary submit; Add Progress
+drops the pt), edit submits read "Update X" (accounts: "Save Changes"), label ids are
+the live snake_case set, and every lucide icon in the app views renders `w-X h-X` with
+margins after — all pinned by `src/lib/__tests__/dialog-forms.test.ts`.
+
 ## Testing & Verification
 
 The full gate (run before every push):
@@ -191,7 +199,7 @@ The full gate (run before every push):
 ```bash
 bun run lint        # ESLint 9 — must exit 0
 bun run typecheck   # tsc --noEmit — must exit 0
-bun run test        # Vitest — 122 unit tests, must all pass
+bun run test        # Vitest — 156 unit tests, must all pass
 bun run build       # next build — must exit 0
 ```
 
