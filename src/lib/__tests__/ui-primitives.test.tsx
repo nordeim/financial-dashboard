@@ -131,7 +131,7 @@ describe("Input (classic live set)", () => {
 describe("Label (classic live set)", () => {
   it("renders the live classes without flex/gap wrappers", () => {
     const cls = classOf(render(<Label>Email</Label>));
-    expect(cls).toContain("text-sm font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70");
+    expect(cls).toContain("text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70");
     expect(cls).not.toContain("flex");
     expect(cls).not.toContain("select-none");
   });
