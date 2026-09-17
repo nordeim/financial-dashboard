@@ -34,3 +34,8 @@ ssh-key.txt
 Thumbs.db
 .idea/
 .vscode/
+
+# Playwright E2E artifacts
+test-results/
+playwright-report/
+playwright/.cache/
