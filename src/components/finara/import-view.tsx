@@ -2,9 +2,10 @@
 
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CheckCircle2, CloudUpload, FileSpreadsheet, Loader2, X } from "lucide-react";
+import { CheckCircle2, CircleAlert, CloudUpload, FileSpreadsheet, Loader2, X } from "lucide-react";
 import { mutate } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { toMinorUnits } from "@/lib/money";
@@ -232,7 +233,22 @@ export function ImportView() {
           no view-root div — the card follows the header directly. */}
       <ViewHeader title="Import Transactions" subtitle="Upload a CSV from your bank to quickly add expenses." bare />
 
-      {/* Live-exact plain card surface (border + bg-card + shadow — not the glass surface). */}
+      {parseError ? (
+        /* Round 9 live capture: extraction failures REPLACE the step card
+         * entirely — a plain card with border-red-500, centered p-8 body,
+         * big CircleAlert (h-16 w-16 — a live h-first exception), text-xl
+         * title, neutral-500 message, default-primary Start New Import. */
+        <div className="fade-in-up rounded-xl border bg-card text-card-foreground shadow border-red-500" role="alert">
+          <div className="flex flex-col items-center justify-center p-8">
+            <CircleAlert className="h-16 w-16 text-red-500" aria-hidden />
+            <h3 className="mt-4 text-xl font-bold">An Error Occurred</h3>
+            <p className="mt-2 text-neutral-500">{parseError}</p>
+            <Button className="h-9 px-4 py-2 mt-6" onClick={reset}>
+              Start New Import
+            </Button>
+          </div>
+        </div>
+      ) : (
       <div className="fade-in-up rounded-xl border bg-card text-card-foreground shadow">
         <div className="flex flex-col space-y-1.5 p-6">
           <div className="font-semibold leading-none tracking-tight">
@@ -240,18 +256,6 @@ export function ImportView() {
           </div>
         </div>
         <div className="p-6 pt-0 space-y-4">
-          {parseError ? (
-            <div className="mb-6 flex flex-col items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-6 py-8 text-center" role="alert">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-                <X className="w-6 h-6 text-red-600" aria-hidden />
-              </div>
-              <h3 className="text-base font-semibold text-red-700">An Error Occurred</h3>
-              <p className="max-w-md text-sm text-red-600">{parseError}</p>
-              <Button variant="outline" className="border-red-300 text-red-600 hover:bg-red-100" onClick={reset}>
-                Start New Import
-              </Button>
-            </div>
-          ) : null}
 
           {step === 1 ? (
             <div
@@ -264,7 +268,11 @@ export function ImportView() {
               }}
             >
               <CloudUpload className="mx-auto h-12 w-12 text-gray-400" aria-hidden />
-              <label
+              {/* Round 9: live renders this through the Label PRIMITIVE — the
+                  base (`text-sm leading-none peer-disabled:…`) merges ahead of
+                  the indigo tail; the round-8 pin had hand-written the tail
+                  only and the base never rendered. */}
+              <Label
                 className="font-medium text-indigo-600 hover:text-indigo-500 cursor-pointer"
                 htmlFor="file-upload"
               >
@@ -280,7 +288,7 @@ export function ImportView() {
                     if (file) void handleFile(file);
                   }}
                 />
-              </label>
+              </Label>
               {pendingFile && !extracting ? (
                 <p className="mt-2 flex items-center justify-center gap-1 text-sm font-medium text-emerald-700 dark:text-emerald-400" aria-live="polite">
                   <CheckCircle2 className="w-4 h-4" aria-hidden /> {pendingFile.name}
@@ -418,6 +426,7 @@ export function ImportView() {
             </div>
           ) : null}
       </div>
+      )}
     </>
   );
 }

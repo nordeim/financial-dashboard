@@ -43,6 +43,7 @@ const DIALOG_OVERLAY_BASE =
 
 function DialogContent({
   className,
+  cardClassName,
   overlayClassName,
   backdropClassName,
   children,
@@ -51,6 +52,15 @@ function DialogContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   /** Classes for the centered card wrapper (width overrides live here). */
   className?: string
+  /**
+   * Round 9: FULL card class replacement. The AI Coach card renders via the
+   * live Card-component merge (`rounded-xl border text-card-foreground shadow
+   * w-full max-w-2xl h-[80vh] bg-white dark:bg-gray-800 flex flex-col`) — a
+   * different class ORDER than DIALOG_CARD_BASE produces, and tailwind-merge
+   * would collapse a re-stated merge. When provided, the card renders this
+   * string alone; callers normally keep using `className`.
+   */
+  cardClassName?: string
   /** Classes for the full-screen overlay (z-index overrides live here). */
   overlayClassName?: string
   /** Classes for the backdrop layer (live Add Account renders bg-black/60). */
@@ -63,7 +73,7 @@ function DialogContent({
         className={cn(DIALOG_OVERLAY_BASE, backdropClassName, overlayClassName)}
         {...props}
       >
-        <div className={cn(DIALOG_CARD_BASE, className)}>
+        <div className={cardClassName ?? cn(DIALOG_CARD_BASE, className)}>
           {children}
           {showCloseButton && (
             <DialogPrimitive.Close className="absolute right-6 top-6 inline-flex h-9 w-9 items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">

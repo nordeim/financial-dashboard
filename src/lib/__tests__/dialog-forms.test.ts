@@ -77,15 +77,23 @@ function iconClassNames(source: string): string[] {
 
 describe("icon class order (live: w-X h-X, margin after)", () => {
   it("renders no h-first size pairs on finara lucide icons", () => {
-    // Live-evidenced exception: the import dropzone's CloudUpload renders
-    // `mx-auto h-12 w-12 text-gray-400` h-first on the live app.
-    const allowHFirst = /lucide-cloud-upload|CloudUpload/;
+    // Live-evidenced exceptions (exact strings, round 9): the import
+    // dropzone's CloudUpload renders `mx-auto h-12 w-12 text-gray-400` and
+    // the import error card's CircleAlert renders `h-16 w-16 text-red-500`
+    // — both h-first on the live app.
+    const allowHFirstClass = /^(?:mx-auto h-12 w-12 text-gray-400|h-16 w-16 text-red-500)$/;
     const offenders: string[] = [];
     for (const [file, source] of Object.entries(sources)) {
-      if (allowHFirst.test(source) && file.includes("import-view")) continue;
+      if (!file.includes("import-view")) {
+        for (const cls of iconClassNames(source)) {
+          const m = cls.match(/h-\d+(?:\.\d+)? w-\d+(?:\.\d+)?/);
+          if (m) offenders.push(`${file}: "${cls}"`);
+        }
+        continue;
+      }
       for (const cls of iconClassNames(source)) {
         const m = cls.match(/h-\d+(?:\.\d+)? w-\d+(?:\.\d+)?/);
-        if (m) offenders.push(`${file}: "${cls}"`);
+        if (m && !allowHFirstClass.test(cls)) offenders.push(`${file}: "${cls}"`);
       }
     }
     expect(offenders).toEqual([]);
