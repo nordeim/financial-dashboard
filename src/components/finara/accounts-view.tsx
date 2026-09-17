@@ -6,14 +6,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Landmark, Pen, Plus, Trash2 } from "lucide-react";
+import {Loader2, Landmark, Pen, Plus} from "lucide-react";
 import { mutate, useQuery } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney, toMinorUnits } from "@/lib/money";
 import { ACCOUNT_TYPES, accountTypeLabel } from "@/lib/categories";
 import { ACCOUNT_TYPE_ICONS } from "@/lib/ui-maps";
 import { formatDate } from "@/lib/date-format";
-import { CARD_SURFACE, EmptyState, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
+import {CARD_HOVER, CARD_PLAIN, ClassicTrash2, EmptyState, ErrorNote, LoadingRows, ViewHeader} from "@/components/finara/ui-bits";
 import type { AccountDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -103,12 +103,12 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
   };
 
   return (
-    <div className="space-y-8">
+    <>
       <ViewHeader
         title="My Accounts"
         subtitle="Manage your connected bank accounts"
         actions={
-          <Button onClick={openCreate} className="h-9 bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
+          <Button onClick={openCreate} className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
             <Plus className="w-5 h-5 mr-2" aria-hidden /> Add Account
           </Button>
         }
@@ -119,7 +119,7 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
       ) : query.loading && !query.data ? (
         <LoadingRows rows={3} />
       ) : accounts.length === 0 ? (
-        <div className={cn(CARD_SURFACE, "p-6")}>
+        <div className={cn(CARD_PLAIN, "p-6")}>
           <EmptyState
             icon={Landmark}
             title="No accounts yet"
@@ -132,18 +132,18 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
           />
         </div>
       ) : (
-        <div className="fade-in-up grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="fade-in-up grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {accounts.map((account) => {
             const TypeIcon = ACCOUNT_TYPE_ICONS[account.type] ?? Landmark;
             return (
-              <div key={account.id} className={cn(CARD_SURFACE, "card-hover flex h-full flex-col")}>
-                <div className="flex flex-row items-start justify-between space-y-1.5 p-6">
+              <div key={account.id} className={cn(CARD_HOVER, "h-full flex flex-col")}>
+                <div className="space-y-1.5 p-6 flex flex-row items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 rounded-xl flex items-center justify-center">
                       <TypeIcon className="w-6 h-6" aria-hidden />
                     </div>
                     <div>
-                      <div className="text-lg font-semibold tracking-tight">{account.name}</div>
+                      <div className="font-semibold tracking-tight text-lg">{account.name}</div>
                       <p className="text-sm text-neutral-500 dark:text-neutral-400">{account.institution}</p>
                     </div>
                   </div>
@@ -164,11 +164,11 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
                       onClick={() => void deleteAccount(account)}
                       aria-label={`Remove ${account.name}`}
                     >
-                      <Trash2 className="w-4 h-4" aria-hidden />
+                      <ClassicTrash2 className="w-4 h-4" aria-hidden />
                     </Button>
                   </div>
                 </div>
-                <div className="flex flex-grow flex-col justify-end p-6 pt-0">
+                <div className="p-6 pt-0 flex-grow flex flex-col justify-end">
                   <p className="text-xs text-neutral-500 dark:text-neutral-400">Balance</p>
                   <p
                     className={cn(
@@ -178,7 +178,7 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
                   >
                     {formatMoney(account.balanceMinor)}
                   </p>
-                  <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+                  <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
                     Last updated: {formatDate(account.lastSyncedAt, "MM/dd/yyyy")}
                   </p>
                   <a
@@ -188,7 +188,7 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
                       onNavigate?.("import");
                     }}
                   >
-                    <Button variant="outline" className="mt-4 w-full">
+                    <Button variant="outline" className="w-full mt-4">
                       Import Transactions
                     </Button>
                   </a>
@@ -292,6 +292,6 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

@@ -8,12 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { DollarSign, Loader2, Pen, Plus, Trash2, TrendingUp, X } from "lucide-react";
+import {DollarSign, Loader2, Pen, Plus, TrendingUp, X} from "lucide-react";
 import { mutate, useQuery } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney, monthlyEquivalent, toMinorUnits } from "@/lib/money";
 import { FREQUENCY_LABELS, INCOME_CATEGORIES, INCOME_FREQUENCIES, incomeCategoryLabel } from "@/lib/categories";
-import { CARD_SURFACE, EmptyState, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
+import {CARD_HOVER, CARD_PLAIN, ClassicTrash2, EmptyState, ErrorNote, LoadingRows, ViewHeader} from "@/components/finara/ui-bits";
 import type { IncomeSourceDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -111,12 +111,12 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
   };
 
   return (
-    <div className="space-y-8">
+    <>
       <ViewHeader
         title="Income Sources"
         subtitle="Track and manage all your income streams"
         actions={
-          <Button onClick={onAddIncome} className="h-9 bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
+          <Button onClick={onAddIncome} className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
             <Plus className="w-5 h-5 mr-2" aria-hidden /> Add Income Source
           </Button>
         }
@@ -130,17 +130,17 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
         <>
           {/* Hero total card (live: emerald gradient, text-4xl, w-20 icon circle) */}
           <div className="fade-in-up mb-8">
-            <div className="rounded-xl border-0 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-xl">
+            <div className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-xl">
               <div className="p-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="mb-2 text-lg font-medium text-emerald-100">Total Monthly Income</p>
+                  <p className="text-emerald-100 text-lg font-medium mb-2">Total Monthly Income</p>
                   <p className="text-4xl font-bold">{formatMoney(monthlyTotal)}</p>
-                  <p className="mt-2 text-sm text-emerald-100">
+                  <p className="text-emerald-100 text-sm mt-2">
                     From {sources.filter((source) => source.active).length} active sources
                   </p>
                 </div>
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/20">
+                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
                   <TrendingUp className="w-10 h-10" aria-hidden />
                 </div>
               </div>
@@ -149,30 +149,30 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
           </div>
 
           {sources.length === 0 ? (
-            <div className={cn(CARD_SURFACE, "p-6")}>
+            <div className={cn(CARD_PLAIN, "p-6")}>
               <EmptyState
                 icon={TrendingUp}
                 title="No Income Sources Yet"
                 body="Start by adding your income sources to track your financial progress"
                 action={
-                  <Button onClick={onAddIncome} className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
+                  <Button onClick={onAddIncome} className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
                     <Plus className="w-4 h-4" aria-hidden /> Add Your First Income Source
                   </Button>
                 }
               />
             </div>
           ) : (
-            <div className="fade-in-up stagger-1 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="fade-in-up stagger-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sources.map((source) => (
-                <div key={source.id} className={cn(CARD_SURFACE, "card-hover")}>
+                <div key={source.id} className={CARD_HOVER}>
                   <div className="p-6">
-                    <div className="mb-4 flex items-start justify-between">
+                    <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
                           <DollarSign className="w-6 h-6 text-emerald-600" aria-hidden />
                         </div>
                         <div>
-                          <h3 className="truncate font-bold text-neutral-900">{source.name}</h3>
+                          <h3 className="font-bold text-neutral-900 truncate">{source.name}</h3>
                           <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">
                             {/* Live renders the raw category id ("primary") on the card badge. */}
                             {source.category}
@@ -196,7 +196,7 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                           onClick={() => void deleteSource(source)}
                           aria-label={`Delete ${source.name}`}
                         >
-                          <Trash2 className="w-4 h-4" aria-hidden />
+                          <ClassicTrash2 className="w-4 h-4" aria-hidden />
                         </Button>
                       </div>
                     </div>
@@ -210,8 +210,8 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                           <span>{(FREQUENCY_LABELS[source.frequency] ?? source.frequency).toLowerCase()}</span>
                         </div>
                       </div>
-                      <div className="border-t pt-3 dark:border-gray-700">
-                        <p className="mb-1 text-sm text-neutral-500 dark:text-neutral-400">Monthly equivalent</p>
+                      <div className="pt-3 border-t dark:border-gray-700">
+                        <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Monthly equivalent</p>
                         <p className="text-lg font-semibold text-primary-sage">
                           {formatMoney(monthlyEquivalent(source.amountMinor, source.frequency))}
                         </p>
@@ -359,6 +359,6 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

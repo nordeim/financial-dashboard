@@ -8,18 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Pen,
-  Plus,
-  Receipt,
-  Search,
-  Trash2,
-  TrendingDown,
-  XCircle,
-} from "lucide-react";
+import { Calendar, Pen, PenLine, Plus, Receipt, Search, SquareCheckBig, TrendingDown, X } from "lucide-react";
 import { mutate, useQuery } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney } from "@/lib/money";
@@ -34,11 +23,10 @@ import {
 } from "@/lib/expense-filters";
 import { ExpenseFiltersPanel } from "@/components/finara/expense-filters-panel";
 import { AddTransactionDialog } from "@/components/finara/add-transaction-dialog";
-import { CARD_SURFACE, ClassicFilterIcon, EmptyState, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
+import {CARD_HOVER, CARD_PLAIN, ClassicFilterIcon, ClassicTrash2, EmptyState, ErrorNote, LoadingRows, ViewHeader} from "@/components/finara/ui-bits";
 import type { ExpenseDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const PAGE_SIZE = 10;
 
 export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKey = 0 }: { onAddExpense: () => void; onQuickAdd: () => void; quickAddOpen: boolean; refreshKey?: number }) {
   const query = useQuery<ExpenseDto[]>("/api/expenses");
@@ -48,8 +36,6 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [draft, setDraft] = useState<ExpenseFilters>(defaultExpenseFilters());
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [bulkCategory, setBulkCategory] = useState<string>("bulk-edit");
-  const [page, setPage] = useState(1);
   const [editingExpense, setEditingExpense] = useState<ExpenseDto | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -86,19 +72,16 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
     (expense) => tab === "All" || expense.category === tab,
   );
 
-  // Reset pagination/selection when the filter context changes — render-time
-  // state adjustment (the React-documented pattern), not an effect.
+  // Reset the selection when the filter context changes — render-time state
+  // adjustment (the React-documented pattern), not an effect. (Round 8: live
+  // has NO pagination — every filtered row renders.)
   const [appliedContext, setAppliedContext] = useState({ filters, search, tab });
   if (appliedContext.filters !== filters || appliedContext.search !== search || appliedContext.tab !== tab) {
     setAppliedContext({ filters, search, tab });
-    setPage(1);
     setSelectedIds(new Set());
   }
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const safePage = Math.min(page, pageCount);
-  const visible = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-  const allVisibleSelected = visible.length > 0 && visible.every((expense) => selectedIds.has(expense.id));
+  const allSelected = filtered.length > 0 && filtered.every((expense) => selectedIds.has(expense.id));
 
   const deleteExpense = async (expense: ExpenseDto) => {
     // Source parity: the live app confirms deletions with a native dialog.
@@ -115,7 +98,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
   const bulkDelete = async () => {
     const ids = [...selectedIds];
     if (ids.length === 0) return;
-    if (!window.confirm(`Are you sure you want to delete ${ids.length} expense${ids.length === 1 ? "" : "s"}?`)) return;
+    if (!window.confirm(`Are you sure you want to delete ${ids.length} expenses?`)) return;
     setDeleting(true);
     let failures = 0;
     for (const id of ids) {
@@ -132,28 +115,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
     });
   };
 
-  const bulkEditCategory = async (category: string) => {
-    const ids = [...selectedIds];
-    if (ids.length === 0 || !["Needs", "Wants", "Savings"].includes(category)) return;
-    setDeleting(true);
-    let failures = 0;
-    for (const id of ids) {
-      const expense = expenses.find((entry) => entry.id === id);
-      const result = await mutate(`/api/expenses/${id}`, "PATCH", { category });
-      if (!result.ok) failures += 1;
-      void expense;
-    }
-    setDeleting(false);
-    setSelectedIds(new Set());
-    setBulkCategory("bulk-edit");
-    query.refresh();
-    toast({
-      title: failures === 0 ? "Expenses updated" : "Some expenses could not be updated",
-      description:
-        failures === 0 ? `${ids.length} expense${ids.length === 1 ? "" : "s"} moved to ${category}.` : `${failures} of ${ids.length} failed.`,
-      variant: failures === 0 ? undefined : "destructive",
-    });
-  };
+
 
   const toggleSelected = (id: string) => {
     setSelectedIds((current) => {
@@ -164,11 +126,11 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
     });
   };
 
-  const toggleSelectAllVisible = () => {
+  const toggleSelectAll = () => {
     setSelectedIds((current) => {
       const next = new Set(current);
-      if (allVisibleSelected) visible.forEach((expense) => next.delete(expense.id));
-      else visible.forEach((expense) => next.add(expense.id));
+      if (allSelected) filtered.forEach((expense) => next.delete(expense.id));
+      else filtered.forEach((expense) => next.add(expense.id));
       return next;
     });
   };
@@ -181,7 +143,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
         title="Expenses"
         subtitle="Track and categorize all your spending"
         actions={
-          <Button onClick={onAddExpense} className="h-9 bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
+          <Button onClick={onAddExpense} className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
             <Plus className="w-5 h-5 mr-2" aria-hidden /> Add Expense
           </Button>
         }
@@ -194,12 +156,12 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
       ) : (
         <>
           {/* Summary cards (live: red gradient total Card + dotted category cards, mb-8) */}
-          <div className="fade-in-up mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
-            <Card className="border-0 bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg">
+          <div className="fade-in-up grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white border-0 shadow-lg">
               <div className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="mb-1 text-sm font-medium text-red-100">Total Expenses</p>
+                    <p className="text-red-100 text-sm font-medium mb-1">Total Expenses</p>
                     <p className="text-2xl font-bold">{formatMoney(totals.total)}</p>
                   </div>
                   <TrendingDown className="w-8 h-8 text-red-200" aria-hidden />
@@ -207,11 +169,11 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
               </div>
             </Card>
             {(["Needs", "Wants", "Savings"] as const).map((category) => (
-              <Card key={category} className={cn(CARD_SURFACE, "card-hover")}>
+              <Card key={category} className={cn(CARD_PLAIN, "card-hover")}>
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="mb-1 text-sm font-medium text-neutral-600 capitalize dark:text-neutral-400">
+                      <p className="text-neutral-600 dark:text-neutral-400 text-sm font-medium mb-1 capitalize">
                         {category.toLowerCase()}
                       </p>
                       <p className="text-xl font-bold text-neutral-900 dark:text-white">{formatMoney(totals[category])}</p>
@@ -227,19 +189,19 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
           <div className="fade-in-up stagger-1 mb-6">
             <div className="space-y-4">
               <div className="flex gap-3">
-                <div className="relative flex-1">
+                <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden />
                 <Input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Search expenses..."
-                  className="h-9 pl-10"
+                  className="pl-10"
                   aria-label="Search expenses..."
                 />
               </div>
               <Button
                 variant="outline"
-                className="h-9 gap-2 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20"
+                className="gap-2 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
                 onClick={() => {
                   setDraft(filters);
                   setFiltersOpen((open) => !open);
@@ -270,37 +232,58 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
             ) : null}
 
             {selectedIds.size > 0 ? (
-              <div
-                className="flex flex-wrap items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800 dark:bg-emerald-900/20"
-                role="toolbar"
-                aria-label="Bulk expense actions"
-              >
-                <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())} className="text-neutral-600 dark:text-neutral-300">
-                  <XCircle className="w-4 h-4 mr-1" aria-hidden /> Deselect All
-                </Button>
-                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-200">
-                  {selectedIds.size} expense{selectedIds.size === 1 ? "" : "s"} selected
-                </span>
-                <div className="ml-auto flex items-center gap-2">
-                  <Select value={bulkCategory} onValueChange={(value) => setBulkCategory(value)}>
-                    <SelectTrigger aria-label="Bulk edit" className="h-9 w-36">
-                      <SelectValue>Bulk Edit</SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="bulk-edit">Bulk Edit</SelectItem>
-                      <SelectItem value="Needs">Move to Needs</SelectItem>
-                      <SelectItem value="Wants">Move to Wants</SelectItem>
-                      <SelectItem value="Savings">Move to Savings</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => void bulkDelete()}
-                    disabled={deleting}
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" aria-hidden /> Delete ({selectedIds.size})
-                  </Button>
+              /* Round 8 (F12 — live-probed 2026-09-17): blue info bar with a
+                 Select All ⇄ Deselect All toggle (dash checkbox ⇄ SquareCheckBig),
+                 an always-plural count, an INERT Bulk Edit select (live's options
+                 trigger nothing — probed), a red outline Delete, and an X clear. */
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="sm" className="gap-2" onClick={toggleSelectAll}>
+                      {allSelected ? (
+                        <SquareCheckBig className="w-4 h-4" aria-hidden />
+                      ) : (
+                        <div className="w-4 h-4 border-2 border-current rounded flex items-center justify-center" aria-hidden>
+                          <div className="w-2 h-0.5 bg-current"></div>
+                        </div>
+                      )}
+                      {allSelected ? "Deselect All" : `Select All (${filtered.length})`}
+                    </Button>
+                    <span className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+                      {selectedIds.size} expenses selected
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Select>
+                      <SelectTrigger className="w-auto gap-2" aria-label="Bulk edit">
+                        <PenLine className="w-4 h-4" aria-hidden />
+                        <SelectValue placeholder="Bulk Edit">Bulk Edit</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="change-category">Change Category</SelectItem>
+                        <SelectItem value="update-date">Update Date</SelectItem>
+                        <SelectItem value="mark-recurring">Mark as Recurring</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 gap-2"
+                      onClick={() => void bulkDelete()}
+                      disabled={deleting}
+                    >
+                      <ClassicTrash2 className="w-4 h-4" aria-hidden /> Delete ({selectedIds.size})
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="w-8 h-8"
+                      onClick={() => setSelectedIds(new Set())}
+                      aria-label="Clear selection"
+                    >
+                      <X className="w-4 h-4" aria-hidden />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ) : null}
@@ -309,10 +292,10 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
 
           {/* Expense History (live: separate card, receipt icon title, tabs in
               the CardHeader row, NO card-hover) */}
-          <Card className={cn(CARD_SURFACE, "fade-in-up stagger-2")}>
+          <Card className={cn(CARD_PLAIN, "fade-in-up stagger-2")}>
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <CardTitle className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                <CardTitle className="flex items-center gap-2 text-primary-navy dark:text-white">
                   <Receipt className="w-5 h-5" aria-hidden /> Expense History ({filtered.length})
                 </CardTitle>
                 <Tabs value={tab} onValueChange={(value) => setTab(value as typeof tab)}>
@@ -326,7 +309,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
               </div>
             </CardHeader>
             <CardContent>
-              {visible.length === 0 ? (
+              {filtered.length === 0 ? (
                 <EmptyState
                   icon={TrendingDown}
                   title="No expenses yet"
@@ -340,10 +323,10 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
               ) : (
                 <>
                   <div className="space-y-4" aria-label="Expense history">
-                    {visible.map((expense) => (
+                    {filtered.map((expense) => (
                       <div
                         key={expense.id}
-                        className="flex items-center gap-4 rounded-xl bg-neutral-50/50 p-4 transition-colors hover:bg-neutral-100/50 dark:bg-gray-700/30 dark:hover:bg-gray-700/50"
+                        className="flex items-center gap-4 p-4 bg-neutral-50/50 dark:bg-gray-700/30 rounded-xl hover:bg-neutral-100/50 dark:hover:bg-gray-700/50 transition-colors"
                       >
                         <Checkbox
                           checked={selectedIds.has(expense.id)}
@@ -353,23 +336,23 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                         <div className="w-10 h-10 bg-white dark:bg-gray-600 rounded-lg flex items-center justify-center shadow-sm" aria-hidden>
                           <span className="text-lg">{subcategoryEmoji(expense.subcategory)}</span>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="mb-1 flex items-start justify-between">
-                            <h3 className="truncate font-semibold text-neutral-900 dark:text-white">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between mb-1">
+                            <h3 className="font-semibold text-neutral-900 dark:text-white truncate">
                               {expense.description}
                             </h3>
-                            <p className="ml-4 text-lg font-bold text-red-600 dark:text-red-500">
+                            <p className="text-lg font-bold text-red-600 dark:text-red-500 ml-4">
                               -{formatMoney(expense.amountMinor)}
                             </p>
                           </div>
-                          <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <Badge
                               variant="secondary"
                               className={CATEGORY_BADGE[expense.category.toLowerCase()] ?? "bg-green-100 text-green-800"}
                             >
                               {expense.category.toLowerCase()}
                             </Badge>
-                            <Badge variant="outline" className="dark:border-gray-600">
+                            <Badge variant="outline" className="text-xs dark:border-gray-600">
                               {subcategoryLabel(expense.subcategory).toLowerCase()}
                             </Badge>
                             <div className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
@@ -398,66 +381,12 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                             onClick={() => void deleteExpense(expense)}
                             aria-label={`Delete ${expense.description}`}
                           >
-                            <Trash2 className="w-4 h-4" aria-hidden />
+                            <ClassicTrash2 className="w-4 h-4" aria-hidden />
                           </Button>
                         </div>
                       </div>
                     ))}
                   </div>
-
-                  {pageCount > 1 ? (
-                    <nav
-                      className="mt-4 flex items-center justify-center gap-2"
-                      aria-label="Expense history pagination"
-                    >
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        disabled={safePage <= 1}
-                        onClick={() => setPage((current) => Math.max(1, current - 1))}
-                        aria-label="Previous page"
-                      >
-                        <ChevronLeft className="w-4 h-4" aria-hidden />
-                      </Button>
-                      {Array.from({ length: pageCount }, (_, index) => index + 1)
-                        .filter(
-                          (number) =>
-                            number === 1 ||
-                            number === pageCount ||
-                            Math.abs(number - safePage) <= 1,
-                        )
-                        .map((number, index, list) => (
-                          <span key={number} className="flex items-center gap-2">
-                            {index > 0 && number - list[index - 1]! > 1 ? (
-                              <span className="text-neutral-400" aria-hidden>
-                                …
-                              </span>
-                            ) : null}
-                            <Button
-                              variant={number === safePage ? "default" : "outline"}
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              onClick={() => setPage(number)}
-                              aria-label={`Page ${number}`}
-                              aria-current={number === safePage ? "page" : undefined}
-                            >
-                              {number}
-                            </Button>
-                          </span>
-                        ))}
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        disabled={safePage >= pageCount}
-                        onClick={() => setPage((current) => Math.min(pageCount, current + 1))}
-                        aria-label="Next page"
-                      >
-                        <ChevronRight className="w-4 h-4" aria-hidden />
-                      </Button>
-                    </nav>
-                  ) : null}
                 </>
               )}
             </CardContent>

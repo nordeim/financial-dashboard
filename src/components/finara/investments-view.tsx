@@ -7,13 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BarChart3, ChartColumn, ChartPie, Loader2, Pen, Plus, Trash2, TrendingUp, Wallet, X } from "lucide-react";
+import {BarChart3, ChartColumn, ChartPie, Loader2, Pen, Plus, TrendingUp, Wallet, X} from "lucide-react";
 import { mutate, useQuery } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney } from "@/lib/money";
 import { INVESTMENT_TYPES, SECTORS, investmentTypeLabel } from "@/lib/categories";
 import { SECTOR_COLORS } from "@/lib/ui-maps";
-import { CARD_SURFACE, EmptyState, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
+import {CARD_PLAIN, ClassicTrash2, EmptyState, ErrorNote, LoadingRows, ViewHeader} from "@/components/finara/ui-bits";
 import type { InvestmentDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -146,12 +146,12 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
   };
 
   return (
-    <div className="space-y-8">
+    <>
       <ViewHeader
         title="Investments"
         subtitle="Track your investment portfolio performance"
         actions={
-          <Button onClick={openCreate} className="h-9 bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
+          <Button onClick={openCreate} className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
             <Plus className="w-5 h-5 mr-2" aria-hidden /> Add Investment
           </Button>
         }
@@ -164,34 +164,34 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
       ) : (
         <>
           {/* KPI row (live: blue + emerald gradients, white return card, w-12 bare icons) */}
-          <div className="fade-in-up grid grid-cols-1 gap-6 md:grid-cols-3 mb-8">
-            <div className="rounded-xl border-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg">
+          <div className="fade-in-up grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg">
               <div className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="mb-1 text-sm font-medium text-blue-100">Portfolio Value</p>
+                    <p className="text-blue-100 text-sm font-medium mb-1">Portfolio Value</p>
                     <p className="text-3xl font-bold">{formatMoney(portfolioValue)}</p>
                   </div>
                   <Wallet className="w-12 h-12 text-blue-200" aria-hidden />
                 </div>
               </div>
             </div>
-            <div className="rounded-xl border-0 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg">
+            <div className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-lg">
               <div className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="mb-1 text-sm font-medium text-emerald-100">Total Gain/Loss</p>
+                    <p className="text-sm font-medium mb-1 text-emerald-100">Total Gain/Loss</p>
                     <p className="text-3xl font-bold">{formatMoney(totalGain)}</p>
                   </div>
                   <TrendingUp className="w-12 h-12 text-emerald-200" aria-hidden />
                 </div>
               </div>
             </div>
-            <div className={cn(CARD_SURFACE)}>
+            <div className={cn(CARD_PLAIN)}>
               <div className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="mb-1 text-sm font-medium text-neutral-600 dark:text-neutral-400">Total Return</p>
+                    <p className="text-neutral-600 dark:text-neutral-400 text-sm font-medium mb-1">Total Return</p>
                     <p className={cn("text-3xl font-bold", totalGain >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")}>
                       {totalReturn.toFixed(2)}%
                     </p>
@@ -204,11 +204,11 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
           </div>
 
           {/* Holdings grid (live: table col-span-2 + sector list right) */}
-          <div className="fade-in-up stagger-1 grid gap-8 lg:grid-cols-3">
+          <div className="fade-in-up stagger-1 grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
-              <div className={cn(CARD_SURFACE)}>
+              <div className={cn(CARD_PLAIN)}>
                 <div className="flex flex-col space-y-1.5 p-6">
-                  <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                  <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                     <Wallet className="w-5 h-5" aria-hidden /> Portfolio Holdings
                   </div>
                 </div>
@@ -261,7 +261,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                                       onClick={() => void deleteHolding(holding)}
                                       aria-label={`Remove ${holding.symbol}`}
                                     >
-                                      <Trash2 className="w-4 h-4" aria-hidden />
+                                      <ClassicTrash2 className="w-4 h-4" aria-hidden />
                                     </Button>
                                   </div>
                                 </TableCell>
@@ -278,9 +278,9 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
 
             {/* Sector Allocation (live: colored-dot list, fixed per-sector colors) */}
             <div>
-              <div className={cn(CARD_SURFACE)}>
+              <div className={cn(CARD_PLAIN)}>
                 <div className="flex flex-col space-y-1.5 p-6">
-                  <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                  <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                     <ChartPie className="w-5 h-5" aria-hidden /> Sector Allocation
                   </div>
                 </div>
@@ -293,7 +293,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                         <div key={entry.sector} className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <div
-                              className="h-3 w-3 rounded-full"
+                              className="w-3 h-3 rounded-full"
                               style={{ backgroundColor: SECTOR_COLORS[sectorKey(entry.sector)] ?? "#6B7280" }}
                               aria-hidden
                             />
@@ -312,7 +312,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
           </div>
 
           {holdings.length === 0 ? (
-            <div className={cn(CARD_SURFACE, "p-6")}>
+            <div className={cn(CARD_PLAIN, "p-6")}>
               <EmptyState
                 icon={BarChart3}
                 title="No Investments Yet"
@@ -485,6 +485,6 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

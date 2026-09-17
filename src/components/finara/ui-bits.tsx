@@ -10,10 +10,23 @@ import type { ReactNode } from "react";
  * Shared Finara UI primitives restyled to the source app's exact surface
  * language (round-3) and restructured to the live DOM anatomy (round 4,
  * 2026-09-15 — see docs/plans/2026-09-15-parity-remediation-round4.md).
+ * Round 8 (2026-09-17) re-pinned every card surface to the live RENDERED
+ * class order (raw capture extraction — the signature diff sorts classes,
+ * so orders were re-verified against the unsorted DOM). All glass cards
+ * share the CARD_PLAIN order; interactive cards append card-hover.
  */
 
-/** Source-exact card surface: translucent white, blur, no border, soft shadow. */
-export const CARD_SURFACE = "rounded-xl border-0 bg-white/80 text-card-foreground shadow-lg backdrop-blur-sm dark:bg-gray-800/80";
+/** Dashboard KPI cards (Card + `p-6 card-hover bg-white/80 … shadow-lg`). */
+export const CARD_DASHBOARD_SURFACE =
+  "rounded-xl text-card-foreground p-6 card-hover bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg";
+
+/** Interactive cards — income sources, goals, accounts, expenses KPIs. */
+export const CARD_HOVER =
+  "rounded-xl text-card-foreground card-hover bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg";
+
+/** Static glass cards — dashboard sections, investments KPIs. */
+export const CARD_PLAIN =
+  "rounded-xl text-card-foreground bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg";
 
 /** Standard page header block used by every view (live-exact).
  *
@@ -38,23 +51,23 @@ export function ViewHeader({
   if (bare) {
     return (
       <>
-        <h1 className="mb-2 text-3xl font-bold text-primary-navy lg:text-4xl dark:text-white">{title}</h1>
-        <p className="mb-8 text-neutral-600 dark:text-neutral-400">{subtitle}</p>
+        <h1 className="text-3xl lg:text-4xl font-bold text-primary-navy dark:text-white mb-2">{title}</h1>
+        <p className="text-neutral-600 dark:text-neutral-400 mb-8">{subtitle}</p>
       </>
     );
   }
   if (!actions) {
     return (
       <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-bold text-primary-navy lg:text-4xl dark:text-white">{title}</h1>
+        <h1 className="text-3xl lg:text-4xl font-bold text-primary-navy dark:text-white mb-2">{title}</h1>
         <p className="text-neutral-600 dark:text-neutral-400">{subtitle}</p>
       </div>
     );
   }
   return (
-    <div className="mb-8 flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
+    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
       <div>
-        <h1 className="mb-2 text-3xl font-bold text-primary-navy lg:text-4xl dark:text-white">{title}</h1>
+        <h1 className="text-3xl lg:text-4xl font-bold text-primary-navy dark:text-white mb-2">{title}</h1>
         <p className="text-neutral-600 dark:text-neutral-400">{subtitle}</p>
       </div>
       {/* Round-5: live renders header actions directly in the flex row (no
@@ -86,6 +99,37 @@ export function ClassicFilterIcon({ className }: { className?: string }) {
       aria-hidden
     >
       <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+    </svg>
+  );
+}
+
+/**
+ * Classic lucide trash glyph with the SINGLE alias class (round 8, F8). The
+ * live app's vendored lucide emits only the compact alias form on numbered
+ * icons; lucide-react@0.525 emits a dual hyphenated-plus-alias form. The path
+ * set is identical —
+ * only the class string differs — so render it inline like ClassicFilterIcon.
+ */
+export function ClassicTrash2({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("lucide lucide-trash2", className)}
+      aria-hidden
+    >
+      <path d="M3 6h18" />
+      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+      <line x1="10" x2="10" y1="11" y2="17" />
+      <line x1="14" x2="14" y1="11" y2="17" />
     </svg>
   );
 }
@@ -124,15 +168,15 @@ export function StatCard({
   trend?: number | null;
 }) {
   return (
-    <div className={cn(CARD_SURFACE, "card-hover p-6")}>
+    <div className={CARD_DASHBOARD_SURFACE}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="mb-1 text-sm font-medium text-neutral-600 dark:text-neutral-400">{label}</p>
-          <p className="mb-3 text-2xl font-bold text-neutral-900 dark:text-white">{value}</p>
+          <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-1">{label}</p>
+          <p className="text-2xl font-bold text-neutral-900 dark:text-white mb-3">{value}</p>
           {trend !== undefined ? <TrendPill value={trend} /> : null}
         </div>
-        <div className={cn("flex h-12 w-12 items-center justify-center rounded-xl", iconClass)}>
-          <Icon className="h-6 w-6 text-white" aria-hidden />
+        <div className={cn("w-12 h-12 rounded-xl", iconClass, "flex items-center justify-center")}>
+          <Icon className="w-6 h-6 text-white" aria-hidden />
         </div>
       </div>
     </div>
@@ -168,18 +212,18 @@ export function GradientCard({
   const inner = (
     <div className={cn("flex items-center justify-between", onClick ? "h-full" : undefined)}>
       <div>
-        <p className={cn("mb-1 text-sm font-medium", titleTint(gradient))}>{title}</p>
+        <p className={cn(titleTint(gradient), "text-sm font-medium mb-1")}>{title}</p>
         <p className={cn("text-2xl font-bold", capitalizeValue ? "capitalize" : undefined)}>{value}</p>
-        <p className={cn("text-lg", titleTint(gradient))}>{subtitle}</p>
+        <p className={cn(titleTint(gradient), "text-lg")}>{subtitle}</p>
       </div>
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20">
-        <Icon className="h-8 w-8" aria-hidden />
+      <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+        <Icon className="w-8 h-8" aria-hidden />
       </div>
     </div>
   );
   if (onClick) {
     return (
-      <div className={cn("card-hover rounded-2xl p-6 text-white", gradient)}>
+      <div className={cn(gradient, "rounded-2xl p-6 text-white card-hover")}>
         <a
           href={href ?? "#"}
           onClick={(event) => {
@@ -193,7 +237,7 @@ export function GradientCard({
       </div>
     );
   }
-  return <div className={cn("rounded-2xl p-6 text-white", gradient)}>{inner}</div>;
+  return <div className={cn(gradient, "rounded-2xl p-6 text-white")}>{inner}</div>;
 }
 
 function titleTint(gradient: string): string {
@@ -255,16 +299,18 @@ export function SectionCard({
   headerClassName?: string;
 }) {
   const titleNode = Icon ? (
-    <CardTitle className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
-      <Icon className="h-5 w-5" aria-hidden />
+    <CardTitle className="flex items-center gap-2 text-primary-navy dark:text-white">
+      <Icon className="w-5 h-5" aria-hidden />
       {title}
     </CardTitle>
   ) : (
-    <CardTitle className="text-xl font-bold tracking-tight text-primary-navy dark:text-white">{title}</CardTitle>
+    /* Round 8: the live plain-card titles are literal strings with
+     * tracking-tight first (not the CardTitle merge — no leading-none). */
+    <CardTitle className="tracking-tight text-xl font-bold text-primary-navy dark:text-white">{title}</CardTitle>
   );
   const trailing = badge ?? actions;
   return (
-    <Card className={cn(CARD_SURFACE, className)}>
+    <Card className={cn(CARD_PLAIN, className)}>
       <CardHeader className={headerClassName}>
         {trailing ? (
           <div className="flex items-center justify-between">
@@ -329,6 +375,51 @@ export function ErrorNote({ message, onRetry }: { message: string; onRetry?: () 
           Try again
         </button>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * Standalone 404 page (round 8, F10 — live-probed 2026-09-17). Rendered
+ * OUTSIDE the app shell for any unknown route; the live page camelCase-splits
+ * the raw path segment into the title and body quote, and the Go Home button
+ * navigates to `/` (which renders the dashboard with no active nav pill).
+ */
+export function NotFoundView({ segment, onGoHome }: { segment: string; onGoHome: () => void }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
+      <div className="max-w-md w-full">
+        <div className="text-center space-y-6">
+          <div className="space-y-2">
+            <h1 className="text-7xl font-light text-slate-300">404</h1>
+            <div className="h-0.5 w-16 bg-slate-200 mx-auto"></div>
+          </div>
+          <div className="space-y-3">
+            <h2 className="text-2xl font-medium text-slate-800">Page Not Found</h2>
+            <p className="text-slate-600 leading-relaxed">
+              The page <span className="font-medium text-slate-700">&quot;{segment}&quot;</span> could not be found in this application.
+            </p>
+          </div>
+          <div className="pt-6">
+            <button
+              type="button"
+              onClick={onGoHome}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
+            >
+              {/* Live renders a plain (non-lucide) home glyph at w-4 h-4 mr-2. */}
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                ></path>
+              </svg>
+              Go Home
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

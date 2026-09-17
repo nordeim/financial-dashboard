@@ -239,7 +239,7 @@ export function ImportView() {
             {step === 1 ? "Step 1: Upload File" : step === 2 ? "Step 2: Review & Categorize" : "Step 3: Done"}
           </div>
         </div>
-        <div className="space-y-4 p-6 pt-0">
+        <div className="p-6 pt-0 space-y-4">
           {parseError ? (
             <div className="mb-6 flex flex-col items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-6 py-8 text-center" role="alert">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
@@ -255,7 +255,7 @@ export function ImportView() {
 
           {step === 1 ? (
             <div
-              className="rounded-lg border-2 border-dashed p-6 text-center"
+              className="p-6 border-2 border-dashed rounded-lg text-center"
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
                 event.preventDefault();
@@ -265,7 +265,7 @@ export function ImportView() {
             >
               <CloudUpload className="mx-auto h-12 w-12 text-gray-400" aria-hidden />
               <label
-                className="cursor-pointer text-sm font-medium leading-none text-indigo-600 hover:text-indigo-500 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="font-medium text-indigo-600 hover:text-indigo-500 cursor-pointer"
                 htmlFor="file-upload"
               >
                 <span>Upload a file</span>
@@ -290,10 +290,11 @@ export function ImportView() {
             </div>
           ) : null}
 
+          {/* Round 8: plain default Button — the live default variant already
+              carries `shadow` (plan F6), so no className override here. */}
           <Button
             disabled={!pendingFile || extracting}
             onClick={() => void extract()}
-            className="shadow"
           >
             {extracting ? (
               <>
@@ -306,7 +307,7 @@ export function ImportView() {
         </div>
 
         {step === 2 ? (
-          <div className="space-y-4 p-6 pt-0">
+          <div className="p-6 pt-0 space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
                   <FileSpreadsheet className="w-4 h-4 text-emerald-600" aria-hidden />

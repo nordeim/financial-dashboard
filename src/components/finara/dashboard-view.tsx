@@ -88,16 +88,18 @@ export function DashboardView({
   const data = dashboardQuery.data;
 
   return (
-    <div className="space-y-8">
+    <>
       {/* Page header (live-exact: AI Coach + Refresh outline buttons; the sage
           Add Transaction button is an anchor that navigates to /Expenses). */}
-      <div className="fade-in-up mb-8 flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
+      <div className="fade-in-up flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
         <div>
-          <h1 className="mb-2 text-3xl font-bold text-primary-navy lg:text-4xl dark:text-white">Financial Dashboard</h1>
+          <h1 className="text-3xl lg:text-4xl font-bold text-primary-navy dark:text-white mb-2">Financial Dashboard</h1>
           <p className="text-neutral-600 dark:text-neutral-400">Real-time overview of your financial health</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={onOpenAiCoach} className="h-9">
+          {/* Round 8 (F6): the live outline header buttons re-pass gap-2 so it
+              lands at the tail: `… h-9 px-4 py-2 gap-2`. */}
+          <Button variant="outline" onClick={onOpenAiCoach} className="h-9 px-4 py-2 gap-2">
             <Brain className="w-4 h-4" aria-hidden /> AI Coach
           </Button>
           <Button
@@ -107,7 +109,7 @@ export function DashboardView({
               void loadInsights();
               toast({ title: "Dashboard refreshed", description: "All figures are up to date." });
             }}
-            className="h-9"
+            className="h-9 px-4 py-2 gap-2"
           >
             <RefreshCw className="w-4 h-4" aria-hidden /> Refresh
           </Button>
@@ -118,7 +120,7 @@ export function DashboardView({
               onNavigate("expenses");
             }}
           >
-            <Button className="h-9 bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
+            <Button className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
               <CirclePlus className="w-5 h-5 mr-2" aria-hidden /> Add Transaction
             </Button>
           </a>
@@ -132,7 +134,7 @@ export function DashboardView({
       ) : (
         <>
           {/* KPI row (live: md:2 / lg:4, gap-6) */}
-          <div className="fade-in-up stagger-1 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+          <div className="fade-in-up stagger-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <StatCard
               label="Monthly Income"
               value={formatMoney(data.kpis.monthlyIncomeMinor)}
@@ -163,7 +165,7 @@ export function DashboardView({
           </div>
 
           {/* Action tiles (live: only Bank Sync + Portfolio are interactive) */}
-          <div className="fade-in-up stagger-2 grid gap-6 md:grid-cols-4 mb-8">
+          <div className="fade-in-up stagger-2 grid md:grid-cols-4 gap-6 mb-8">
             <GradientCard
               title="Largest Expense Category"
               value={data.kpis.largestExpenseCategory ?? "N/A"}
@@ -202,8 +204,8 @@ export function DashboardView({
           </div>
 
           {/* Feature grid (live: Budget col-span-2 + right column stacks Recent Activity + AI Insights) */}
-          <div className="fade-in-up stagger-3 grid gap-8 lg:grid-cols-3">
-            <div className="space-y-8 lg:col-span-2">
+          <div className="fade-in-up stagger-3 grid lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-8">
               <SectionCard
                 title="Budget Overview"
                 badge={<SurplusBadge amountMinor={data.budgetSurplusMinor} />}
@@ -228,7 +230,7 @@ export function DashboardView({
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <div className={cn("w-3 h-3 rounded-full", CATEGORY_DOT[categoryId] ?? "bg-slate-400")} aria-hidden />
-                              <span className="font-medium text-neutral-800 capitalize dark:text-neutral-200">
+                              <span className="font-medium capitalize text-neutral-800 dark:text-neutral-200">
                                 {budget.category.toLowerCase()}
                               </span>
                             </div>
@@ -243,7 +245,7 @@ export function DashboardView({
                             </div>
                           </div>
                           <div
-                            className="relative h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
+                            className="relative w-full overflow-hidden rounded-full h-2 bg-gray-200 dark:bg-gray-700"
                             role="progressbar"
                             aria-valuenow={Math.round(percentUsed)}
                             aria-valuemin={0}
@@ -259,10 +261,9 @@ export function DashboardView({
                             <span>{percentUsed.toFixed(1)}% used</span>
                             <span
                               className={cn(
-                                "font-medium",
                                 underBudget || !hasLimit
-                                  ? "text-emerald-600 dark:text-emerald-400"
-                                  : "text-red-600 dark:text-red-400",
+                                  ? "text-emerald-600 dark:text-emerald-400 font-medium"
+                                  : "text-red-600 dark:text-red-400 font-medium",
                               )}
                             >
                               {remainingLabel}
@@ -293,7 +294,7 @@ export function DashboardView({
                       return (
                         <div
                           key={transaction.id}
-                          className="flex items-center gap-3 rounded-lg bg-neutral-50/50 p-3 transition-colors hover:bg-neutral-100/50 dark:bg-gray-700/30 dark:hover:bg-gray-700/50"
+                          className="flex items-center gap-3 p-3 rounded-lg bg-neutral-50/50 dark:bg-gray-700/30 hover:bg-neutral-100/50 dark:hover:bg-gray-700/50 transition-colors"
                         >
                           {/* Live-exact: the text color lives on the circle div
                               and the glyph inherits currentColor. */}
@@ -309,9 +310,9 @@ export function DashboardView({
                               <ArrowDownLeft className="w-5 h-5" aria-hidden />
                             )}
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate font-medium text-neutral-900 dark:text-white">{transaction.description}</p>
-                            <div className="mt-1 flex items-center gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-neutral-900 dark:text-white truncate">{transaction.description}</p>
+                            <div className="flex items-center gap-2 mt-1">
                               <Badge variant="secondary" className={ACTIVITY_BADGE[badgeKey] ?? ACTIVITY_BADGE.other}>
                                 {badgeText}
                               </Badge>
@@ -343,7 +344,7 @@ export function DashboardView({
                 icon={Brain}
                 actions={
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={onOpenAiCoach} className="h-8 gap-2 px-3 text-xs">
+                    <Button size="sm" variant="outline" onClick={onOpenAiCoach} className="gap-2">
                       <MessageCircle className="w-4 h-4" aria-hidden /> Ask AI
                     </Button>
                     <Button
@@ -370,13 +371,10 @@ export function DashboardView({
                   <ScrollArea className="h-80">
                     <div className="space-y-4">
                       {insights.length === 0 ? (
-                        <div className="py-8 text-center">
-                          <Brain
-                            className="w-12 h-12 text-neutral-300 dark:text-neutral-600 mx-auto mb-3"
-                            aria-hidden
-                          />
+                        <div className="text-center py-8">
+                          <Brain className="w-12 h-12 text-neutral-300 dark:text-neutral-600 mx-auto mb-3" aria-hidden />
                           <p className="text-neutral-500 dark:text-neutral-400">No insights available yet</p>
-                          <p className="mt-1 text-sm text-neutral-400 dark:text-neutral-500">
+                          <p className="text-sm text-neutral-400 dark:text-neutral-500 mt-1">
                             Add more transactions to see AI-powered insights
                           </p>
                         </div>
@@ -426,9 +424,9 @@ export function DashboardView({
           </div>
 
           {/* Quick Actions (live: plain mt-12 panel, NOT a Card; anchor-wrapped buttons) */}
-          <div className="fade-in-up mt-12 rounded-2xl bg-white/80 p-6 shadow-lg backdrop-blur-sm dark:bg-gray-800/80">
-            <h3 className="mb-4 text-xl font-bold text-primary-navy dark:text-white">Quick Actions</h3>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="fade-in-up mt-12 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6">
+            <h3 className="text-xl font-bold text-primary-navy dark:text-white mb-4">Quick Actions</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <a
                 href="/Income"
                 onClick={(event) => {
@@ -436,7 +434,7 @@ export function DashboardView({
                   onNavigate("income");
                 }}
               >
-                <Button variant="outline" className="h-16 w-full flex-col gap-2 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
+                <Button variant="outline" className="px-4 py-2 w-full h-16 flex-col gap-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
                   <TrendingUp className="w-5 h-5" aria-hidden />
                   <span className="text-sm">Add Income</span>
                 </Button>
@@ -448,7 +446,7 @@ export function DashboardView({
                   onNavigate("expenses");
                 }}
               >
-                <Button variant="outline" className="h-16 w-full flex-col gap-2 px-4 py-2 hover:bg-red-50 dark:hover:bg-red-900/20">
+                <Button variant="outline" className="px-4 py-2 w-full h-16 flex-col gap-2 hover:bg-red-50 dark:hover:bg-red-900/20">
                   <TrendingDown className="w-5 h-5" aria-hidden />
                   <span className="text-sm">Add Expense</span>
                 </Button>
@@ -460,7 +458,7 @@ export function DashboardView({
                   onNavigate("goals");
                 }}
               >
-                <Button variant="outline" className="h-16 w-full flex-col gap-2 px-4 py-2 hover:bg-purple-50 dark:hover:bg-purple-900/20">
+                <Button variant="outline" className="px-4 py-2 w-full h-16 flex-col gap-2 hover:bg-purple-50 dark:hover:bg-purple-900/20">
                   <Target className="w-5 h-5" aria-hidden />
                   <span className="text-sm">Set Goal</span>
                 </Button>
@@ -472,7 +470,7 @@ export function DashboardView({
                   onNavigate("analytics");
                 }}
               >
-                <Button variant="outline" className="h-16 w-full flex-col gap-2 px-4 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                <Button variant="outline" className="px-4 py-2 w-full h-16 flex-col gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20">
                   <TrendingUp className="w-5 h-5" aria-hidden />
                   <span className="text-sm">View Reports</span>
                 </Button>
@@ -496,6 +494,6 @@ export function DashboardView({
           </div>
         </Button>
       </div>
-    </div>
+    </>
   );
 }

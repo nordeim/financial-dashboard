@@ -7,14 +7,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Clock, DollarSign, Loader2, Pen, Plus, Target, Trash2, TrendingUp } from "lucide-react";
+import {Clock, DollarSign, Loader2, Pen, Plus, Target, TrendingUp} from "lucide-react";
 import { mutate, useQuery } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney, percent, toMinorUnits } from "@/lib/money";
 import { GOAL_CATEGORIES, GOAL_PRIORITIES, goalCategoryEmoji, goalCategoryLabel, goalPriorityLabel } from "@/lib/categories";
 import { GOAL_TILE_GRADIENT, PRIORITY_BADGE } from "@/lib/ui-maps";
 import { formatDate } from "@/lib/date-format";
-import { CARD_SURFACE, EmptyState, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
+import {CARD_HOVER, CARD_PLAIN, ClassicTrash2, EmptyState, ErrorNote, LoadingRows, ViewHeader} from "@/components/finara/ui-bits";
 import type { GoalDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -141,12 +141,12 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
   };
 
   return (
-    <div className="space-y-8">
+    <>
       <ViewHeader
         title="Savings Goals"
         subtitle="Set and track your financial objectives"
         actions={
-          <Button onClick={openCreate} className="h-9 bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
+          <Button onClick={openCreate} className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
             <Plus className="w-5 h-5 mr-2" aria-hidden /> New Goal
           </Button>
         }
@@ -157,7 +157,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
       ) : query.loading && !query.data ? (
         <LoadingRows rows={3} />
       ) : goals.length === 0 ? (
-        <div className={cn(CARD_SURFACE, "p-6")}>
+        <div className={cn(CARD_PLAIN, "p-6")}>
           <EmptyState
             icon={Target}
             title="No Goals Set Yet"
@@ -170,13 +170,13 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
           />
         </div>
       ) : (
-        <div className="fade-in-up grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+        <div className="fade-in-up grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {goals.map((goal) => {
             const progress = percent(goal.currentAmountMinor, goal.targetAmountMinor);
             const complete = goal.currentAmountMinor >= goal.targetAmountMinor;
             const remaining = daysRemaining(goal.deadline);
             return (
-              <div key={goal.id} className={cn(CARD_SURFACE, "card-hover")}>
+              <div key={goal.id} className={CARD_HOVER}>
                 <div className="flex flex-col space-y-1.5 p-6 pb-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
@@ -186,8 +186,8 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                         </span>
                       </div>
                       <div>
-                        <div className="truncate text-lg font-bold tracking-tight text-neutral-900 dark:text-neutral-100">{goal.name}</div>
-                        <div className="mt-1 flex items-center gap-2">
+                        <div className="tracking-tight text-lg font-bold text-neutral-900 dark:text-neutral-100 truncate">{goal.name}</div>
+                        <div className="flex items-center gap-2 mt-1">
                           <Badge
                             variant="secondary"
                             className={PRIORITY_BADGE[goal.priority ?? "medium"] ?? PRIORITY_BADGE.medium}
@@ -214,19 +214,19 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                         onClick={() => void deleteGoal(goal)}
                         aria-label={`Delete ${goal.name}`}
                       >
-                        <Trash2 className="w-4 h-4" aria-hidden />
+                        <ClassicTrash2 className="w-4 h-4" aria-hidden />
                       </Button>
                     </div>
                   </div>
                 </div>
-                <div className="space-y-4 p-6 pt-0">
+                <div className="p-6 pt-0 space-y-4">
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-neutral-600 dark:text-neutral-300">Progress</span>
                       <span className="font-medium text-neutral-800 dark:text-neutral-100">{progress.toFixed(1)}%</span>
                     </div>
                     <div
-                      className="relative h-2 w-full overflow-hidden rounded-full bg-primary/20"
+                      className="relative w-full overflow-hidden rounded-full bg-primary/20 h-2"
                       role="progressbar"
                       aria-valuenow={Math.round(progress)}
                       aria-valuemin={0}
@@ -255,7 +255,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="mt-4 w-full"
+                    className="w-full mt-4"
                     onClick={() => {
                       setContributing(goal);
                       setContribution("");
@@ -432,6 +432,6 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

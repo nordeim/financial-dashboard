@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TrendingDown, TrendingUp, X } from "lucide-react";
+import { Check, TrendingDown, TrendingUp, X } from "lucide-react";
 import { mutate } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { toMinorUnits } from "@/lib/money";
@@ -168,13 +168,11 @@ export function QuickAddDialog({
                 onChange={(event) => setDescription(event.target.value)}
                 placeholder={step === "expense" ? "Expense description..." : "Income source..."}
                 required
-                maxLength={140}
                 aria-label={step === "expense" ? "Expense description" : "Income source name"}
               />
               <Input
                 type="number"
                 step="0.01"
-                min="0"
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}
                 placeholder="Amount"
@@ -194,15 +192,19 @@ export function QuickAddDialog({
                 </SelectContent>
               </Select>
               <div className="flex gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => setStep("chooser")}>
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setStep("chooser")}>
                   Back
                 </Button>
+                {/* Round 8 (F13 — live-probed): flex-1 both sides, the default
+                    variant's shadow survives the sage overrides, a Check glyph
+                    precedes the label, and the button stays disabled until
+                    BOTH fields are filled (live behavior). */}
                 <Button
                   type="submit"
-                  disabled={submitting}
-                  className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90"
+                  disabled={submitting || !description.trim() || !amount.trim()}
+                  className="flex-1 bg-primary-sage hover:bg-primary-sage/90"
                 >
-                  Add
+                  <Check className="w-4 h-4 mr-1" aria-hidden /> Add
                 </Button>
               </div>
             </form>

@@ -24,7 +24,7 @@ import { useQuery } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney, formatMoneyCompact } from "@/lib/money";
 import { SECTOR_COLORS } from "@/lib/ui-maps";
-import { CARD_SURFACE, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
+import { CARD_PLAIN, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
 import { Input } from "@/components/ui/input";
 import type { AnalyticsDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -106,14 +106,14 @@ export function AnalyticsView() {
   const tooltipStyle = { borderRadius: 12, border: "1px solid #E2E8F0", fontSize: 12 };
 
   return (
-    <div className="space-y-8">
+    <>
       <ViewHeader
         title="Analytics & Reports"
         subtitle="Real-time insights into your financial performance"
         actions={
           /* Live wraps the analytics actions in its own flex row (round-5
              capture: div.flex.gap-3.flex-wrap) — the only view with a wrapper. */
-          <div className="flex flex-wrap gap-3">
+          <div className="flex gap-3 flex-wrap">
             <div className="flex gap-2">
               <Input
                 type="date"
@@ -121,7 +121,7 @@ export function AnalyticsView() {
                 placeholder="Start date"
                 value={fromDate}
                 onChange={(event) => setFromDate(event.target.value)}
-                className="h-9 w-auto"
+                className="w-auto"
               />
               <Input
                 type="date"
@@ -129,7 +129,7 @@ export function AnalyticsView() {
                 placeholder="End date"
                 value={toDate}
                 onChange={(event) => setToDate(event.target.value)}
-                className="h-9 w-auto"
+                className="w-auto"
               />
             </div>
             <Select value={period} onValueChange={(value) => setPeriod(value as Period)}>
@@ -142,10 +142,10 @@ export function AnalyticsView() {
                 <SelectItem value="12">1 Year</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" onClick={() => query.refresh()} className="h-9 gap-2">
+            <Button variant="outline" onClick={() => query.refresh()} className="gap-2">
               <RefreshCw className="w-4 h-4" aria-hidden /> Refresh
             </Button>
-            <Button variant="outline" onClick={exportCsv} className="h-9 gap-2">
+            <Button variant="outline" onClick={exportCsv} className="gap-2">
               <Download className="w-4 h-4" aria-hidden /> Export
             </Button>
           </div>
@@ -166,9 +166,9 @@ export function AnalyticsView() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-8">
-            <div className={cn(CARD_SURFACE, "fade-in-up")}>
+            <div className={cn(CARD_PLAIN, "fade-in-up")}>
               <div className="flex flex-col space-y-1.5 p-6">
-                <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                   <TrendingUp className="w-5 h-5" aria-hidden /> Income vs Expenses Trend
                 </div>
               </div>
@@ -200,36 +200,36 @@ export function AnalyticsView() {
               </div>
             </div>
 
-            <div className="fade-in-up stagger-1 grid gap-6 md:grid-cols-3">
-              <div className="rounded-xl border-0 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg">
+            <div className="fade-in-up stagger-1 grid md:grid-cols-3 gap-6">
+              <div className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-lg">
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="mb-1 text-sm font-medium text-emerald-100">Avg Monthly Income</p>
+                      <p className="text-emerald-100 text-sm font-medium mb-1">Avg Monthly Income</p>
                       <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgIncomeMinor)}</p>
                     </div>
                     <TrendingUp className="w-8 h-8 text-emerald-200" aria-hidden />
                   </div>
                 </div>
               </div>
-              <div className="rounded-xl border-0 bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg">
+              <div className="rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white border-0 shadow-lg">
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="mb-1 text-sm font-medium text-red-100">Avg Monthly Expenses</p>
+                      <p className="text-red-100 text-sm font-medium mb-1">Avg Monthly Expenses</p>
                       <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgExpensesMinor)}</p>
                     </div>
                     {/* Live quirk: the expenses average tile flips the trending-up
                         glyph 180° (renders as a down-arrow) in red-200. */}
-                    <TrendingUp className="w-8 h-8 rotate-180 text-red-200" aria-hidden />
+                    <TrendingUp className="w-8 h-8 text-red-200 rotate-180" aria-hidden />
                   </div>
                 </div>
               </div>
-              <div className="rounded-xl border-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg">
+              <div className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg">
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="mb-1 text-sm font-medium text-blue-100">Avg Monthly Savings</p>
+                      <p className="text-blue-100 text-sm font-medium mb-1">Avg Monthly Savings</p>
                       <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgSavingsMinor)}</p>
                     </div>
                     <Calendar className="w-8 h-8 text-blue-200" aria-hidden />
@@ -240,9 +240,9 @@ export function AnalyticsView() {
           </TabsContent>
 
           <TabsContent value="expenses" className="space-y-8">
-            <div className={cn(CARD_SURFACE, "fade-in-up")}>
+            <div className={cn(CARD_PLAIN, "fade-in-up")}>
               <div className="flex flex-col space-y-1.5 p-6">
-                <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                   <ChartPie className="w-5 h-5" aria-hidden /> Spending by Category
                 </div>
               </div>
@@ -271,9 +271,9 @@ export function AnalyticsView() {
               </div>
             </div>
 
-            <div className={cn(CARD_SURFACE, "fade-in-up stagger-1")}>
+            <div className={cn(CARD_PLAIN, "fade-in-up stagger-1")}>
               <div className="flex flex-col space-y-1.5 p-6">
-                <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                   <ChartColumn className="w-5 h-5" aria-hidden /> Top Spending Categories
                 </div>
               </div>
@@ -309,9 +309,9 @@ export function AnalyticsView() {
               Income shows the empty pane in both apps. */}
 
           <TabsContent value="investments" className="space-y-8">
-            <div className={cn(CARD_SURFACE, "fade-in-up")}>
+            <div className={cn(CARD_PLAIN, "fade-in-up")}>
               <div className="flex flex-col space-y-1.5 p-6">
-                <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+                <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                   <ChartPie className="w-5 h-5" aria-hidden /> Portfolio Allocation by Sector
                 </div>
               </div>
@@ -334,6 +334,6 @@ export function AnalyticsView() {
           </TabsContent>
         </Tabs>
       )}
-    </div>
+    </>
   );
 }

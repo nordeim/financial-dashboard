@@ -10,7 +10,7 @@ import { Bell, Download, FileText, Save, Shield, TriangleAlert, Upload, User } f
 import { mutate, useQuery } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { CURRENCIES, DATE_FORMATS } from "@/lib/categories";
-import { CARD_SURFACE, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
+import { CARD_PLAIN, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
 import type { SettingsDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -122,16 +122,16 @@ export function SettingsView() {
       ) : (
         <div className="space-y-6">
           {/* Profile Settings (live: user icon header + two selects) */}
-          <div className={cn(CARD_SURFACE, "fade-in-up")}>
+          <div className={cn(CARD_PLAIN, "fade-in-up")}>
             <div className="flex flex-col space-y-1.5 p-6">
-              <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+              <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                 <User className="w-5 h-5" aria-hidden /> Profile Settings
               </div>
             </div>
-            <div className="space-y-4 p-6 pt-0">
-              <div className="grid gap-4 md:grid-cols-2">
+            <div className="p-6 pt-0 space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="setting-currency" className="leading-none">Default Currency</Label>
+                <Label htmlFor="setting-currency">Default Currency</Label>
                 <Select value={form.currency} onValueChange={(value) => setForm({ ...form, currency: value })}>
                   <SelectTrigger id="setting-currency">
                     <SelectValue />
@@ -146,7 +146,7 @@ export function SettingsView() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="setting-date-format" className="leading-none">Date Format</Label>
+                <Label htmlFor="setting-date-format">Date Format</Label>
                 <Select value={form.dateFormat} onValueChange={(value) => setForm({ ...form, dateFormat: value })}>
                   <SelectTrigger id="setting-date-format">
                     <SelectValue />
@@ -165,13 +165,13 @@ export function SettingsView() {
           </div>
 
           {/* Notifications (live: bell icon, text-base labels, space-y-6 rows) */}
-          <div className={cn(CARD_SURFACE, "fade-in-up stagger-1")}>
+          <div className={cn(CARD_PLAIN, "fade-in-up stagger-1")}>
             <div className="flex flex-col space-y-1.5 p-6">
-              <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+              <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                 <Bell className="w-5 h-5" aria-hidden /> Notifications
               </div>
             </div>
-            <div className="space-y-6 p-6 pt-0">
+            <div className="p-6 pt-0 space-y-6">
               {TOGGLES.map((toggle) => (
                 <div key={toggle.key} className="flex items-center justify-between">
                   <div>
@@ -191,43 +191,43 @@ export function SettingsView() {
           </div>
 
           {/* Export Your Data (live: blue info box + full-width blue button) */}
-          <div className={cn(CARD_SURFACE, "fade-in-up stagger-2")}>
+          <div className={cn(CARD_PLAIN, "fade-in-up stagger-2")}>
             <div className="flex flex-col space-y-1.5 p-6">
-              <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+              <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                 <Download className="w-5 h-5" aria-hidden /> Export Your Data
               </div>
             </div>
-            <div className="space-y-4 p-6 pt-0">
-              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+            <div className="p-6 pt-0 space-y-4">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                 <div className="flex items-start gap-3">
-                  <Shield className="w-5 h-5 mt-0.5 text-blue-600 dark:text-blue-400" aria-hidden />
+                  <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" aria-hidden />
                   <div>
-                    <h4 className="mb-1 font-semibold text-blue-800 dark:text-blue-200">GDPR Compliant Export</h4>
+                    <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-1">GDPR Compliant Export</h4>
                     <p className="text-sm text-blue-700 dark:text-blue-300">
                       Download all your data in JSON format. This includes expenses, income, goals, and account information.
                     </p>
                   </div>
                 </div>
               </div>
-              <Button className="w-full bg-blue-600 shadow hover:bg-blue-700" onClick={() => void exportAllData()}>
+              <Button className="h-9 px-4 py-2 w-full bg-blue-600 hover:bg-blue-700" onClick={() => void exportAllData()}>
                 <Download className="w-4 h-4 mr-2" aria-hidden /> Export All Data
               </Button>
             </div>
           </div>
 
           {/* Import Data (live: amber warning box + visible file input) */}
-          <div className={cn(CARD_SURFACE, "fade-in-up stagger-3")}>
+          <div className={cn(CARD_PLAIN, "fade-in-up stagger-3")}>
             <div className="flex flex-col space-y-1.5 p-6">
-              <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+              <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                 <Upload className="w-5 h-5" aria-hidden /> Import Data
               </div>
             </div>
-            <div className="space-y-4 p-6 pt-0">
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+            <div className="p-6 pt-0 space-y-4">
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
                 <div className="flex items-start gap-3">
-                  <TriangleAlert className="w-5 h-5 mt-0.5 text-amber-600 dark:text-amber-400" aria-hidden />
+                  <TriangleAlert className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5" aria-hidden />
                   <div>
-                    <h4 className="mb-1 font-semibold text-amber-800 dark:text-amber-200">Import Warning</h4>
+                    <h4 className="font-semibold text-amber-800 dark:text-amber-200 mb-1">Import Warning</h4>
                     <p className="text-sm text-amber-700 dark:text-amber-300">
                       Importing will add data to your existing records. Make sure to backup your current data first.
                     </p>
@@ -235,12 +235,12 @@ export function SettingsView() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="importFile" className="leading-none">Select Finara Export File</Label>
+                <Label htmlFor="importFile">Select Finara Export File</Label>
                 <input
                   ref={importInputRef}
                   type="file"
                   accept=".json,application/json"
-                  className="flex h-9 w-full cursor-pointer rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm cursor-pointer"
                   id="importFile"
                   aria-label="Select a Finara export file to import"
                   disabled={importing}
@@ -254,17 +254,17 @@ export function SettingsView() {
           </div>
 
           {/* Your Data Summary (live: text-2xl titles + colored pills) */}
-          <div className={cn(CARD_SURFACE, "fade-in-up stagger-4")}>
+          <div className={cn(CARD_PLAIN, "fade-in-up stagger-4")}>
             <div className="flex flex-col space-y-1.5 p-6">
-              <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
+              <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                 <FileText className="w-5 h-5" aria-hidden /> Your Data Summary
               </div>
             </div>
             <div className="p-6 pt-0">
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {DATA_SUMMARY.map((tile) => (
                 <div key={tile.title} className="text-center">
-                  <div className="mb-1 text-2xl font-bold text-gray-900 dark:text-white">{tile.title}</div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{tile.title}</div>
                   <Badge variant="secondary" className={tile.pillClass}>
                     {tile.icon ? <Shield className="w-3 h-3 mr-1" aria-hidden /> : null}
                     {tile.pill}
@@ -276,7 +276,7 @@ export function SettingsView() {
           </div>
 
           <div className="flex justify-end">
-            <Button onClick={() => void handleSave()} className="bg-primary-sage shadow hover:bg-primary-sage/90" disabled={saving}>
+            <Button onClick={() => void handleSave()} className="h-9 px-4 py-2 bg-primary-sage hover:bg-primary-sage/90 gap-2" disabled={saving}>
               <Save className="w-4 h-4" aria-hidden /> {saving ? "Saving…" : "Save Settings"}
             </Button>
           </div>
