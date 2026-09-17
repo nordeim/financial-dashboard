@@ -30,6 +30,7 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -63,8 +64,11 @@
   --card-foreground: #0a0a0a;
   --popover: #ffffff;
   --popover-foreground: #0a0a0a;
-  --primary: #059669;
-  --primary-foreground: #ffffff;
+  /* Round-10 (variable-level probe): the live --primary is the classic shadcn
+     neutral ink/paper pair, NOT the sage. The sage CTAs style via the separate
+     --primary-sage token in the Finara block below. Live light: '0 0% 9%'/'0 0% 98%'. */
+  --primary: #171717;
+  --primary-foreground: #fafafa;
   --secondary: #f5f5f5;
   --secondary-foreground: #0a0a0a;
   --muted: #f5f5f5;
@@ -72,6 +76,7 @@
   --accent: #f5f5f5;
   --accent-foreground: #0a0a0a;
   --destructive: #ef4444;
+  --destructive-foreground: #fafafa;
   --border: #e5e5e5;
   --input: #e5e5e5;
   --ring: #0a0a0a;
@@ -99,18 +104,22 @@
   --card-foreground: #fafafa;
   --popover: #0a0a0a;
   --popover-foreground: #fafafa;
-  --primary: #059669;
-  --primary-foreground: #ffffff;
+  /* Round-10 (variable-level probe): live dark --primary '0 0% 98%',
+     --primary-foreground '0 0% 9%', --ring '0 0% 83.1%', --destructive
+     '0 62.8% 30.6%'. */
+  --primary: #fafafa;
+  --primary-foreground: #171717;
   --secondary: #262626;
   --secondary-foreground: #fafafa;
   --muted: #262626;
   --muted-foreground: #a3a3a3;
   --accent: #262626;
   --accent-foreground: #fafafa;
-  --destructive: #ef4444;
+  --destructive: #7f1d1d;
+  --destructive-foreground: #fafafa;
   --border: #262626;
   --input: #262626;
-  --ring: #0a0a0a;
+  --ring: #d4d4d4;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
