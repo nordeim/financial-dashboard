@@ -146,8 +146,8 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
         title="Savings Goals"
         subtitle="Set and track your financial objectives"
         actions={
-          <Button onClick={openCreate} className="h-9 bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
-            <Plus className="mr-2 h-5 w-5" aria-hidden /> New Goal
+          <Button onClick={openCreate} className="h-9 bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
+            <Plus className="w-5 h-5 mr-2" aria-hidden /> New Goal
           </Button>
         }
       />
@@ -163,8 +163,8 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
             title="No Goals Set Yet"
             body="Create your first savings goal to start tracking your financial objectives"
             action={
-              <Button onClick={openCreate} className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
-                <Plus className="mr-1 h-4 w-4" aria-hidden /> Create Your First Goal
+              <Button onClick={openCreate} className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
+                <Plus className="w-4 h-4 mr-1" aria-hidden /> Create Your First Goal
               </Button>
             }
           />
@@ -180,7 +180,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                 <div className="flex flex-col space-y-1.5 p-6 pb-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={cn("flex h-12 w-12 items-center justify-center rounded-xl", GOAL_TILE_GRADIENT)}>
+                      <div className={cn("w-12 h-12", GOAL_TILE_GRADIENT, "rounded-xl flex items-center justify-center")}>
                         <span className="text-2xl" aria-hidden>
                           {goalCategoryEmoji(goal.category)}
                         </span>
@@ -201,20 +201,20 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-8 w-8 text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400"
+                        className="w-8 h-8 text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400"
                         onClick={() => openEdit(goal)}
                         aria-label={`Edit ${goal.name}`}
                       >
-                        <Pen className="h-4 w-4" aria-hidden />
+                        <Pen className="w-4 h-4" aria-hidden />
                       </Button>
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-8 w-8 text-neutral-400 hover:text-red-600 dark:hover:text-red-400"
+                        className="w-8 h-8 text-neutral-400 hover:text-red-600 dark:hover:text-red-400"
                         onClick={() => void deleteGoal(goal)}
                         aria-label={`Delete ${goal.name}`}
                       >
-                        <Trash2 className="h-4 w-4" aria-hidden />
+                        <Trash2 className="w-4 h-4" aria-hidden />
                       </Button>
                     </div>
                   </div>
@@ -244,7 +244,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <Clock className="h-4 w-4 text-neutral-400" aria-hidden />
+                    <Clock className="w-4 h-4 text-neutral-400" aria-hidden />
                     <span className="text-neutral-600 dark:text-neutral-300">
                       {remaining !== null ? `${remaining} days remaining` : "No deadline set"}
                     </span>
@@ -262,7 +262,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                     }}
                     disabled={complete}
                   >
-                    <DollarSign className="mr-1 h-4 w-4" aria-hidden /> {complete ? "Goal reached" : "Add Progress"}
+                    <DollarSign className="w-4 h-4 mr-1" aria-hidden /> {complete ? "Goal reached" : "Add Progress"}
                   </Button>
                 </div>
               </div>
@@ -280,16 +280,16 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
         <DialogContent className="max-w-md dark:bg-gray-900 dark:text-white" showCloseButton={false} aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-              <Target className="h-5 w-5" aria-hidden />
+              <Target className="w-5 h-5" aria-hidden />
               {editing ? "Edit Goal" : "Create New Goal"}
             </DialogTitle>
           </DialogHeader>
           <div className="p-6 pt-0">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="goal-title" className="dark:text-neutral-300">Goal Title</Label>
+              <Label htmlFor="title" className="dark:text-neutral-300">Goal Title</Label>
               <Input
-                id="goal-title"
+                id="title"
                 className="dark:bg-gray-800 dark:text-white dark:border-gray-700"
                 value={form.name}
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
@@ -299,9 +299,9 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="goal-target" className="dark:text-neutral-300">Target Amount</Label>
+              <Label htmlFor="target_amount" className="dark:text-neutral-300">Target Amount</Label>
               <Input
-                id="goal-target"
+                id="target_amount"
                 type="number"
                 inputMode="decimal"
                 min="0"
@@ -314,26 +314,26 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="target_date" className="dark:text-neutral-300">Target Date</Label>
+              <Input
+                id="target_date"
+                type="date"
+                className="dark:bg-gray-800 dark:text-white dark:border-gray-700"
+                value={form.deadline}
+                onChange={(event) => setForm((current) => ({ ...current, deadline: event.target.value }))}
+                required
+
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="goal-deadline" className="dark:text-neutral-300">Target Date</Label>
-                <Input
-                  id="goal-deadline"
-                  type="date"
-                  className="dark:bg-gray-800 dark:text-white dark:border-gray-700"
-                  value={form.deadline}
-                  onChange={(event) => setForm((current) => ({ ...current, deadline: event.target.value }))}
-                  required
-                 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="goal-category" className="dark:text-neutral-300">Category</Label>
+                <Label htmlFor="category" className="dark:text-neutral-300">Category</Label>
                 <Select
                   value={form.category}
                   onValueChange={(value) => setForm((current) => ({ ...current, category: value }))}
                 >
-                  <SelectTrigger id="goal-category" className="dark:bg-gray-800 dark:text-white dark:border-gray-700">
+                  <SelectTrigger id="category" className="dark:bg-gray-800 dark:text-white dark:border-gray-700">
                     <SelectValue>{goalCategoryLabel(form.category)}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -345,36 +345,36 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="priority" className="dark:text-neutral-300">Priority</Label>
+                <Select
+                  value={form.priority}
+                  onValueChange={(value) => setForm((current) => ({ ...current, priority: value }))}
+                >
+                  <SelectTrigger id="priority" className="dark:bg-gray-800 dark:text-white dark:border-gray-700">
+                    <SelectValue>{goalPriorityLabel(form.priority)}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GOAL_PRIORITIES.map((priority) => (
+                      <SelectItem key={priority.id} value={priority.id}>
+                        {priority.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="goal-priority" className="dark:text-neutral-300">Priority</Label>
-              <Select
-                value={form.priority}
-                onValueChange={(value) => setForm((current) => ({ ...current, priority: value }))}
-              >
-                <SelectTrigger id="goal-priority" className="dark:bg-gray-800 dark:text-white dark:border-gray-700">
-                  <SelectValue>{goalPriorityLabel(form.priority)}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {GOAL_PRIORITIES.map((priority) => (
-                    <SelectItem key={priority.id} value={priority.id}>
-                      {priority.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex justify-end gap-2 pt-1">
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+            <div className="flex gap-3 pt-4">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90" disabled={submitting}>
+              <Button type="submit" className="flex-1 bg-primary-sage shadow hover:bg-primary-sage/90" disabled={submitting}>
                 {submitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden /> Saving…
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden /> Saving…
                   </>
                 ) : editing ? (
-                  "Save Changes"
+                  "Update Goal"
                 ) : (
                   "Create Goal"
                 )}
@@ -392,7 +392,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
         <DialogContent className="max-w-sm dark:bg-gray-900 dark:text-white" showCloseButton={false} aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-              <TrendingUp className="h-5 w-5" aria-hidden />
+              <TrendingUp className="w-5 h-5" aria-hidden />
               Add Progress
             </DialogTitle>
           </DialogHeader>
@@ -405,9 +405,9 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
             className="space-y-4"
           >
             <div className="space-y-2">
-              <Label htmlFor="goal-contribution" className="dark:text-neutral-300">Amount to Add</Label>
+              <Label htmlFor="amount" className="dark:text-neutral-300">Amount to Add</Label>
               <Input
-                id="goal-contribution"
+                id="amount"
                 type="number"
                 inputMode="decimal"
                 min="0"
@@ -420,11 +420,11 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                
               />
             </div>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setContributing(null)}>
+            <div className="flex gap-3">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setContributing(null)}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
+              <Button type="submit" className="flex-1 text-primary-foreground bg-primary-sage shadow hover:bg-primary-sage/90">
                 Add Amount
               </Button>
             </div>

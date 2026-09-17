@@ -151,8 +151,8 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
         title="Investments"
         subtitle="Track your investment portfolio performance"
         actions={
-          <Button onClick={openCreate} className="h-9 bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
-            <Plus className="mr-2 h-5 w-5" aria-hidden /> Add Investment
+          <Button onClick={openCreate} className="h-9 bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
+            <Plus className="w-5 h-5 mr-2" aria-hidden /> Add Investment
           </Button>
         }
       />
@@ -172,7 +172,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                     <p className="mb-1 text-sm font-medium text-blue-100">Portfolio Value</p>
                     <p className="text-3xl font-bold">{formatMoney(portfolioValue)}</p>
                   </div>
-                  <Wallet className="h-12 w-12 text-blue-200" aria-hidden />
+                  <Wallet className="w-12 h-12 text-blue-200" aria-hidden />
                 </div>
               </div>
             </div>
@@ -183,7 +183,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                     <p className="mb-1 text-sm font-medium text-emerald-100">Total Gain/Loss</p>
                     <p className="text-3xl font-bold">{formatMoney(totalGain)}</p>
                   </div>
-                  <TrendingUp className="h-12 w-12 text-emerald-200" aria-hidden />
+                  <TrendingUp className="w-12 h-12 text-emerald-200" aria-hidden />
                 </div>
               </div>
             </div>
@@ -197,7 +197,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                     </p>
                   </div>
                   {/* Live: the Total Return icon is neutral in both themes (round-5). */}
-                  <ChartColumn className="h-12 w-12 text-neutral-400 dark:text-neutral-500" aria-hidden />
+                  <ChartColumn className="w-12 h-12 text-neutral-400 dark:text-neutral-500" aria-hidden />
                 </div>
               </div>
             </div>
@@ -209,7 +209,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
               <div className={cn(CARD_SURFACE)}>
                 <div className="flex flex-col space-y-1.5 p-6">
                   <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
-                    <Wallet className="h-5 w-5" aria-hidden /> Portfolio Holdings
+                    <Wallet className="w-5 h-5" aria-hidden /> Portfolio Holdings
                   </div>
                 </div>
                 <div className="p-6 pt-0">
@@ -248,20 +248,20 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                                     <Button
                                       size="icon"
                                       variant="ghost"
-                                      className="h-8 w-8 text-neutral-400 hover:text-blue-600"
+                                      className="w-8 h-8 text-neutral-400 hover:text-blue-600"
                                       onClick={() => openEdit(holding)}
                                       aria-label={`Edit ${holding.symbol}`}
                                     >
-                                      <Pen className="h-4 w-4" aria-hidden />
+                                      <Pen className="w-4 h-4" aria-hidden />
                                     </Button>
                                     <Button
                                       size="icon"
                                       variant="ghost"
-                                      className="h-8 w-8 text-neutral-400 hover:text-red-600"
+                                      className="w-8 h-8 text-neutral-400 hover:text-red-600"
                                       onClick={() => void deleteHolding(holding)}
                                       aria-label={`Remove ${holding.symbol}`}
                                     >
-                                      <Trash2 className="h-4 w-4" aria-hidden />
+                                      <Trash2 className="w-4 h-4" aria-hidden />
                                     </Button>
                                   </div>
                                 </TableCell>
@@ -281,7 +281,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
               <div className={cn(CARD_SURFACE)}>
                 <div className="flex flex-col space-y-1.5 p-6">
                   <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
-                    <ChartPie className="h-5 w-5" aria-hidden /> Sector Allocation
+                    <ChartPie className="w-5 h-5" aria-hidden /> Sector Allocation
                   </div>
                 </div>
                 <div className="p-6 pt-0">
@@ -318,8 +318,8 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                 title="No Investments Yet"
                 body="Add your investments to start tracking your portfolio performance."
                 action={
-                  <Button onClick={openCreate} className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
-                    <Plus className="mr-1 h-4 w-4" aria-hidden /> Add Your First Investment
+                  <Button onClick={openCreate} className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
+                    <Plus className="w-4 h-4 mr-1" aria-hidden /> Add Your First Investment
                   </Button>
                 }
               />
@@ -335,26 +335,26 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-                <TrendingUp className="h-5 w-5" aria-hidden />
+                <TrendingUp className="w-5 h-5" aria-hidden />
                 {editing ? "Edit Investment" : "Add Investment"}
               </DialogTitle>
               <button
                 type="button"
                 onClick={() => setDialogOpen(false)}
                 aria-label="Close"
-                className="inline-flex h-9 w-9 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-9 w-9"
               >
-                <X className="h-4 w-4" aria-hidden />
+                <X className="w-4 h-4" aria-hidden />
               </button>
             </div>
           </DialogHeader>
           <div className="p-6 pt-0">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="inv-symbol">Symbol</Label>
+                <Label htmlFor="symbol">Symbol</Label>
                 <Input
-                  id="inv-symbol"
+                  id="symbol"
                   value={form.symbol}
                   onChange={(event) => setForm((current) => ({ ...current, symbol: event.target.value }))}
                   placeholder="e.g. AAPL"
@@ -364,9 +364,9 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="inv-type">Type</Label>
+                <Label htmlFor="investment_type">Type</Label>
                 <Select value={form.type} onValueChange={(value) => setForm((current) => ({ ...current, type: value }))}>
-                  <SelectTrigger id="inv-type">
+                  <SelectTrigger id="investment_type">
                     <SelectValue>{investmentTypeLabel(form.type)}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -380,9 +380,9 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="inv-name">Company/Fund Name</Label>
+              <Label htmlFor="name">Company/Fund Name</Label>
               <Input
-                id="inv-name"
+                id="name"
                 value={form.name}
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
                 placeholder="e.g. Apple Inc."
@@ -391,11 +391,11 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                
               />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="inv-shares">Shares</Label>
+                <Label htmlFor="shares">Shares</Label>
                 <Input
-                  id="inv-shares"
+                  id="shares"
                   type="number"
                   inputMode="decimal"
                   min="0"
@@ -404,13 +404,12 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                   onChange={(event) => setForm((current) => ({ ...current, shares: event.target.value }))}
                   placeholder="0"
                   required
-                 
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="inv-avg">Avg Cost</Label>
+                <Label htmlFor="purchase_price">Avg Cost</Label>
                 <Input
-                  id="inv-avg"
+                  id="purchase_price"
                   type="number"
                   inputMode="decimal"
                   min="0"
@@ -419,13 +418,14 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                   onChange={(event) => setForm((current) => ({ ...current, avgPrice: event.target.value }))}
                   placeholder="0.00"
                   required
-                 
                 />
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="inv-current">Current Price</Label>
+                <Label htmlFor="current_price">Current Price</Label>
                 <Input
-                  id="inv-current"
+                  id="current_price"
                   type="number"
                   inputMode="decimal"
                   min="0"
@@ -434,15 +434,12 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                   onChange={(event) => setForm((current) => ({ ...current, currentPrice: event.target.value }))}
                   placeholder="0.00"
                   required
-                 
                 />
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="inv-percent">Portfolio %</Label>
+                <Label htmlFor="portfolio_percentage">Portfolio %</Label>
                 <Input
-                  id="inv-percent"
+                  id="portfolio_percentage"
                   type="number"
                   inputMode="decimal"
                   min="0"
@@ -450,36 +447,35 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                   value={form.portfolioPercent}
                   onChange={(event) => setForm((current) => ({ ...current, portfolioPercent: event.target.value }))}
                   placeholder="—"
-                 
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="inv-sector">Sector</Label>
-                <Select value={form.sector} onValueChange={(value) => setForm((current) => ({ ...current, sector: value }))}>
-                  <SelectTrigger id="inv-sector">
-                    <SelectValue>{form.sector}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SECTORS.map((sector) => (
-                      <SelectItem key={sector} value={sector}>
-                        {sector}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
-            <div className="flex justify-end gap-2 pt-1">
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+            <div className="space-y-2">
+              <Label htmlFor="sector">Sector</Label>
+              <Select value={form.sector} onValueChange={(value) => setForm((current) => ({ ...current, sector: value }))}>
+                <SelectTrigger id="sector">
+                  <SelectValue>{form.sector}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {SECTORS.map((sector) => (
+                    <SelectItem key={sector} value={sector}>
+                      {sector}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-3 pt-4">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90" disabled={submitting}>
+              <Button type="submit" className="flex-1 bg-primary-sage text-white shadow hover:bg-primary-sage/90" disabled={submitting}>
                 {submitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden /> Saving…
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden /> Saving…
                   </>
                 ) : editing ? (
-                  "Save Changes"
+                  "Update Investment"
                 ) : (
                   "Add Investment"
                 )}

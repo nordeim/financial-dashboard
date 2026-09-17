@@ -108,8 +108,8 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
         title="My Accounts"
         subtitle="Manage your connected bank accounts"
         actions={
-          <Button onClick={openCreate} className="h-9 bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
-            <Plus className="mr-2 h-5 w-5" aria-hidden /> Add Account
+          <Button onClick={openCreate} className="h-9 bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
+            <Plus className="w-5 h-5 mr-2" aria-hidden /> Add Account
           </Button>
         }
       />
@@ -125,8 +125,8 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
             title="No accounts yet"
             body="Add a bank account to start tracking your finances."
             action={
-              <Button onClick={openCreate} className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
-                <Plus className="mr-1 h-4 w-4" aria-hidden /> Add your first account
+              <Button onClick={openCreate} className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
+                <Plus className="w-4 h-4 mr-1" aria-hidden /> Add your first account
               </Button>
             }
           />
@@ -139,8 +139,8 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
               <div key={account.id} className={cn(CARD_SURFACE, "card-hover flex h-full flex-col")}>
                 <div className="flex flex-row items-start justify-between space-y-1.5 p-6">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300">
-                      <TypeIcon className="h-6 w-6" aria-hidden />
+                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 rounded-xl flex items-center justify-center">
+                      <TypeIcon className="w-6 h-6" aria-hidden />
                     </div>
                     <div>
                       <div className="text-lg font-semibold tracking-tight">{account.name}</div>
@@ -151,20 +151,20 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8 text-neutral-400 hover:text-blue-600"
+                      className="w-8 h-8 text-neutral-400 hover:text-blue-600"
                       onClick={() => openEdit(account)}
                       aria-label={`Edit ${account.name}`}
                     >
-                      <Pen className="h-4 w-4" aria-hidden />
+                      <Pen className="w-4 h-4" aria-hidden />
                     </Button>
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8 text-neutral-400 hover:text-red-600"
+                      className="w-8 h-8 text-neutral-400 hover:text-red-600"
                       onClick={() => void deleteAccount(account)}
                       aria-label={`Remove ${account.name}`}
                     >
-                      <Trash2 className="h-4 w-4" aria-hidden />
+                      <Trash2 className="w-4 h-4" aria-hidden />
                     </Button>
                   </div>
                 </div>
@@ -200,12 +200,16 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        {/* Round-6 live matrix: Add Account = max-w-md, NO max-h/scroll,
-            bg-card surface, black/60 overlay, plain title (no icon, no close
-            button), no description, stacked fields Name → Bank → Type →
-            Balance, p-6 pt-0 body, pt-4 button row (live-probed). */}
+        {/* Live matrix (round-6 + round-7): Add/Edit Account = max-w-md, NO
+            max-h/scroll, bg-card surface in BOTH themes (dark:bg-card kills
+            the base dark:bg-gray-800 leak — live probes bg-card only),
+            black/60 overlay, plain title (no icon, no close), no description,
+            stacked fields Name → Bank → Type → Balance with PLAIN div
+            wrappers (live renders no space-y-2 here), p-6 pt-0 body,
+            justify-end gap-2 pt-4 row with a DEFAULT primary submit
+            ("Save Changes" when editing) — not sage (live-probed). */}
         <DialogContent
-          className="max-w-md bg-card"
+          className="max-w-md bg-card dark:bg-card"
           backdropClassName="bg-black/60"
           showCloseButton={false}
           aria-describedby={undefined}
@@ -215,10 +219,10 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
           </DialogHeader>
           <div className="p-6 pt-0">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="account-name">Account Name</Label>
+            <div>
+              <Label htmlFor="account_name">Account Name</Label>
               <Input
-                id="account-name"
+                id="account_name"
                 value={form.name}
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
                 placeholder="e.g. Everyday Checking"
@@ -227,10 +231,10 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
                
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="account-bank">Bank Name</Label>
+            <div>
+              <Label htmlFor="bank_name">Bank Name</Label>
               <Input
-                id="account-bank"
+                id="bank_name"
                 value={form.institution}
                 onChange={(event) => setForm((current) => ({ ...current, institution: event.target.value }))}
                 placeholder="e.g. Chase"
@@ -238,10 +242,10 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
                  
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="account-type">Account Type</Label>
+            <div>
+              <Label htmlFor="account_type">Account Type</Label>
               <Select value={form.type} onValueChange={(value) => setForm((current) => ({ ...current, type: value }))}>
-                <SelectTrigger id="account-type">
+                <SelectTrigger id="account_type">
                   <SelectValue>{accountTypeLabel(form.type)}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -253,10 +257,10 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="account-balance">Current Balance</Label>
+            <div>
+              <Label htmlFor="manual_balance">Current Balance</Label>
               <Input
-                id="account-balance"
+                id="manual_balance"
                 type="number"
                 inputMode="decimal"
                 min="0"
@@ -272,10 +276,10 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90" disabled={submitting}>
+              <Button type="submit" disabled={submitting}>
                 {submitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden /> Saving…
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden /> Saving…
                   </>
                 ) : editing ? (
                   "Save Changes"
