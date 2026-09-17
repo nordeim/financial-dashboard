@@ -14,7 +14,14 @@ interface ChatPayload {
   messages?: { role?: unknown; content?: unknown }[];
 }
 
+/** The Settings currency for grounding text (round 9 F6; USD default). */
+async function readSettingsCurrency(): Promise<string> {
+  const row = await db.setting.findUnique({ where: { key: "currency" } });
+  return row?.value ?? "USD";
+}
+
 async function snapshot(): Promise<string> {
+  const currency = await readSettingsCurrency();
   const [expenses, incomeSources, budgets, goals, investments, accounts] = await Promise.all([
     db.expense.findMany({ orderBy: { date: "desc" }, take: 200 }),
     db.incomeSource.findMany({ where: { active: true } }),
@@ -33,13 +40,13 @@ async function snapshot(): Promise<string> {
     (sum, s) => sum + monthlyEquivalent(s.amountMinor, s.frequency),
     0,
   );
-  lines.push(`Monthly income: ${formatMoney(monthlyIncome)} from ${incomeSources.length} sources (normalized to monthly equivalents).`);
+  lines.push(`Monthly income: ${formatMoney(monthlyIncome, { currency })} from ${incomeSources.length} sources (normalized to monthly equivalents).`);
   lines.push(
-    incomeSources.map((s) => `  - ${s.name}: ${formatMoney(s.amountMinor)} (${s.frequency})`).join("\n"),
+    incomeSources.map((s) => `  - ${s.name}: ${formatMoney(s.amountMinor, { currency })} (${s.frequency})`).join("\n"),
   );
 
   const monthlyExpenses = thisMonth.reduce((sum, e) => sum + e.amountMinor, 0);
-  lines.push(`Expenses this month: ${formatMoney(monthlyExpenses)} across ${thisMonth.length} transactions.`);
+  lines.push(`Expenses this month: ${formatMoney(monthlyExpenses, { currency })} across ${thisMonth.length} transactions.`);
 
   const bySubcategory = new Map<string, number>();
   for (const expense of thisMonth) {
@@ -48,7 +55,7 @@ async function snapshot(): Promise<string> {
   const top = Array.from(bySubcategory.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8)
-    .map(([subcategory, amount]) => `  - ${subcategoryLabel(subcategory)}: ${formatMoney(amount)}`);
+    .map(([subcategory, amount]) => `  - ${subcategoryLabel(subcategory)}: ${formatMoney(amount, { currency })}`);
   lines.push("Top spending categories this month:\n" + top.join("\n"));
 
   for (const budget of budgets) {
@@ -56,25 +63,25 @@ async function snapshot(): Promise<string> {
       .filter((e) => e.category === budget.category)
       .reduce((sum, e) => sum + e.amountMinor, 0);
     lines.push(
-      `Budget ${budget.category}: spent ${formatMoney(spent)} of ${formatMoney(budget.monthlyLimitMinor)} limit.`,
+      `Budget ${budget.category}: spent ${formatMoney(spent, { currency })} of ${formatMoney(budget.monthlyLimitMinor, { currency })} limit.`,
     );
   }
 
   for (const goal of goals) {
     lines.push(
-      `Goal "${goal.name}": ${formatMoney(goal.currentAmountMinor)} of ${formatMoney(goal.targetAmountMinor)} saved.`,
+      `Goal "${goal.name}": ${formatMoney(goal.currentAmountMinor, { currency })} of ${formatMoney(goal.targetAmountMinor, { currency })} saved.`,
     );
   }
 
   const portfolioValue = investments.reduce((sum, h) => sum + Math.round(h.shares * h.currentPriceMinor), 0);
   const costBasis = investments.reduce((sum, h) => sum + Math.round(h.shares * h.avgPriceMinor), 0);
   lines.push(
-    `Investments: ${investments.length} holdings, portfolio value ${formatMoney(portfolioValue)}, ` +
-      `total gain ${formatMoney(portfolioValue - costBasis)}.`,
+    `Investments: ${investments.length} holdings, portfolio value ${formatMoney(portfolioValue, { currency })}, ` +
+      `total gain ${formatMoney(portfolioValue - costBasis, { currency })}.`,
   );
 
   const netWorth = accounts.reduce((sum, a) => sum + a.balanceMinor, 0);
-  lines.push(`Accounts: ${accounts.length} connected, combined balance ${formatMoney(netWorth)}.`);
+  lines.push(`Accounts: ${accounts.length} connected, combined balance ${formatMoney(netWorth, { currency })}.`);
 
   return lines.join("\n");
 }

@@ -20,7 +20,7 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
-import { useQuery } from "@/hooks/use-api";
+import { useQuery, useSettings } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney } from "@/lib/money";
 import { ACTIVITY_BADGE, CATEGORY_DOT } from "@/lib/ui-maps";
@@ -53,12 +53,15 @@ export function DashboardView({
   const [insightsLoading, setInsightsLoading] = useState(true);
   const [insightsError, setInsightsError] = useState<string | null>(null);
   const { toast } = useToast();
+  // Round 9 (F6): the Settings currency + date format propagate to every figure
+  // and date on this view (live-probed — saving EUR reformats the dashboard).
+  const { currency, dateFormat } = useSettings();
 
   const loadInsights = useCallback(async () => {
     setInsightsLoading(true);
     setInsightsError(null);
     try {
-      const response = await fetch("/api/ai/insights", { headers: { Accept: "application/json" } });
+      const response = await fetch("/api/ai/insights", { headers: { Accept: "application/json" }, cache: "no-store" });
       const payload = (await response.json()) as { ok: boolean; data?: { insights: AiInsightDto[] }; error?: string };
       if (!response.ok || !payload.ok || !payload.data) {
         throw new Error(payload.error ?? `Request failed with status ${response.status}`);
@@ -137,21 +140,21 @@ export function DashboardView({
           <div className="fade-in-up stagger-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <StatCard
               label="Monthly Income"
-              value={formatMoney(data.kpis.monthlyIncomeMinor)}
+              value={formatMoney(data.kpis.monthlyIncomeMinor, { currency })}
               icon={TrendingUp}
               iconClass="bg-gradient-to-r from-emerald-500 to-emerald-600"
               trend={data.kpis.incomeChangePercent}
             />
             <StatCard
               label="Monthly Expenses"
-              value={formatMoney(data.kpis.monthlyExpensesMinor)}
+              value={formatMoney(data.kpis.monthlyExpensesMinor, { currency })}
               icon={TrendingDown}
               iconClass="bg-gradient-to-r from-red-500 to-red-600"
               trend={data.kpis.expenseChangePercent}
             />
             <StatCard
               label="Net Balance"
-              value={formatMoney(data.kpis.netBalanceMinor)}
+              value={formatMoney(data.kpis.netBalanceMinor, { currency })}
               icon={Wallet}
               iconClass="bg-gradient-to-r from-blue-500 to-blue-600"
               trend={data.kpis.netChangePercent}
@@ -169,7 +172,7 @@ export function DashboardView({
             <GradientCard
               title="Largest Expense Category"
               value={data.kpis.largestExpenseCategory ?? "N/A"}
-              subtitle={data.kpis.largestExpenseCategory ? formatMoney(data.kpis.largestExpenseMinor) : "$0.00"}
+              subtitle={data.kpis.largestExpenseCategory ? formatMoney(data.kpis.largestExpenseMinor, { currency }) : formatMoney(0, { currency })}
               icon={TrendingDown}
               gradient="bg-gradient-to-r from-orange-500 to-orange-600"
               capitalizeValue
@@ -208,7 +211,7 @@ export function DashboardView({
             <div className="lg:col-span-2 space-y-8">
               <SectionCard
                 title="Budget Overview"
-                badge={<SurplusBadge amountMinor={data.budgetSurplusMinor} />}
+                badge={<SurplusBadge amountMinor={data.budgetSurplusMinor} currency={currency} />}
                 contentClassName="space-y-6"
               >
                 {data.budgets.length === 0 ? (
@@ -223,7 +226,7 @@ export function DashboardView({
                       const categoryId = budget.category.toLowerCase();
                       const hasLimit = budget.limitMinor > 0;
                       const underBudget = budget.remainingMinor >= 0;
-                      const remainingLabel = budgetRemainingLabel(budget.limitMinor, budget.remainingMinor);
+                      const remainingLabel = budgetRemainingLabel(budget.limitMinor, budget.remainingMinor, currency);
                       const percentUsed = budget.percentUsed;
                       return (
                         <div key={budget.category} className="space-y-2">
@@ -240,7 +243,7 @@ export function DashboardView({
                                 aria-hidden
                               />
                               <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                                {formatMoney(budget.spentMinor)} / {formatMoney(budget.limitMinor)}
+                                {formatMoney(budget.spentMinor, { currency })} / {formatMoney(budget.limitMinor, { currency })}
                               </span>
                             </div>
                           </div>
@@ -317,7 +320,7 @@ export function DashboardView({
                                 {badgeText}
                               </Badge>
                               <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                                {formatDate(transaction.date, "MM/dd/yyyy")}
+                                {formatDate(transaction.date, dateFormat)}
                               </span>
                             </div>
                           </div>
@@ -329,7 +332,7 @@ export function DashboardView({
                               )}
                             >
                               {isIncome ? "+" : "-"}
-                              {formatMoney(transaction.amountMinor)}
+                              {formatMoney(transaction.amountMinor, { currency })}
                             </p>
                           </div>
                         </div>

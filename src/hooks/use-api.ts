@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { SettingsDto } from "@/lib/types";
 
 /**
  * Minimal typed fetch hook with loading/error state and manual refresh.
@@ -30,7 +31,12 @@ export function useQuery<T>(url: string, options: { manual?: boolean } = {}): Qu
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(url, { headers: { Accept: "application/json" } });
+      // Round 9 (F6): `cache: "no-store"` — the API responses carry no
+      // Cache-Control header, so browsers heuristically cache them and a
+      // remounted view (e.g. the Add-dialog's useSettings after a currency
+      // change) would render stale values. The live app always shows fresh
+      // data on navigation; the server is the source of truth.
+      const response = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-store" });
       const payload = (await response.json()) as ApiEnvelope<T>;
       if (!response.ok || !payload.ok || payload.data === undefined) {
         throw new Error(payload.error ?? `Request failed with status ${response.status}`);
@@ -76,4 +82,22 @@ export async function mutate<T>(
   } catch (cause) {
     return { ok: false, error: cause instanceof Error ? cause.message : "Network error" };
   }
+}
+
+/**
+ * App-wide settings slice (round 9 — live-probed propagation).
+ *
+ * Saving a currency or date format on the live app reformats EVERY view
+ * (EUR → € everywhere; dd/MM/yyyy → 25/12/2024 everywhere), and the change
+ * persists across reloads. Views therefore consume this hook and thread
+ * `currency` into every formatMoney call and `dateFormat` into every
+ * formatDate call; defaults cover the loading state (USD + MM/dd/yyyy —
+ * the app's seeded defaults).
+ */
+export function useSettings(): { currency: string; dateFormat: string } {
+  const { data } = useQuery<SettingsDto>("/api/settings");
+  return {
+    currency: data?.currency ?? "USD",
+    dateFormat: data?.dateFormat ?? "MM/dd/yyyy",
+  };
 }

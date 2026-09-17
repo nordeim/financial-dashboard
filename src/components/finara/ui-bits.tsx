@@ -327,8 +327,9 @@ export function SectionCard({
 }
 
 /** Budget surplus pill (live: default Badge + emerald classes + trending-up
- * glyph at w-3 h-3 mr-1). */
-export function SurplusBadge({ amountMinor }: { amountMinor: number }) {
+ * glyph at w-3 h-3 mr-1). Round 9: the currency follows the Settings
+ * selection (live-probed — the surplus pill reformats with everything else). */
+export function SurplusBadge({ amountMinor, currency = "USD" }: { amountMinor: number; currency?: string }) {
   const positive = amountMinor >= 0;
   return (
     <Badge
@@ -339,13 +340,13 @@ export function SurplusBadge({ amountMinor }: { amountMinor: number }) {
       )}
     >
       <TrendingUp className="w-3 h-3 mr-1" aria-hidden />
-      {formatSigned(positive ? amountMinor : -amountMinor)} {positive ? "surplus" : "deficit"}
+      {formatSigned(positive ? amountMinor : -amountMinor, currency)} {positive ? "surplus" : "deficit"}
     </Badge>
   );
 }
 
-function formatSigned(amountMinor: number): string {
-  const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+function formatSigned(amountMinor: number, currency = "USD"): string {
+  const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency, minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return formatter.format(amountMinor / 100);
 }
 

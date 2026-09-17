@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {Loader2, Landmark, Pen, Plus} from "lucide-react";
-import { mutate, useQuery } from "@/hooks/use-api";
+import { mutate, useQuery, useSettings } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney, toMinorUnits } from "@/lib/money";
 import { ACCOUNT_TYPES, accountTypeLabel } from "@/lib/categories";
@@ -35,6 +35,7 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState<AccountFormState>(emptyForm());
   const { toast } = useToast();
+  const { currency, dateFormat } = useSettings();
 
   const accounts = query.data ?? [];
   void refreshKey;
@@ -176,10 +177,10 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
                       account.balanceMinor < 0 ? "text-red-600 dark:text-red-400" : "text-neutral-800 dark:text-neutral-100",
                     )}
                   >
-                    {formatMoney(account.balanceMinor)}
+                    {formatMoney(account.balanceMinor, { currency })}
                   </p>
                   <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
-                    Last updated: {formatDate(account.lastSyncedAt, "MM/dd/yyyy")}
+                    Last updated: {formatDate(account.lastSyncedAt, dateFormat)}
                   </p>
                   <a
                     href="/Import"

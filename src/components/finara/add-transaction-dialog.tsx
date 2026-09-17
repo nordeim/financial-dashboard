@@ -8,9 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, DollarSign, Receipt, X } from "lucide-react";
-import { mutate } from "@/hooks/use-api";
+import { mutate, useSettings } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
-import { toMinorUnits } from "@/lib/money";
+import { currencySymbol, toMinorUnits } from "@/lib/money";
 import {
   EXPENSE_CATEGORIES,
   FREQUENCY_LABELS,
@@ -83,6 +83,12 @@ export function AddTransactionDialog({
   const [mode, setMode] = useState<"quick" | "manual">("quick");
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
+  // Round 9 (F6): the quick-amount chips follow the Settings currency — the
+  // live expense chips render `+ USD5` (currency code + integer) and the
+  // income chips `+$5.00` (symbol + decimals); EUR variants follow the same
+  // templates (code/symbol swap).
+  const { currency } = useSettings();
+  const symbol = currencySymbol(currency);
   const [expenseForm, setExpenseForm] = useState<ExpenseFormData>(defaultExpenseForm());
   const [incomeForm, setIncomeForm] = useState<IncomeFormData>(defaultIncomeForm());
 
@@ -341,7 +347,7 @@ export function AddTransactionDialog({
                       onClick={() => addQuickAmount(units, "expense")}
                       className="h-9 px-4 py-2"
                     >
-                      + USD{units}
+                      + {currency}{units}
                     </Button>
                   </div>
                 ))}
@@ -487,7 +493,7 @@ export function AddTransactionDialog({
                       onClick={() => addQuickAmount(units, "income")}
                       className="h-8 rounded-md px-3 text-xs"
                     >
-                      + ${units.toFixed(2)}
+                      +{symbol}{units.toFixed(2)}
                     </Button>
                   </div>
                 ))}

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {BarChart3, ChartColumn, ChartPie, Loader2, Pen, Plus, TrendingUp, Wallet, X} from "lucide-react";
-import { mutate, useQuery } from "@/hooks/use-api";
+import { mutate, useQuery, useSettings } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney } from "@/lib/money";
 import { INVESTMENT_TYPES, SECTORS, investmentTypeLabel } from "@/lib/categories";
@@ -53,6 +53,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState<InvestmentFormState>(emptyForm());
   const { toast } = useToast();
+  const { currency } = useSettings();
 
   const holdings = query.data ?? [];
   void refreshKey;
@@ -170,7 +171,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-blue-100 text-sm font-medium mb-1">Portfolio Value</p>
-                    <p className="text-3xl font-bold">{formatMoney(portfolioValue)}</p>
+                    <p className="text-3xl font-bold">{formatMoney(portfolioValue, { currency })}</p>
                   </div>
                   <Wallet className="w-12 h-12 text-blue-200" aria-hidden />
                 </div>
@@ -181,7 +182,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium mb-1 text-emerald-100">Total Gain/Loss</p>
-                    <p className="text-3xl font-bold">{formatMoney(totalGain)}</p>
+                    <p className="text-3xl font-bold">{formatMoney(totalGain, { currency })}</p>
                   </div>
                   <TrendingUp className="w-12 h-12 text-emerald-200" aria-hidden />
                 </div>
@@ -237,11 +238,11 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                               <TableRow key={holding.id}>
                                 <TableCell className="font-medium">{holding.symbol}</TableCell>
                                 <TableCell>{holding.shares}</TableCell>
-                                <TableCell>{formatMoney(holding.avgPriceMinor)}</TableCell>
-                                <TableCell>{formatMoney(holding.currentPriceMinor)}</TableCell>
-                                <TableCell>{formatMoney(marketValue)}</TableCell>
+                                <TableCell>{formatMoney(holding.avgPriceMinor, { currency })}</TableCell>
+                                <TableCell>{formatMoney(holding.currentPriceMinor, { currency })}</TableCell>
+                                <TableCell>{formatMoney(marketValue, { currency })}</TableCell>
                                 <TableCell className={gain >= 0 ? "text-emerald-600" : "text-red-600"}>
-                                  {formatMoney(gain)}
+                                  {formatMoney(gain, { currency })}
                                 </TableCell>
                                 <TableCell>
                                   <div className="flex gap-1">

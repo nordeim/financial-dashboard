@@ -16,8 +16,10 @@ import { useToast } from "@/hooks/use-toast";
  * see README (Authentication) before deploying anywhere real.
  */
 
-export const DEMO_EMAIL = "sepnetflix2023@outlook.com";
-export const DEMO_PASSWORD = "Abcd1234";
+// Round 9: the identity lives in lib/demo-user (the GDPR export embeds it
+// too); re-exported here so existing imports keep working.
+export { DEMO_EMAIL, DEMO_PASSWORD } from "@/lib/demo-user";
+import { DEMO_EMAIL, DEMO_PASSWORD } from "@/lib/demo-user";
 
 /** Live login input classes (round-6 capture): py-2, ring-2 + ring-offset,
  * no shadow-sm/transition-colors — a custom set, NOT the app-wide Input. */

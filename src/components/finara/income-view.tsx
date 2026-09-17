@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import {DollarSign, Loader2, Pen, Plus, TrendingUp, X} from "lucide-react";
-import { mutate, useQuery } from "@/hooks/use-api";
+import { mutate, useQuery, useSettings } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney, monthlyEquivalent, toMinorUnits } from "@/lib/money";
 import { FREQUENCY_LABELS, INCOME_CATEGORIES, INCOME_FREQUENCIES, incomeCategoryLabel } from "@/lib/categories";
@@ -38,6 +38,7 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
   const [form, setForm] = useState<IncomeFormState>(emptyForm());
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
+  const { currency } = useSettings();
 
   // Refetch when the shell bumps refreshKey (e.g. after the add sheet closes).
   const appliedRefreshKey = useRef(refreshKey);
@@ -135,7 +136,7 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-emerald-100 text-lg font-medium mb-2">Total Monthly Income</p>
-                  <p className="text-4xl font-bold">{formatMoney(monthlyTotal)}</p>
+                  <p className="text-4xl font-bold">{formatMoney(monthlyTotal, { currency })}</p>
                   <p className="text-emerald-100 text-sm mt-2">
                     From {sources.filter((source) => source.active).length} active sources
                   </p>
@@ -203,7 +204,7 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-2xl font-bold text-neutral-900 dark:text-white">
-                          {formatMoney(source.amountMinor)}
+                          {formatMoney(source.amountMinor, { currency })}
                         </span>
                         <div className="flex items-center gap-1 text-sm text-neutral-500 dark:text-neutral-400">
                           <span aria-hidden>📊</span>
@@ -213,7 +214,7 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                       <div className="pt-3 border-t dark:border-gray-700">
                         <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Monthly equivalent</p>
                         <p className="text-lg font-semibold text-primary-sage">
-                          {formatMoney(monthlyEquivalent(source.amountMinor, source.frequency))}
+                          {formatMoney(monthlyEquivalent(source.amountMinor, source.frequency), { currency })}
                         </p>
                       </div>
                     </div>

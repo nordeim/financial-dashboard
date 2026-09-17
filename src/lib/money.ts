@@ -32,18 +32,22 @@ export function formatMoney(
   return formatted;
 }
 
-/** Compact currency for chart axes (e.g. $1.2k). */
-export function formatMoneyCompact(amountMinor: number, currency = "USD"): string {
-  const units = amountMinor / MINOR_PER_UNIT;
-  const abs = Math.abs(units);
-  if (abs >= 1_000_000) return `${sign(units)}$${(abs / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `${sign(units)}$${(abs / 1_000).toFixed(1)}k`;
-  return `${sign(units)}$${abs.toFixed(0)}`;
+/**
+ * Currency symbol for a ISO code (round 9: the live income quick-amount chips
+ * render `+<symbol><amount>` and follow the Settings currency). Derived from
+ * Intl so it always matches what formatMoney renders for the same code.
+ */
+export function currencySymbol(currency: string): string {
+  const parts = new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).formatToParts(0);
+  return parts.find((part) => part.type === "currency")?.value ?? "$";
 }
 
-function sign(units: number): string {
-  return units < 0 ? "-" : "";
-}
+/**
+ * Compact axis formatting was retired in round 9: the live app renders FULL
+ * money strings on BOTH chart axes ($1,500.00-style on the trend, $2.00-style
+ * on the category bars — r7 captures re-read). formatMoney is the only
+ * formatter; there is no compact variant.
+ */
 
 /** Percentage helper safe against division by zero. */
 export function percent(value: number, total: number): number {

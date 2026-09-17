@@ -20,9 +20,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useQuery } from "@/hooks/use-api";
+import { useQuery, useSettings } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
-import { formatMoney, formatMoneyCompact } from "@/lib/money";
+import { formatMoney } from "@/lib/money";
 import { SECTOR_COLORS } from "@/lib/ui-maps";
 import { CARD_PLAIN, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
 import { Input } from "@/components/ui/input";
@@ -40,37 +40,18 @@ type Period = "3" | "6" | "12";
 
 export function AnalyticsView() {
   const [period, setPeriod] = useState<Period>("6");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
   const query = useQuery<AnalyticsDto>(`/api/analytics?months=${period}`);
   const { toast } = useToast();
+  const { currency } = useSettings();
 
-  // The server windows the aggregates; a custom date range narrows the trend
-  // client-side by month label boundaries.
+  // The server windows the aggregates by the period select. Round 9: the
+  // From/To date inputs are live-INERT (any range leaves the charts
+  // untouched — probed 2026-09-17, the same unfinished-wiring class as the
+  // expenses Bulk Edit options), so no client-side trend filtering exists.
   const trend = useMemo(() => {
     const all = query.data?.overview.monthlyTrend ?? [];
     return all;
   }, [query.data]);
-
-  const dateRangeTrend = useMemo(() => {
-    if (!fromDate && !toDate) return trend;
-    const from = fromDate ? new Date(`${fromDate}T00:00:00`) : null;
-    const to = toDate ? new Date(`${toDate}T23:59:59`) : null;
-    const monthLabelToNumber = (label: string): number => {
-      const map: Record<string, number> = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
-      return map[label.split(" ")[0] ?? ""] ?? -1;
-    };
-    return trend.filter((entry) => {
-      const parts = entry.month.split(" ");
-      const month = monthLabelToNumber(entry.month);
-      const year = Number.parseInt(parts[1] ?? "0", 10) + 2000;
-      if (month < 0 || Number.isNaN(year)) return true;
-      const point = new Date(year, month, 1);
-      if (from && point < new Date(from.getFullYear(), from.getMonth(), 1)) return false;
-      if (to && point > new Date(to.getFullYear(), to.getMonth(), 1)) return false;
-      return true;
-    });
-  }, [trend, fromDate, toDate]);
 
   const expensesBySubcategory = useMemo(() => {
     const source = query.data?.expenses.bySubcategory ?? [];
@@ -84,23 +65,30 @@ export function AnalyticsView() {
     [query.data],
   );
 
-  const exportCsv = () => {
-    const data = query.data;
-    if (!data) return;
-    const lines = ["Month,Income,Expenses,Net Savings"];
-    for (const month of data.overview.monthlyTrend) {
-      lines.push(
-        `${month.month},${(month.incomeMinor / 100).toFixed(2)},${(month.expensesMinor / 100).toFixed(2)},${(month.netMinor / 100).toFixed(2)}`,
-      );
+  const exportCsv = async () => {
+    // Round 9 live probe: the Export button downloads a TRANSACTIONS csv
+    // ("Date,Description,Category,Subcategory,Amount,Type" — every expense,
+    // income source and holding), built server-side by /api/export, named
+    // financial-report-<date>.csv — NOT a monthly-trend summary.
+    try {
+      const response = await fetch("/api/export?type=transactions", { cache: "no-store" });
+      if (!response.ok) throw new Error(`Export failed with status ${response.status}`);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      const today = new Date().toISOString().slice(0, 10);
+      anchor.download = `financial-report-${today}.csv`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      toast({ title: "Export ready", description: `financial-report-${today}.csv has been downloaded.` });
+    } catch (cause) {
+      toast({
+        title: "Export failed",
+        description: cause instanceof Error ? cause.message : "Please try again.",
+        variant: "destructive",
+      });
     }
-    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = "finara-analytics.csv";
-    anchor.click();
-    URL.revokeObjectURL(url);
-    toast({ title: "Export ready", description: "finara-analytics.csv has been downloaded." });
   };
 
   const tooltipStyle = { borderRadius: 12, border: "1px solid #E2E8F0", fontSize: 12 };
@@ -115,22 +103,10 @@ export function AnalyticsView() {
              capture: div.flex.gap-3.flex-wrap) — the only view with a wrapper. */
           <div className="flex gap-3 flex-wrap">
             <div className="flex gap-2">
-              <Input
-                type="date"
-                aria-label="Start date"
-                placeholder="Start date"
-                value={fromDate}
-                onChange={(event) => setFromDate(event.target.value)}
-                className="w-auto"
-              />
-              <Input
-                type="date"
-                aria-label="End date"
-                placeholder="End date"
-                value={toDate}
-                onChange={(event) => setToDate(event.target.value)}
-                className="w-auto"
-              />
+              {/* Live renders value="" and never consumes the range (F8) —
+                  uncontrolled inputs keep the exact live behavior. */}
+              <Input type="date" aria-label="Start date" placeholder="Start date" className="w-auto" />
+              <Input type="date" aria-label="End date" placeholder="End date" className="w-auto" />
             </div>
             <Select value={period} onValueChange={(value) => setPeriod(value as Period)}>
               <SelectTrigger className="w-32" aria-label="Reporting period">
@@ -175,7 +151,7 @@ export function AnalyticsView() {
               <div className="p-6 pt-0">
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={dateRangeTrend} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                    <LineChart data={trend} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
                       {/* Live chart config (round-5 capture): both grid directions,
                           visible axis + tick lines (#64748b), dark-mode grid via
                           dark:stroke-gray-600 on each line (className propagates
@@ -186,10 +162,10 @@ export function AnalyticsView() {
                         stroke="#64748b"
                         className="dark:stroke-gray-400"
                         tick={{ fill: "#64748b" }}
-                        tickFormatter={(value: number) => formatMoney(value)}
+                        tickFormatter={(value: number) => formatMoney(value, { currency })}
                         width={84}
                       />
-                      <Tooltip formatter={(value: number | string) => formatMoney(Number(value))} contentStyle={tooltipStyle} />
+                      <Tooltip formatter={(value: number | string) => formatMoney(Number(value), { currency })} contentStyle={tooltipStyle} />
                       <Legend wrapperStyle={{ fontSize: 12 }} />
                       <Line type="monotone" dataKey="incomeMinor" name="Income" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
                       <Line type="monotone" dataKey="expensesMinor" name="Expenses" stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} />
@@ -206,7 +182,7 @@ export function AnalyticsView() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-emerald-100 text-sm font-medium mb-1">Avg Monthly Income</p>
-                      <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgIncomeMinor)}</p>
+                      <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgIncomeMinor, { currency })}</p>
                     </div>
                     <TrendingUp className="w-8 h-8 text-emerald-200" aria-hidden />
                   </div>
@@ -217,7 +193,7 @@ export function AnalyticsView() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-red-100 text-sm font-medium mb-1">Avg Monthly Expenses</p>
-                      <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgExpensesMinor)}</p>
+                      <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgExpensesMinor, { currency })}</p>
                     </div>
                     {/* Live quirk: the expenses average tile flips the trending-up
                         glyph 180° (renders as a down-arrow) in red-200. */}
@@ -230,7 +206,7 @@ export function AnalyticsView() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-blue-100 text-sm font-medium mb-1">Avg Monthly Savings</p>
-                      <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgSavingsMinor)}</p>
+                      <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgSavingsMinor, { currency })}</p>
                     </div>
                     <Calendar className="w-8 h-8 text-blue-200" aria-hidden />
                   </div>
@@ -263,7 +239,7 @@ export function AnalyticsView() {
                           <Cell key={entry.name} fill={CHART_COLORS[expensesBySubcategory.indexOf(entry) % CHART_COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value: number | string) => formatMoney(Number(value))} contentStyle={tooltipStyle} />
+                      <Tooltip formatter={(value: number | string) => formatMoney(Number(value), { currency })} contentStyle={tooltipStyle} />
                       <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
                     </PieChart>
                   </ResponsiveContainer>
@@ -287,10 +263,10 @@ export function AnalyticsView() {
                         stroke="#64748b"
                         className="dark:stroke-gray-400"
                         tick={{ fill: "#64748b" }}
-                        tickFormatter={(value: number) => formatMoneyCompact(value)}
+                        tickFormatter={(value: number) => formatMoney(value, { currency })}
                       />
                       <YAxis type="category" dataKey="label" stroke="#64748b" className="dark:stroke-gray-400" tick={{ fill: "#64748b" }} width={140} />
-                      <Tooltip formatter={(value: number | string) => formatMoney(Number(value))} contentStyle={tooltipStyle} />
+                      <Tooltip formatter={(value: number | string) => formatMoney(Number(value), { currency })} contentStyle={tooltipStyle} />
                       <Bar dataKey="amountMinor" name="Spending" radius={[0, 6, 6, 0]}>
                         {topCategories.map((entry, index) => (
                           <Cell key={entry.label} fill={CHART_COLORS[index % CHART_COLORS.length]} />
@@ -324,7 +300,7 @@ export function AnalyticsView() {
                           <Cell key={entry.name} fill={SECTOR_COLORS[sectorKey(entry.name)] ?? "#6B7280"} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value: number | string) => formatMoney(Number(value))} contentStyle={tooltipStyle} />
+                      <Tooltip formatter={(value: number | string) => formatMoney(Number(value), { currency })} contentStyle={tooltipStyle} />
                       <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
                     </PieChart>
                   </ResponsiveContainer>

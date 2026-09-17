@@ -19,11 +19,18 @@ interface InsightDraft {
   tone: AiInsightDto["tone"];
 }
 
+/** The Settings currency for grounding text (round 9 F6; USD default). */
+async function readSettingsCurrency(): Promise<string> {
+  const row = await db.setting.findUnique({ where: { key: "currency" } });
+  return row?.value ?? "USD";
+}
+
 function deterministicInsights(
   monthlyIncomeMinor: number,
   monthlyExpensesMinor: number,
   topCategory: { label: string; amountMinor: number } | null,
   savingsRate: number,
+  currency = "USD",
 ): InsightDraft[] {
   const drafts: InsightDraft[] = [];
   if (monthlyIncomeMinor > 0) {
@@ -40,7 +47,7 @@ function deterministicInsights(
   if (topCategory) {
     drafts.push({
       title: "Top spending category",
-      body: `${topCategory.label} is your largest category at ${formatMoney(topCategory.amountMinor)} this month, ` +
+      body: `${topCategory.label} is your largest category at ${formatMoney(topCategory.amountMinor, { currency })} this month, ` +
         `${percent(topCategory.amountMinor, monthlyExpensesMinor || 1).toFixed(0)}% of total spending.`,
       tone: "neutral",
     });
@@ -48,7 +55,7 @@ function deterministicInsights(
   if (monthlyExpensesMinor > monthlyIncomeMinor) {
     drafts.push({
       title: "Spending exceeds income",
-      body: `Expenses (${formatMoney(monthlyExpensesMinor)}) exceed income (${formatMoney(monthlyIncomeMinor)}) this month. ` +
+      body: `Expenses (${formatMoney(monthlyExpensesMinor, { currency })}) exceed income (${formatMoney(monthlyIncomeMinor, { currency })}) this month. ` +
         "Review discretionary categories before the month closes.",
       tone: "warning",
     });
@@ -59,6 +66,9 @@ function deterministicInsights(
 export async function GET() {
   try {
     await ensureSeeded();
+    // Round 9 (F6): the insight facts follow the Settings currency (the
+    // dashboard reformats when it changes — the AI text must not leak $).
+    const currency = await readSettingsCurrency();
     const [expenses, incomeSources, budgets] = await Promise.all([
       db.expense.findMany({ orderBy: { date: "desc" } }),
       db.incomeSource.findMany({ where: { active: true } }),
@@ -87,21 +97,21 @@ export async function GET() {
       .map((budget) => {
         const spent = thisMonth.filter((e) => e.category === budget.category).reduce((sum, e) => sum + e.amountMinor, 0);
         const used = percent(spent, budget.monthlyLimitMinor);
-        if (used >= 90) return `${budget.category} budget is ${used.toFixed(0)}% used (${formatMoney(spent)} of ${formatMoney(budget.monthlyLimitMinor)}).`;
+        if (used >= 90) return `${budget.category} budget is ${used.toFixed(0)}% used (${formatMoney(spent, { currency })} of ${formatMoney(budget.monthlyLimitMinor, { currency })}).`;
         return null;
       })
       .filter((note): note is string => note !== null);
 
-    const drafts = deterministicInsights(monthlyIncomeMinor, monthlyExpensesMinor, topCategory, savingsRate);
+    const drafts = deterministicInsights(monthlyIncomeMinor, monthlyExpensesMinor, topCategory, savingsRate, currency);
     if (budgetNotes.length > 0 && drafts.length < 3) {
       drafts.push({ title: "Budget watch", body: budgetNotes.join(" "), tone: "warning" });
     }
 
     const facts = [
-      `Monthly income: ${formatMoney(monthlyIncomeMinor)}`,
-      `Expenses this month: ${formatMoney(monthlyExpensesMinor)}`,
+      `Monthly income: ${formatMoney(monthlyIncomeMinor, { currency })}`,
+      `Expenses this month: ${formatMoney(monthlyExpensesMinor, { currency })}`,
       `Savings rate: ${savingsRate.toFixed(1)}%`,
-      topCategory ? `Top category: ${topCategory.label} at ${formatMoney(topCategory.amountMinor)}` : null,
+      topCategory ? `Top category: ${topCategory.label} at ${formatMoney(topCategory.amountMinor, { currency })}` : null,
       ...budgetNotes,
     ]
       .filter((line): line is string => line !== null)

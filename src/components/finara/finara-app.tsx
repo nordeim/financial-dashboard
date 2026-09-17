@@ -279,12 +279,19 @@ export function FinaraApp({ route: initialRoute }: { route: FinaraRouteInput }) 
 
       <QuickAddDialog open={quickAddOpen} onOpenChange={setQuickAddOpen} onSaved={bumpRefresh} />
 
-      <AddTransactionDialog
-        open={txnDialogOpen}
-        onOpenChange={setTxnDialogOpen}
-        kind={txnKind}
-        onSaved={bumpRefresh}
-      />
+      {/* Round 9 (F6): mount-on-open — this dialog lives at the shell level
+          and would otherwise keep its mount-time useSettings data forever
+          (stale quick-amount chips after a currency change). Rendering it
+          only while open remounts it per open, so the chips always reflect
+          the current Settings currency like the live app. */}
+      {txnDialogOpen ? (
+        <AddTransactionDialog
+          open={txnDialogOpen}
+          onOpenChange={setTxnDialogOpen}
+          kind={txnKind}
+          onSaved={bumpRefresh}
+        />
+      ) : null}
 
       <AiCoachDialog
         open={aiCoachOpen}

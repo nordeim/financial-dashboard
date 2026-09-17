@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Pen, PenLine, Plus, Receipt, Search, SquareCheckBig, TrendingDown, X } from "lucide-react";
-import { mutate, useQuery } from "@/hooks/use-api";
+import { mutate, useQuery, useSettings } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney } from "@/lib/money";
 import { subcategoryEmoji, subcategoryLabel } from "@/lib/categories";
@@ -40,6 +40,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
   const [editOpen, setEditOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
+  const { currency, dateFormat } = useSettings();
 
   // Refetch when the shell bumps refreshKey (e.g. after the save dialog closes).
   const appliedRefreshKey = useRef(refreshKey);
@@ -162,7 +163,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-red-100 text-sm font-medium mb-1">Total Expenses</p>
-                    <p className="text-2xl font-bold">{formatMoney(totals.total)}</p>
+                    <p className="text-2xl font-bold">{formatMoney(totals.total, { currency })}</p>
                   </div>
                   <TrendingDown className="w-8 h-8 text-red-200" aria-hidden />
                 </div>
@@ -176,7 +177,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                       <p className="text-neutral-600 dark:text-neutral-400 text-sm font-medium mb-1 capitalize">
                         {category.toLowerCase()}
                       </p>
-                      <p className="text-xl font-bold text-neutral-900 dark:text-white">{formatMoney(totals[category])}</p>
+                      <p className="text-xl font-bold text-neutral-900 dark:text-white">{formatMoney(totals[category], { currency })}</p>
                     </div>
                     <div className={cn("w-3 h-3 rounded-full", CATEGORY_DOT[category.toLowerCase()])} aria-hidden />
                   </div>
@@ -342,7 +343,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                               {expense.description}
                             </h3>
                             <p className="text-lg font-bold text-red-600 dark:text-red-500 ml-4">
-                              -{formatMoney(expense.amountMinor)}
+                              -{formatMoney(expense.amountMinor, { currency })}
                             </p>
                           </div>
                           <div className="flex items-center gap-2 flex-wrap">
@@ -357,7 +358,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                             </Badge>
                             <div className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
                               <Calendar className="w-3 h-3" aria-hidden />
-                              <span>{formatDate(expense.date, "MM/dd/yyyy")}</span>
+                              <span>{formatDate(expense.date, dateFormat)}</span>
                             </div>
                           </div>
                         </div>

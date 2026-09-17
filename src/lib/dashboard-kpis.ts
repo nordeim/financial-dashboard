@@ -215,11 +215,16 @@ export function computeDashboardKpis(input: {
  * Budget-row remaining-amount label (live-verified round 4): a zero monthly
  * limit renders "$0.00 remaining" — never the over-budget wording (observed
  * on the live app with an unconfigured $0.00 budget). Real limits keep the
- * under/over phrasing.
+ * under/over phrasing. Round 9: the currency follows the Settings selection
+ * (live-probed — saving EUR reformats the budget rows too).
  */
-export function budgetRemainingLabel(limitMinor: number, remainingMinor: number): string {
-  if (limitMinor <= 0) return `${formatMoney(0)} remaining`;
+export function budgetRemainingLabel(
+  limitMinor: number,
+  remainingMinor: number,
+  currency = "USD",
+): string {
+  if (limitMinor <= 0) return `${formatMoney(0, { currency })} remaining`;
   return remainingMinor >= 0
-    ? `${formatMoney(remainingMinor)} remaining`
-    : `${formatMoney(-remainingMinor)} over budget`;
+    ? `${formatMoney(remainingMinor, { currency })} remaining`
+    : `${formatMoney(-remainingMinor, { currency })} over budget`;
 }

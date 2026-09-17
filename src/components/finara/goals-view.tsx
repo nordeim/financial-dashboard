@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {Clock, DollarSign, Loader2, Pen, Plus, Target, TrendingUp} from "lucide-react";
-import { mutate, useQuery } from "@/hooks/use-api";
+import { mutate, useQuery, useSettings } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney, percent, toMinorUnits } from "@/lib/money";
 import { GOAL_CATEGORIES, GOAL_PRIORITIES, goalCategoryEmoji, goalCategoryLabel, goalPriorityLabel } from "@/lib/categories";
@@ -48,6 +48,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState<GoalFormState>(emptyForm());
   const { toast } = useToast();
+  const { currency, dateFormat } = useSettings();
 
   const goals = query.data ?? [];
   void refreshKey;
@@ -122,7 +123,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
       toast({ title: "Could not add progress", description: result.error, variant: "destructive" });
       return;
     }
-    toast({ title: "Progress added", description: `${formatMoney(contributeMinor)} added to ${goal.name}.` });
+    toast({ title: "Progress added", description: `${formatMoney(contributeMinor, { currency })} added to ${goal.name}.` });
     setContribution("");
     setContributing(null);
     query.refresh();
@@ -239,8 +240,8 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                       />
                     </div>
                     <div className="flex justify-between text-sm text-neutral-500 dark:text-neutral-400">
-                      <span>{formatMoney(goal.currentAmountMinor)}</span>
-                      <span>{formatMoney(goal.targetAmountMinor)}</span>
+                      <span>{formatMoney(goal.currentAmountMinor, { currency })}</span>
+                      <span>{formatMoney(goal.targetAmountMinor, { currency })}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
@@ -250,7 +251,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                     </span>
                   </div>
                   <div className="text-xs text-neutral-500 dark:text-neutral-400">
-                    Target: {formatDate(goal.deadline ?? "", "MM/dd/yyyy")}
+                    Target: {formatDate(goal.deadline ?? "", dateFormat)}
                   </div>
                   <Button
                     variant="outline"
