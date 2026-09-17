@@ -91,7 +91,20 @@ export function AnalyticsView() {
     }
   };
 
-  const tooltipStyle = { borderRadius: 12, border: "1px solid #E2E8F0", fontSize: 12 };
+  // Round-11 corrected live probe (computed styles + pixel crops, both
+  // themes): the live tooltip's inline style references var(--background)/
+  // var(--border)/var(--foreground), but its theme tokens are raw HSL
+  // triples (Tailwind v3 convention) — defined yet INVALID as direct color
+  // values. The whole border shorthand invalidates (computed style none,
+  // width 0 — NO border renders), the background computes transparent and
+  // the text color inherits: a pure borderless text overlay (#fafafa on
+  // dark, #0a0a0a on light) with an 8px radius and 16px inherited font. We
+  // replicate that effective rendering (the var() fallbacks never fire).
+  const tooltipStyle = {
+    backgroundColor: "transparent",
+    border: "none",
+    borderRadius: 8,
+  };
 
   return (
     <>
@@ -166,7 +179,10 @@ export function AnalyticsView() {
                         width={84}
                       />
                       <Tooltip formatter={(value: number | string) => formatMoney(Number(value), { currency })} contentStyle={tooltipStyle} />
-                      <Legend wrapperStyle={{ fontSize: 12 }} />
+                      {/* Live: the ONLY chart legend — default icon and
+                          inherited 16px text (round-11 probe: no font style
+                          is passed on the legend). */}
+                      <Legend />
                       <Line type="monotone" dataKey="incomeMinor" name="Income" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
                       <Line type="monotone" dataKey="expensesMinor" name="Expenses" stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} />
                       <Line type="monotone" dataKey="netMinor" name="Net Savings" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
@@ -240,7 +256,8 @@ export function AnalyticsView() {
                         ))}
                       </Pie>
                       <Tooltip formatter={(value: number | string) => formatMoney(Number(value), { currency })} contentStyle={tooltipStyle} />
-                      <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                      {/* Live Expenses-tab charts carry NO legend (round-11
+                          probe: zero legends on both the pie and the bar). */}
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -301,7 +318,9 @@ export function AnalyticsView() {
                         ))}
                       </Pie>
                       <Tooltip formatter={(value: number | string) => formatMoney(Number(value), { currency })} contentStyle={tooltipStyle} />
-                      <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                      {/* Live Investments-tab donut carries NO legend either
+                          (round-11 probe) — the sector list beside it serves
+                          that role. */}
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
