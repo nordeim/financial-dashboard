@@ -5,7 +5,7 @@ import {
   ok,
   optionalString,
   requireIsoDate,
-  requireNonNegativeInt,
+  requireSignedInt,
   requireString,
   safeJson,
 } from "@/lib/api";
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
     const body = await safeJson<ExpensePayload>(request);
     if (!body) return fail("Invalid JSON body", 400);
     const description = requireString(body.description, "Description");
-    const amountMinor = requireNonNegativeInt(body.amountMinor, "Amount");
+    const amountMinor = requireSignedInt(body.amountMinor, "Amount");
     const category = requireString(body.category, "Category", 20);
     if (!CATEGORIES.has(category)) {
       return fail("Category must be one of Needs, Wants, Savings", 400);

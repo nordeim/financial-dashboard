@@ -29,7 +29,10 @@ export function defaultExpenseFilters(): ExpenseFilters {
     dateRange: "all",
     customFrom: null,
     customTo: null,
-    minMinor: 0,
+    // UNSET by default (round-11 live probe): the panel's "0.00" is a
+    // placeholder, not a value — a default of 0 filtered out negative
+    // expenses that the live app renders in its default list.
+    minMinor: null,
     maxMinor: null,
     sortBy: "date",
     sortDesc: true,
@@ -48,7 +51,8 @@ export function countActiveFilters(filters: ExpenseFilters): number {
   if (filters.maxMinor !== null) count += 1;
   if (filters.sortBy !== defaults.sortBy) count += 1;
   if (filters.sortDesc !== defaults.sortDesc) count += 1;
-  // The source app counts the two default amount controls even untouched.
+  // The source app counts the two default amount controls even untouched
+  // (both empty = both at their default).
   if (filters.minMinor === defaults.minMinor && filters.maxMinor === defaults.maxMinor) count += 2;
   return count;
 }

@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { errorResponse, fail, ok, requireNonNegativeInt, safeJson } from "@/lib/api";
+import { errorResponse, fail, ok, requireSignedInt, safeJson } from "@/lib/api";
 import { INCOME_CATEGORIES, INCOME_FREQUENCIES } from "@/lib/categories";
 
 interface IncomePatch {
@@ -29,7 +29,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       where: { id },
       data: {
         name: typeof body.name === "string" && body.name.trim() ? body.name.trim() : undefined,
-        amountMinor: body.amountMinor === undefined ? undefined : requireNonNegativeInt(body.amountMinor, "Amount"),
+        amountMinor: body.amountMinor === undefined ? undefined : requireSignedInt(body.amountMinor, "Amount"),
         frequency: body.frequency === undefined ? undefined : String(body.frequency),
         category: body.category === undefined ? undefined : String(body.category),
         active: typeof body.active === "boolean" ? body.active : undefined,

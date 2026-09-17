@@ -327,7 +327,6 @@ export function AddTransactionDialog({
                 id="amount"
                 type="number"
                 inputMode="decimal"
-                min="0"
                 step="0.01"
                 value={expenseForm.amount}
                 onChange={(event) => setExpenseForm((current) => ({ ...current, amount: event.target.value }))}
@@ -473,7 +472,6 @@ export function AddTransactionDialog({
                 id="amount"
                 type="number"
                 inputMode="decimal"
-                min="0"
                 step="0.01"
                 value={incomeForm.amount}
                 onChange={(event) => setIncomeForm((current) => ({ ...current, amount: event.target.value }))}

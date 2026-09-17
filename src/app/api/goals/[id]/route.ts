@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { errorResponse, fail, ok, requireIsoDate, requireNonNegativeInt, safeJson } from "@/lib/api";
+import { errorResponse, fail, ok, requireIsoDate, requireSignedInt, safeJson } from "@/lib/api";
 import { GOAL_PRIORITIES, normalizeGoalCategory } from "@/lib/categories";
 
 interface GoalPatch {
@@ -25,13 +25,12 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     }
 
     const contribution =
-      body.contributeMinor === undefined ? 0 : requireNonNegativeInt(body.contributeMinor, "Contribution");
-    const nextCurrent = Math.min(
-      existing.currentAmountMinor + contribution,
-      body.targetAmountMinor !== undefined
-        ? requireNonNegativeInt(body.targetAmountMinor, "Target amount")
-        : existing.targetAmountMinor,
-    );
+      body.contributeMinor === undefined ? 0 : requireSignedInt(body.contributeMinor, "Contribution");
+    // Uncapped (round-11 live probe: 150 contributed to a 100 target renders
+    // Complete at 150.0%). Negative contributions stay a silent no-op — the
+    // live PUT returned 200 with the current unchanged (contribution > 0
+    // gate below replicates that).
+    const nextCurrent = existing.currentAmountMinor + contribution;
     const updated = await db.goal.update({
       where: { id },
       data: {
@@ -39,7 +38,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
         targetAmountMinor:
           body.targetAmountMinor === undefined
             ? undefined
-            : requireNonNegativeInt(body.targetAmountMinor, "Target amount"),
+            : requireSignedInt(body.targetAmountMinor, "Target amount"),
         currentAmountMinor: body.currentAmountMinor !== undefined || contribution > 0 ? nextCurrent : undefined,
         deadline: body.deadline === undefined ? undefined : body.deadline ? requireIsoDate(body.deadline, "Deadline") : null,
         category:

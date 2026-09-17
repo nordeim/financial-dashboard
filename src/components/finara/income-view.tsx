@@ -264,7 +264,6 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                 id="amount"
                 type="number"
                 inputMode="decimal"
-                min="0"
                 step="0.01"
                 value={form.amount}
                 onChange={(event) => setForm((current) => ({ ...current, amount: event.target.value }))}

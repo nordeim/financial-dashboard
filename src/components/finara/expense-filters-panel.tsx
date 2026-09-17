@@ -97,7 +97,6 @@ export function ExpenseFiltersPanel({
             id="filter-min"
             type="number"
             inputMode="decimal"
-            min="0"
             step="0.01"
             placeholder="0.00"
             value={draft.minMinor === null ? "" : (draft.minMinor / 100).toString()}
@@ -120,7 +119,6 @@ export function ExpenseFiltersPanel({
             id="filter-max"
             type="number"
             inputMode="decimal"
-            min="0"
             step="0.01"
             placeholder="No limit"
             value={draft.maxMinor === null ? "" : (draft.maxMinor / 100).toString()}

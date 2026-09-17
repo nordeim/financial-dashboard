@@ -3,8 +3,8 @@ import {
   errorResponse,
   fail,
   ok,
-  requireNonNegativeInt,
-  requirePositiveNumber,
+  requireSignedInt,
+  requireFiniteNumber,
   requireString,
   safeJson,
 } from "@/lib/api";
@@ -66,9 +66,9 @@ export async function POST(request: Request) {
       typeof body.type === "string" && INVESTMENT_TYPES.some((option) => option.id === body.type)
         ? body.type
         : "stock";
-    const shares = requirePositiveNumber(body.shares, "Shares");
-    const avgPriceMinor = requireNonNegativeInt(body.avgPriceMinor, "Average price");
-    const currentPriceMinor = requireNonNegativeInt(body.currentPriceMinor, "Current price");
+    const shares = requireFiniteNumber(body.shares, "Shares");
+    const avgPriceMinor = requireSignedInt(body.avgPriceMinor, "Average price");
+    const currentPriceMinor = requireSignedInt(body.currentPriceMinor, "Current price");
     const sector = normalizeSector(requireString(body.sector, "Sector", 40));
     if (!(SECTORS as readonly string[]).includes(sector)) {
       return fail("Sector must be one of the supported sectors", 400);
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     const portfolioPercent =
       body.portfolioPercent === undefined || body.portfolioPercent === null
         ? null
-        : requirePositiveNumber(body.portfolioPercent, "Portfolio percent");
+        : requireFiniteNumber(body.portfolioPercent, "Portfolio percent");
     const created = await db.investment.create({
       data: { symbol, name, type, shares, avgPriceMinor, currentPriceMinor, portfolioPercent, sector },
     });

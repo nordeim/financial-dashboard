@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { errorResponse, fail, ok, requireNonNegativeInt, safeJson } from "@/lib/api";
+import { errorResponse, fail, ok, requireSignedInt, safeJson } from "@/lib/api";
 import { ensureSeeded } from "@/lib/seed";
 
 const CATEGORIES = new Set(["Needs", "Wants", "Savings"]);
@@ -35,7 +35,7 @@ export async function PUT(request: Request) {
       if (!CATEGORIES.has(category)) {
         throw new ValidationErrorWrapper("Category must be one of Needs, Wants, Savings");
       }
-      return { category, monthlyLimitMinor: requireNonNegativeInt(entry.monthlyLimitMinor, "Monthly limit") };
+      return { category, monthlyLimitMinor: requireSignedInt(entry.monthlyLimitMinor, "Monthly limit") };
     });
     for (const entry of parsed) {
       const existing = await db.budget.findFirst({ where: { category: entry.category, subcategory: null } });

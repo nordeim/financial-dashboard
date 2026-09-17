@@ -4,7 +4,7 @@ import {
   fail,
   ok,
   requireIsoDate,
-  requireNonNegativeInt,
+  requireSignedInt,
   requireString,
   safeJson,
 } from "@/lib/api";
@@ -55,12 +55,12 @@ export async function POST(request: Request) {
     const body = await safeJson<GoalPayload>(request);
     if (!body) return fail("Invalid JSON body", 400);
     const name = requireString(body.name, "Name");
-    const targetAmountMinor = requireNonNegativeInt(body.targetAmountMinor, "Target amount");
+    const targetAmountMinor = requireSignedInt(body.targetAmountMinor, "Target amount");
     const currentAmountMinor =
-      body.currentAmountMinor === undefined ? 0 : requireNonNegativeInt(body.currentAmountMinor, "Current amount");
-    if (currentAmountMinor > targetAmountMinor) {
-      return fail("Current amount cannot exceed the target amount", 400);
-    }
+      body.currentAmountMinor === undefined ? 0 : requireSignedInt(body.currentAmountMinor, "Current amount");
+    // No current-vs-target validation (round-11 live probe: a 0-current goal
+    // with a -500 target saved fine; progress may also overshoot the target
+    // via Add Progress — the card renders Complete at 150.0%).
     const deadline = body.deadline ? requireIsoDate(body.deadline, "Deadline") : null;
     const priority =
       typeof body.priority === "string" && GOAL_PRIORITIES.some((option) => option.id === body.priority)

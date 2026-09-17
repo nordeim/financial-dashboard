@@ -24,18 +24,23 @@ export async function safeJson<T>(request: Request): Promise<T | null> {
   }
 }
 
-export function requireNonNegativeInt(value: unknown, field: string): number {
+export function requireSignedInt(value: unknown, field: string): number {
   const parsed = typeof value === "number" ? value : Number.parseInt(String(value), 10);
-  if (!Number.isInteger(parsed) || parsed < 0 || parsed > Number.MAX_SAFE_INTEGER) {
-    throw new ValidationError(`${field} must be a non-negative integer (minor units)`);
+  // Signed minor units (ADR-024, round-11 live probe): the source app's
+  // backend persists negative amounts on every entity (expense -5.50, income
+  // -100, balance -250, target -500, prices -5) — only non-integers fail.
+  if (!Number.isInteger(parsed) || Math.abs(parsed) > Number.MAX_SAFE_INTEGER) {
+    throw new ValidationError(`${field} must be an integer (minor units)`);
   }
   return parsed;
 }
 
-export function requirePositiveNumber(value: unknown, field: string): number {
+export function requireFiniteNumber(value: unknown, field: string): number {
   const parsed = typeof value === "number" ? value : Number.parseFloat(String(value));
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    throw new ValidationError(`${field} must be a positive number`);
+  // Shares/portfolio % accept negatives like the source app (round-11 probe:
+  // -10 shares and -15.5% both returned 200) — only non-numbers fail.
+  if (!Number.isFinite(parsed)) {
+    throw new ValidationError(`${field} must be a number`);
   }
   return parsed;
 }

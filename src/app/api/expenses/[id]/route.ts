@@ -32,7 +32,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
         description:
           typeof body.description === "string" && body.description.trim() ? body.description.trim() : undefined,
         amountMinor:
-          typeof body.amountMinor === "number" && Number.isInteger(body.amountMinor) && body.amountMinor >= 0
+          // Signed (ADR-024): the live backend accepts negative amounts —
+          // only non-integers fall through untouched.
+          typeof body.amountMinor === "number" && Number.isInteger(body.amountMinor)
             ? body.amountMinor
             : undefined,
         category: body.category === undefined ? undefined : String(body.category),

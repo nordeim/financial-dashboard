@@ -5,10 +5,16 @@
 
 export const MINOR_PER_UNIT = 100;
 
-/** Parse a user-entered decimal amount into integer minor units. */
+/** Parse a user-entered decimal amount into integer minor units.
+ *
+ * Signed by design (ADR-024, round-11 live probe): the source app's number
+ * inputs carry no `min` and its backend persists negative amounts (a -5.50
+ * expense rendered `--$5.50` on the live row) — negatives convert, only
+ * non-finite values are invalid.
+ */
 export function toMinorUnits(input: string | number): number {
   const parsed = typeof input === "number" ? input : Number.parseFloat(input);
-  if (!Number.isFinite(parsed) || parsed < 0) {
+  if (!Number.isFinite(parsed)) {
     throw new RangeError(`Invalid monetary amount: ${String(input)}`);
   }
   return Math.round(parsed * MINOR_PER_UNIT);
@@ -28,7 +34,9 @@ export function formatMoney(
   });
   const formatted = formatter.format(Math.abs(amountMinor) / MINOR_PER_UNIT);
   if (signed && amountMinor > 0) return `+${formatted}`;
-  if (amountMinor < 0) return `-${formatted}`;
+  // -0 keeps its sign like the live app's direct Intl rendering (a
+  // negative-shares/zero-price holding shows "-$0.00" — round-11 probe).
+  if (amountMinor < 0 || Object.is(amountMinor, -0)) return `-${formatted}`;
   return formatted;
 }
 

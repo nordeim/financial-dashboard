@@ -3,7 +3,7 @@ import {
   errorResponse,
   fail,
   ok,
-  requireNonNegativeInt,
+  requireSignedInt,
   requireString,
   safeJson,
 } from "@/lib/api";
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       return fail("Type must be one of checking, savings, credit-card, investment, other", 400);
     }
     const institution = requireString(body.institution, "Institution");
-    const balanceMinor = requireNonNegativeInt(body.balanceMinor, "Balance");
+    const balanceMinor = requireSignedInt(body.balanceMinor, "Balance");
     const created = await db.account.create({ data: { name, type, institution, balanceMinor } });
     return ok(toDto(created), 201);
   } catch (error) {

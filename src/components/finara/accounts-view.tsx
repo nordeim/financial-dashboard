@@ -264,7 +264,6 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
                 id="manual_balance"
                 type="number"
                 inputMode="decimal"
-                min="0"
                 step="0.01"
                 value={form.balance}
                 onChange={(event) => setForm((current) => ({ ...current, balance: event.target.value }))}

@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { errorResponse, fail, ok, requireNonNegativeInt, safeJson } from "@/lib/api";
+import { errorResponse, fail, ok, requireSignedInt, safeJson } from "@/lib/api";
 import { ACCOUNT_TYPES, normalizeAccountType } from "@/lib/categories";
 
 interface AccountPatch {
@@ -32,7 +32,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
         type: body.type === undefined ? undefined : String(body.type),
         institution:
           typeof body.institution === "string" && body.institution.trim() ? body.institution.trim() : undefined,
-        balanceMinor: body.balanceMinor === undefined ? undefined : requireNonNegativeInt(body.balanceMinor, "Balance"),
+        balanceMinor: body.balanceMinor === undefined ? undefined : requireSignedInt(body.balanceMinor, "Balance"),
         lastSyncedAt: new Date(),
       },
     });

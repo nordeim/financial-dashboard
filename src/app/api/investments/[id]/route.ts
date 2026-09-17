@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { errorResponse, fail, ok, requireNonNegativeInt, requirePositiveNumber, safeJson } from "@/lib/api";
+import { errorResponse, fail, ok, requireSignedInt, requireFiniteNumber, safeJson } from "@/lib/api";
 import { INVESTMENT_TYPES, SECTORS, normalizeSector } from "@/lib/categories";
 
 interface InvestmentPatch {
@@ -41,17 +41,17 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
             : String(body.symbol).toUpperCase().slice(0, 12) || existing.symbol,
         name: typeof body.name === "string" && body.name.trim() ? body.name.trim().slice(0, 120) : undefined,
         type: body.type === undefined ? undefined : String(body.type),
-        shares: body.shares === undefined ? undefined : requirePositiveNumber(body.shares, "Shares"),
+        shares: body.shares === undefined ? undefined : requireFiniteNumber(body.shares, "Shares"),
         avgPriceMinor:
-          body.avgPriceMinor === undefined ? undefined : requireNonNegativeInt(body.avgPriceMinor, "Average price"),
+          body.avgPriceMinor === undefined ? undefined : requireSignedInt(body.avgPriceMinor, "Average price"),
         currentPriceMinor:
           body.currentPriceMinor === undefined
             ? undefined
-            : requireNonNegativeInt(body.currentPriceMinor, "Current price"),
+            : requireSignedInt(body.currentPriceMinor, "Current price"),
         portfolioPercent:
           body.portfolioPercent === undefined || body.portfolioPercent === null
             ? undefined
-            : requirePositiveNumber(body.portfolioPercent, "Portfolio percent"),
+            : requireFiniteNumber(body.portfolioPercent, "Portfolio percent"),
         sector: body.sector === undefined ? undefined : String(body.sector),
       },
     });

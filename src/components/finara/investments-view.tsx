@@ -97,13 +97,18 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    // Live carries no positivity gate (round-11 probe: -10 shares / -5 avg
+    // cost / empty current price / -15.5% portfolio all saved with 200) —
+    // only NaN (unreachable through the native number inputs + required)
+    // is defended against so a NaN never reaches the payload.
     const shares = Number.parseFloat(form.shares);
     const avgPrice = Number.parseFloat(form.avgPrice);
-    const currentPrice = Number.parseFloat(form.currentPrice);
-    if (!(shares > 0) || !(avgPrice > 0) || !(currentPrice > 0)) {
-      toast({ title: "Shares and prices must be positive numbers", variant: "destructive" });
+    if (!Number.isFinite(shares) || !Number.isFinite(avgPrice)) {
+      toast({ title: "Enter valid shares and cost", variant: "destructive" });
       return;
     }
+    // Empty current price stores 0 like the live app.
+    const currentPrice = form.currentPrice ? Number.parseFloat(form.currentPrice) : 0;
     const portfolioPercent = form.portfolioPercent ? Number.parseFloat(form.portfolioPercent) : null;
     setSubmitting(true);
     const payload = {
@@ -113,7 +118,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
       shares,
       avgPriceMinor: Math.round(avgPrice * 100),
       currentPriceMinor: Math.round(currentPrice * 100),
-      portfolioPercent: portfolioPercent != null && portfolioPercent > 0 ? portfolioPercent : null,
+      portfolioPercent: portfolioPercent != null && Number.isFinite(portfolioPercent) ? portfolioPercent : null,
       sector: form.sector,
     };
     const result = editing
@@ -399,8 +404,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                   id="shares"
                   type="number"
                   inputMode="decimal"
-                  min="0"
-                  step="0.0001"
+                  step="0.01"
                   value={form.shares}
                   onChange={(event) => setForm((current) => ({ ...current, shares: event.target.value }))}
                   placeholder="0"
@@ -413,7 +417,6 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                   id="purchase_price"
                   type="number"
                   inputMode="decimal"
-                  min="0"
                   step="0.01"
                   value={form.avgPrice}
                   onChange={(event) => setForm((current) => ({ ...current, avgPrice: event.target.value }))}
@@ -425,16 +428,17 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="current_price">Current Price</Label>
+                {/* Live: current price is OPTIONAL (an empty field stores 0
+                    — round-11 probe: a -10-share holding saved with an empty
+                    current price and rendered $0.00). */}
                 <Input
                   id="current_price"
                   type="number"
                   inputMode="decimal"
-                  min="0"
                   step="0.01"
                   value={form.currentPrice}
                   onChange={(event) => setForm((current) => ({ ...current, currentPrice: event.target.value }))}
                   placeholder="0.00"
-                  required
                 />
               </div>
               <div className="space-y-2">
@@ -443,8 +447,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                   id="portfolio_percentage"
                   type="number"
                   inputMode="decimal"
-                  min="0"
-                  step="0.01"
+                  step="0.1"
                   value={form.portfolioPercent}
                   onChange={(event) => setForm((current) => ({ ...current, portfolioPercent: event.target.value }))}
                   placeholder="—"

@@ -4,7 +4,7 @@ import {
   fail,
   ok,
   requireIsoDate,
-  requireNonNegativeInt,
+  requireSignedInt,
   requireString,
   safeJson,
 } from "@/lib/api";
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     const body = await safeJson<IncomePayload>(request);
     if (!body) return errorResponse(new Error("Invalid JSON body"));
     const name = requireString(body.name, "Name");
-    const amountMinor = requireNonNegativeInt(body.amountMinor, "Amount");
+    const amountMinor = requireSignedInt(body.amountMinor, "Amount");
     const frequency = requireString(body.frequency, "Frequency", 20);
     if (!(INCOME_FREQUENCIES as readonly string[]).includes(frequency)) {
       return fail("Frequency must be one of monthly, weekly, biweekly, annual", 400);
