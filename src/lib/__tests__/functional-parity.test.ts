@@ -336,3 +336,57 @@ describe("source contracts: settings propagation (F6)", () => {
     expect(src.addTransaction).not.toContain("+ USD{units}");
   });
 });
+
+describe("theme lifecycle (round 10 F1/F3 — live-probed sign-out/sign-in/toggle flows)", () => {
+  const themeModule = read("src/components/finara/theme.ts");
+  const finaraApp = read("src/components/finara/finara-app.tsx");
+  const sidebar = read("src/components/finara/sidebar.tsx");
+  const settingsRoute = read("src/app/api/settings/route.ts");
+  const schema = read("prisma/schema.prisma");
+  const globals = read("src/app/globals.css");
+
+  it("theme.ts exposes resetTheme() that applies light and clears the stored key (live sign-out semantics)", () => {
+    expect(themeModule).toContain("export function resetTheme");
+    // the reset must remove the persisted key and apply light in-memory,
+    // WITHOUT re-persisting (the live key stays absent until the next toggle)
+    expect(themeModule).toMatch(/function resetTheme[\s\S]*?localStorage\.removeItem\(STORAGE_KEY\)/);
+    expect(themeModule).toMatch(/function resetTheme[\s\S]*?applyThemeClass\("light"\)/);
+  });
+
+  it("handleSignOut resets the theme (single seam covers user-menu + mobile-drawer paths)", () => {
+    expect(finaraApp).toMatch(/handleSignOut[\s\S]{0,400}resetTheme\(\)/);
+  });
+
+  it("handleSignIn applies the fetched server theme (live User.theme hydration)", () => {
+    expect(finaraApp).toMatch(/handleSignIn[\s\S]{0,900}\/api\/settings/);
+    expect(finaraApp).toMatch(/handleSignIn[\s\S]{0,900}setTheme/);
+  });
+
+  it("both theme toggle call sites persist the theme server-side (fire-and-forget PUT)", () => {
+    // The two ARROW call sites (user-menu item + mobile top-bar button); the
+    // function definition line does not match this pattern.
+    const toggleSites = sidebar.match(/=> toggleThemeAndPersist\(\)/g) ?? [];
+    expect(toggleSites.length).toBe(2);
+    expect(sidebar).toMatch(/function toggleThemeAndPersist[\s\S]*?toggleTheme\(\)/);
+    expect(sidebar).toMatch(/function toggleThemeAndPersist[\s\S]*?\/api\/settings/);
+  });
+
+  it("the settings API round-trips the theme with enum validation and a light default", () => {
+    expect(settingsRoute).toMatch(/theme:\s*"light"/);
+    expect(settingsRoute).toMatch(/[\"']light[\"'],\s*[\"']dark[\"']/);
+    expect(settingsRoute).toMatch(/body\.theme/);
+  });
+
+  it("the mobile menu icon swaps Menu↔X with the drawer (live: lucide-menu ⇄ lucide-x w-5 h-5)", () => {
+    expect(sidebar).toMatch(/menuOpen\s*\?\s*<X className="w-5 h-5"/);
+    expect(sidebar).toMatch(/<Menu className="w-5 h-5"/);
+  });
+
+  it("globals.css carries the corrected neutral primary tokens (round-10 variable-level probe)", () => {
+    expect(globals).toMatch(/--primary:\s*#171717;/);
+    expect(globals).toMatch(/--primary-foreground:\s*#fafafa;/);
+    expect(globals).toMatch(/--ring:\s*#d4d4d4;/);
+    expect(globals).toMatch(/--destructive:\s*#7f1d1d;/);
+    expect(globals).toMatch(/--destructive-foreground:\s*#fafafa;/);
+  });
+});
