@@ -53,9 +53,12 @@ export async function POST(request: Request) {
         errors.push({ row: index + 1, error: "Missing description" });
         return;
       }
+      // Round-12 (ADR-024): amounts are SIGNED minor units end-to-end — the
+      // live entity APIs accept negatives (round-11 probes), so the rows
+      // mode keeps only the integer-shape guard, never the sign.
       const amountMinor =
         typeof row.amountMinor === "number" && Number.isInteger(row.amountMinor) ? row.amountMinor : null;
-      if (amountMinor === null || amountMinor < 0) {
+      if (amountMinor === null) {
         errors.push({ row: index + 1, error: "Invalid amount" });
         return;
       }

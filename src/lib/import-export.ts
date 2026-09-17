@@ -126,7 +126,9 @@ function intMinor(value: unknown): number | null {
  * as plain decimals (`4.5`, `5000`), unlike the clone's integer minor units.
  */
 function decimalMinor(value: unknown): number | null {
-  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) return null;
+  // Round-12 (ADR-024): signed amounts — negatives restore like any other
+  // row (the live entity APIs accept them; round-11 probes).
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
   return Math.round(value * 100);
 }
 
