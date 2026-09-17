@@ -28,7 +28,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { VIEW_PATHS } from "@/lib/routes";
 import { getServerTheme, getThemeSnapshot, subscribeTheme, toggleTheme, type Theme } from "@/components/finara/theme";
 
 // Source-exact nav items (icons verified against the live sidebar DOM 2026-09-15).
@@ -74,13 +76,15 @@ function BrandMark({ compact = false }: { compact?: boolean }) {
   );
 }
 
-/** "Synced" status badge with wifi glyph (live-exact outline style). */
+/** "Synced" status badge (round 8 re-pin): the live app renders the Badge
+ *  component + `gap-1 text-green-600 border-green-300 dark:*` tail — base
+ *  classes first, usage tail last (plan F14). */
 function SyncedBadge() {
   return (
-    <div className="inline-flex items-center gap-1 rounded-md border border-green-300 px-2.5 py-0.5 text-xs font-semibold text-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:border-green-600 dark:text-green-400">
+    <Badge className="gap-1 text-green-600 border-green-300 dark:text-green-400 dark:border-green-600">
       <Wifi className="w-3 h-3" aria-hidden />
       Synced
-    </div>
+    </Badge>
   );
 }
 
@@ -133,7 +137,9 @@ function UserMenu({
 }
 
 /** Live nav item anatomy: plain anchor wrapping a div (tabindex=0) that
- * carries the pill classes — no ul/li, no span. */
+ * carries the pill classes — no ul/li, no span. Round 8: the anchors point
+ * at the REAL live routes (the SPA intercepts the click, plan F10), and the
+ * padding classes sit between gap-3 and rounded-xl (live order, F15). */
 function NavItem({
   item,
   active,
@@ -147,7 +153,7 @@ function NavItem({
 }) {
   return (
     <Link
-      href="/"
+      href={VIEW_PATHS[item.id]}
       onClick={(event) => {
         event.preventDefault();
         onNavigate(item.id);
@@ -157,12 +163,14 @@ function NavItem({
       <div
         tabIndex={0}
         className={cn(
-          "flex items-center gap-3 rounded-xl font-medium transition-all duration-200",
+          "flex items-center gap-3",
           compact ? "px-4 py-4" : "px-4 py-3",
+          "rounded-xl font-medium transition-all duration-200",
           active
             ? cn(
-                "border border-emerald-400/30 bg-emerald-500/20 text-white shadow-lg",
-                // Desktop active pill carries the blur; the mobile drawer's does not (live-verified).
+                // Live active-pill order (F15): bg, text, shadow, border — and
+                // the desktop pill alone carries the blur.
+                "bg-emerald-500/20 text-white shadow-lg border border-emerald-400/30",
                 compact ? undefined : "backdrop-blur-sm",
               )
             : "text-slate-300 hover:bg-white/10 hover:text-white",
@@ -182,7 +190,8 @@ export function Sidebar({
   userEmail,
   onSignOut,
 }: {
-  active: ViewId;
+  /** Round 8: `/` renders the dashboard with NO active pill (plan F10). */
+  active: ViewId | null;
   onNavigate: (view: ViewId) => void;
   userName: string;
   userEmail: string;
@@ -217,7 +226,7 @@ export function MobileTopNav({
   onToggleMenu,
   onSignOut,
 }: {
-  active: ViewId;
+  active: ViewId | null;
   onNavigate: (view: ViewId) => void;
   menuOpen: boolean;
   onToggleMenu: () => void;
@@ -234,10 +243,12 @@ export function MobileTopNav({
 
   return (
     <div>
-      <div className="fixed left-0 right-0 top-0 z-50 border-b border-neutral-200 bg-white/95 backdrop-blur-sm lg:hidden dark:border-gray-700 dark:bg-gray-900/95">
-        <div className="flex h-16 items-center justify-between px-4">
+      {/* Round 8 (F14): live mobile-header orders — container, inner row,
+          brand tile, and the two ghost buttons (theme w-8 h-8, menu h-9 w-9). */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-neutral-200 dark:border-gray-700">
+        <div className="flex items-center justify-between h-16 px-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500">
+            <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
               <DollarSign className="w-5 h-5 text-white" aria-hidden />
             </div>
             <h2 className="text-lg font-bold text-primary-navy dark:text-white">Finara</h2>
@@ -249,7 +260,7 @@ export function MobileTopNav({
               size="icon"
               onClick={() => toggleTheme()}
               aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-              className="h-8 w-8 text-gray-700 dark:text-gray-300"
+              className="w-8 h-8 text-gray-700 dark:text-gray-300"
             >
               {isDark ? <Sun className="w-4 h-4" aria-hidden /> : <Moon className="w-4 h-4" aria-hidden />}
             </Button>
@@ -270,10 +281,10 @@ export function MobileTopNav({
       {menuOpen ? (
         <div
           id="mobile-nav-menu"
-          className="fixed inset-0 z-40 bg-slate-800 lg:hidden dark:bg-gray-900"
+          className="lg:hidden fixed inset-0 z-40 bg-slate-800 dark:bg-gray-900"
         >
-          <div className="flex h-full flex-col pt-20">
-            <nav className="flex-1 space-y-2 px-4 py-6">
+          <div className="flex flex-col h-full pt-20">
+            <nav className="flex-1 px-4 py-6 space-y-2">
               {NAV_ITEMS.map((item) => (
                 <NavItem key={item.id} item={item} active={item.id === active} onNavigate={handleNavigate} compact />
               ))}
