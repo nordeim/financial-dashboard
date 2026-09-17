@@ -23,7 +23,7 @@ Finara solves the "where did my money go?" problem with a single, real-time surf
 | 🧭 **Analytics** | 3/6/12-month windows with From/To date pickers, segmented 4-tab control (Overview/Expenses/Income/Investments), windowed monthly averages, income vs expenses trend, category donuts, sector allocation (Income tab renders empty, mirroring a verified source quirk) |
 | 🤖 **AI Coach & Insights** | Chat grounded in your live financial snapshot; dashboard insight cards with deterministic fallback |
 | 🔐 **GDPR Export & Restore** | One-click full JSON export; Settings page round-trips a Finara export file back into the database (finara-export import mode) |
-| 🧪 **Unit Tests** | Vitest suite (156 tests) covering money math, taxonomy, KPI computation (incl. income activity categories), filters, date formats, export normalization, source-exact UI maps, quick-select tile labels, the pinned shadcn primitive class sets, the live-probed semantic design tokens, the login-page class sets, and the round-7 dialog form-body + icon-order source contracts |
+| 🧪 **Unit Tests** | Vitest suite (210 tests) covering money math, taxonomy, KPI computation (incl. income activity categories), filters, date formats, export normalization, source-exact UI maps, quick-select tile labels, the pinned shadcn primitive class sets, the live-probed semantic design tokens, the login-page class sets, and the round-7 dialog form-body + icon-order source contracts |
 | 🌙 **Responsive** | Sidebar on desktop, full-screen mobile drawer with Synced badge; WCAG-minded focus states and aria labels; staggered CSS entrance animations (`prefers-reduced-motion` safe) |
 
 ## Architecture
@@ -73,7 +73,7 @@ Requires **Bun ≥ 1.3** (or Node.js ≥ 20 with npm — commands below use `bun
 
 - `bun run lint` → exits 0, no output.
 - `bun run typecheck` → exits 0, no output.
-- `bun run test` → 156 tests passing (Vitest).
+- `bun run test` → 210 tests passing (Vitest).
 - First visit to any API route (e.g. the dashboard) auto-seeds a six-month demo history: 4 accounts, 4 income sources, ~96 expenses, 3 budgets, 3 goals, 8 holdings. Seeding is idempotent and concurrency-safe (DB-level unique-key lock + completion marker).
 
 ## Demo Credentials
@@ -102,7 +102,7 @@ financial-dashboard/
 │   └── 📂 lib/                            # money, categories, types, analytics, seed, api,
 │                                          # dashboard-kpis, expense-filters, date-format,
 │                                          # import-export, ui-maps (pure domain modules, TDD)
-│                                          # + __tests__/ (Vitest, 156 tests)
+│                                          # + __tests__/ (Vitest, 210 tests)
 ├── 📂 prisma/
 │   └── 📄 schema.prisma                   # 7 models, money as integer minor units
 ├── 📂 db/                                 # SQLite runtime storage (gitignored)
