@@ -30,6 +30,23 @@ describe("countActiveFilters (badge)", () => {
     expect(countActiveFilters(defaultExpenseFilters())).toBe(2);
   });
 
+  it("defaults the min filter to UNSET so negative rows render (round 11: live shows them)", () => {
+    // Live probe: a -5.50 expense appeared in the default Expenses list
+    // immediately after submit (the min input's "0.00" is a PLACEHOLDER,
+    // not a value) — a default minMinor of 0 silently filtered negatives.
+    expect(defaultExpenseFilters().minMinor).toBe(null);
+    const negativeRow = {
+      id: "neg",
+      description: "Probe",
+      amountMinor: -550,
+      category: "Needs",
+      subcategory: "other",
+      date: new Date().toISOString(),
+    };
+    const visible = applyExpenseFilters([negativeRow], defaultExpenseFilters(), new Date());
+    expect(visible.map((r) => r.id)).toContain("neg");
+  });
+
   it("counts every non-default control", () => {
     const filters: ExpenseFilters = {
       ...defaultExpenseFilters(),

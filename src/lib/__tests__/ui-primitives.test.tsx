@@ -11,6 +11,8 @@
  * content) are covered by the browser E2E pass instead — they do not render
  * under `renderToStaticMarkup` without an open portal.
  */
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import * as React from "react";
@@ -289,5 +291,37 @@ describe("DialogContent card base (round-6, ADR-019)", () => {
     expect(base).not.toContain("relative");
     // The merged default width stays max-w-2xl (Add Expense); callers narrow it.
     expect(base).toContain("max-w-2xl");
+  });
+});
+
+describe("Select popup source contracts (round-11 live capture — portal surfaces)", () => {
+  // The popup (SelectContent/Viewport/Item) renders through a Radix portal and
+  // cannot be captured under renderToStaticMarkup — the round-4 header comment
+  // delegated these to the browser E2E pass. Round 11 captured the live popup
+  // DOM (Settings currency dropdown, 2026-09-17) and these source pins lock
+  // the class sets so the primitive cannot drift.
+  const selectSource = readFileSync(join(process.cwd(), "src/components/ui/select.tsx"), "utf8");
+
+  it("SelectContent renders the live classic set incl. popper translate classes", () => {
+    expect(selectSource).toContain(
+      "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+    );
+    expect(selectSource).toContain(
+      '"data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1"',
+    );
+  });
+
+  it("the viewport renders p-1 plus the popper trigger-height/width vars", () => {
+    expect(selectSource).toContain(
+      '"h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"',
+    );
+  });
+
+  it("SelectItem keeps the classic anatomy (focus:bg-accent, absolute check indicator)", () => {
+    expect(selectSource).toContain(
+      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+    );
+    expect(selectSource).toContain('"absolute right-2 flex h-3.5 w-3.5 items-center justify-center"');
+    expect(selectSource).toContain('<Check className="h-4 w-4" />');
   });
 });

@@ -404,7 +404,9 @@ describe("investments view (F2/F4/F5/F9)", () => {
 
 describe("goals view (F2/F5/F9)", () => {
   it("cards + progress track orders", () => {
-    expect(src.goals).toContain('className={CARD_HOVER}');
+    // Round-11: complete cards merge the emerald ring onto CARD_HOVER
+    // (live-probed post-reload at 100% and 150%).
+    expect(src.goals).toContain('className={cn(CARD_HOVER, complete && "ring-2 ring-emerald-200 dark:ring-emerald-700")}');
     expect(src.goals).toContain(
       'fade-in-up grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8',
     );

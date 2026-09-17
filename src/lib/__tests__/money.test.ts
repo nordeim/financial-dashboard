@@ -8,8 +8,16 @@ describe("toMinorUnits", () => {
     expect(toMinorUnits(12.99)).toBe(1299);
   });
 
-  it("rejects negative, NaN and non-finite input", () => {
-    expect(() => toMinorUnits("-1")).toThrow();
+  it("converts negative decimals to negative minor units (round 11: live accepts negative amounts)", () => {
+    // Live-probed 2026-09-17: the live app's number inputs carry no `min`
+    // and its backend persists -5.50 expenses / -100 income (round-11 plan
+    // §B F2) — the conversion seam must not reject negatives.
+    expect(toMinorUnits("-1")).toBe(-100);
+    expect(toMinorUnits(-12.99)).toBe(-1299);
+    expect(toMinorUnits("-5.5")).toBe(-550);
+  });
+
+  it("rejects NaN and non-finite input", () => {
     expect(() => toMinorUnits("abc")).toThrow();
     expect(() => toMinorUnits(Number.NaN)).toThrow();
     expect(() => toMinorUnits(Number.POSITIVE_INFINITY)).toThrow();
@@ -24,6 +32,14 @@ describe("formatMoney", () => {
 
   it("renders negative amounts with a leading minus", () => {
     expect(formatMoney(-450)).toBe("-$4.50");
+  });
+
+  it("renders negative zero with the minus (round 11: live Intl behavior)", () => {
+    // Live-probed: an investment with negative shares and a 0 current price
+    // renders its value column as "-$0.00" (Intl formats -0 signed; the
+    // Math.abs + manual-sign path must special-case -0).
+    expect(formatMoney(-0)).toBe("-$0.00");
+    expect(formatMoney(0)).toBe("$0.00");
   });
 
   it("renders positive amounts with a plus when signed", () => {

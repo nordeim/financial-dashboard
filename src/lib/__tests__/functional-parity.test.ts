@@ -390,3 +390,138 @@ describe("theme lifecycle (round 10 F1/F3 — live-probed sign-out/sign-in/toggl
     expect(globals).toMatch(/--destructive-foreground:\s*#fafafa;/);
   });
 });
+
+describe("round 11 F1: chart tooltip style (live renders a borderless ghost tooltip)", () => {
+  it("replicates the live's effective rendering: transparent bg, NO border, inherited text", () => {
+    // Corrected round-11 evidence (computed-style probe + pixel crop, both
+    // themes): the live's tokens are raw HSL triples (Tailwind v3
+    // convention), so its inline var() color refs are defined-but-INVALID —
+    // background computes transparent, the border SHORTHAND invalidates
+    // entirely (computed style none / width 0 — no border renders), and
+    // color inherits. The live tooltip is a pure borderless text overlay
+    // (#fafafa text on dark, #0a0a0a on light, 8px radius, 16px font).
+    // The clone replicates that effective rendering directly.
+    expect(src.analyticsView).toContain('backgroundColor: "transparent"');
+    expect(src.analyticsView).toContain('border: "none"');
+    expect(src.analyticsView).toContain("borderRadius: 8");
+    expect(src.analyticsView).not.toContain('color: "var(--foreground');
+    expect(src.analyticsView).not.toContain('backgroundColor: "var(--background');
+  });
+
+  it("drops the old hardcoded slate border, radius 12 and fontSize 12", () => {
+    expect(src.analyticsView).not.toContain("#E2E8F0");
+    expect(src.analyticsView).not.toContain("borderRadius: 12");
+    expect(src.analyticsView).not.toContain("fontSize: 12");
+  });
+
+  it("renders exactly ONE legend — the Overview chart, bare, no icon override (round-11 probe)", () => {
+    // Live legend census: Overview 1 legend (16px inherited, default icon);
+    // Expenses tab 0/2 charts; Investments tab 0/1 chart.
+    expect(src.analyticsView.match(/<Legend/g)?.length ?? 0).toBe(1);
+    expect(src.analyticsView).toContain("<Legend />");
+    expect(src.analyticsView).not.toContain("iconType");
+    expect(src.analyticsView).not.toContain("wrapperStyle");
+  });
+});
+
+describe("round 11 F2: negative-amount acceptance (live accepts at every layer)", () => {
+  const filtersPanel = read("src/components/finara/expense-filters-panel.tsx");
+  const apiLib = read("src/lib/api.ts");
+  const routes = {
+    accounts: read("src/app/api/accounts/route.ts"),
+    accountsId: read("src/app/api/accounts/[id]/route.ts"),
+    budgets: read("src/app/api/budgets/route.ts"),
+    expenses: read("src/app/api/expenses/route.ts"),
+    expensesId: read("src/app/api/expenses/[id]/route.ts"),
+    goals: read("src/app/api/goals/route.ts"),
+    goalsId: read("src/app/api/goals/[id]/route.ts"),
+    income: read("src/app/api/income/route.ts"),
+    incomeId: read("src/app/api/income/[id]/route.ts"),
+    investments: read("src/app/api/investments/route.ts"),
+    investmentsId: read("src/app/api/investments/[id]/route.ts"),
+  };
+
+  it("numeric inputs carry no min attribute (live: no min on any form)", () => {
+    const viewSources: [string, string][] = [
+      ["accountsView", src.accountsView],
+      ["addTransaction", src.addTransaction],
+      ["filtersPanel", filtersPanel],
+      ["goalsView", src.goalsView],
+      ["incomeView", src.incomeView],
+      ["investmentsView", src.investmentsView],
+    ];
+    for (const [name, source] of viewSources) {
+      expect(source, name).not.toContain('min="0"');
+    }
+  });
+
+  it("toMinorUnits converts negatives instead of throwing", () => {
+    expect(src.money).not.toContain("parsed < 0");
+  });
+
+  it("the API guards are signed (requireSignedInt/requireFiniteNumber), not non-negative", () => {
+    expect(apiLib).toContain("export function requireSignedInt");
+    expect(apiLib).toContain("export function requireFiniteNumber");
+    expect(apiLib).not.toContain("requireNonNegativeInt");
+    expect(apiLib).not.toContain("requirePositiveNumber");
+  });
+
+  it("every amount route validates through the signed guards", () => {
+    for (const [name, source] of Object.entries(routes)) {
+      expect(source, name).not.toContain("requireNonNegativeInt");
+      expect(source, name).not.toContain("requirePositiveNumber");
+    }
+    expect(routes.expensesId).not.toContain(">= 0");
+  });
+
+  it("investment form matches the live attrs: shares step 0.01, optional current price, portfolio step 0.1", () => {
+    const shares = src.investmentsView.match(/id="shares"[\s\S]{0,220}/)?.[0] ?? "";
+    expect(shares).toContain('step="0.01"');
+    const current = src.investmentsView.match(/id="current_price"[\s\S]{0,260}/)?.[0] ?? "";
+    expect(current).not.toContain("required");
+    const portfolio = src.investmentsView.match(/id="portfolio_percentage"[\s\S]{0,240}/)?.[0] ?? "";
+    expect(portfolio).toContain('step="0.1"');
+  });
+
+  it("goal POST applies no current-vs-target validation (live: 0 current with -500 target saved)", () => {
+    const goalsRoute = read("src/app/api/goals/route.ts");
+    expect(goalsRoute).not.toContain("cannot exceed");
+    expect(goalsRoute).not.toContain("currentAmountMinor > targetAmountMinor");
+  });
+
+  it("goal PATCH never caps contributions (live: 150 current on a 100 target renders Complete 150.0%)", () => {
+    const goalsIdRoute = read("src/app/api/goals/[id]/route.ts");
+    expect(goalsIdRoute).not.toContain("Math.min");
+  });
+
+  it("negative progress contributions stay a silent no-op (live: PUT 200, current unchanged)", () => {
+    const goalsIdRoute = read("src/app/api/goals/[id]/route.ts");
+    expect(goalsIdRoute).toContain("contribution > 0");
+  });
+
+  it("goal Complete state: progress-based emerald badge + card ring; Add Progress removed (live re-probe at 100% and 150%)", () => {
+    // Round-11 corrected evidence (post-reload, settled server state — the
+    // earlier "button stays enabled" reading came from a transient pre-refresh
+    // DOM): at progress >= 100 the live card gains
+    // ring-2 ring-emerald-200 dark:ring-emerald-700, the badge row gains a
+    // default-variant Badge with the emerald palette + lucide circle-check-big
+    // w-3 h-3 mr-1 icon, and the Add Progress button is REMOVED entirely.
+    expect(src.goalsView).toContain("const complete = progress >= 100;");
+    expect(src.goalsView).toContain(
+      "bg-emerald-100 text-emerald-800 dark:bg-emerald-700 dark:text-emerald-100"
+    );
+    expect(src.goalsView).toContain("CircleCheckBig");
+    expect(src.goalsView).toContain('"w-3 h-3 mr-1"');
+    expect(src.goalsView).toContain("ring-2 ring-emerald-200 dark:ring-emerald-700");
+    expect(src.goalsView).toContain("{!complete && (");
+    expect(src.goalsView).not.toContain("disabled={complete}");
+    expect(src.goalsView).not.toContain("Goal reached");
+  });
+
+  it("investment submit has no positivity gate; empty current price falls back to 0; portfolio % passes through", () => {
+    expect(src.investmentsView).not.toContain("must be positive");
+    expect(src.investmentsView).not.toMatch(/!\(shares > 0\)/);
+    expect(src.investmentsView).toMatch(/form\.currentPrice\s*\?/);
+    expect(src.investmentsView).not.toContain("portfolioPercent != null && portfolioPercent > 0");
+  });
+});
