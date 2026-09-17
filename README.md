@@ -14,16 +14,16 @@ Finara solves the "where did my money go?" problem with a single, real-time surf
 |---------|--------------|
 | 📊 **Financial Dashboard** | Monthly income/expenses/net/balance KPIs with source-parity emerald trend chips, savings goal progress, largest expense category, active goals, 50/30/20 budget overview with colored-dot rows, arrow-icon recent activity, AI insights, bottom quick-action links, floating action button (FAB) that opens a two-step **Quick Add** chooser and rotates its plus into an X while open |
 | 🌙 **Dark Mode** | User-menu toggle + mobile sun/moon button; persists via `localStorage` theme store; full dark palette across all 9 views, dialogs, and the login card |
-| 💸 **Expenses** | Emoji quick-select modal, quick-add amount chips, Needs/Wants/Savings segmented tabs, search, collapsible Filters panel (date-range presets, category, min/max amount, sort), bulk select + bulk edit/delete, row edit dialog, native `confirm()` deletes, 10-row pagination, FAB |
+| 💸 **Expenses** | Emoji quick-select modal, currency-following quick-add chips, Needs/Wants/Savings segmented tabs, search, collapsible Filters panel (date-range presets, category, min/max amount, sort), blue bulk bar (Select All / inert Bulk Edit / delete), row edit dialog, native `confirm()` deletes, all filtered rows render (no pagination — live parity), FAB |
 | 💰 **Income Sources** | Emerald hero card with monthly total, per-source frequency (monthly/weekly/bi-weekly/annual) normalized to monthly equivalents, income categories (primary/secondary/passive/other), active toggle, edit dialog, native `confirm()` deletes |
 | 🏦 **Accounts** | Checking/savings/credit-card/investment/other accounts with live-exact type icons (banknote/landmark/building), balance block layout, edit + delete with native `confirm()`, and an Import Transactions link |
 | 📈 **Investments** | Holdings by type (stock/ETF/bond/crypto/mutual fund) with portfolio %, gradient portfolio-value/gain KPI cards, sector allocation as a fixed-color dot list (colors verified per sector name), edit + delete with native `confirm()` |
 | 🎯 **Savings Goals** | Purple-gradient tiles with live-exact category emoji (🛡️ ✈️ 🏠 🚗 🎓 🏖️ 🎯), priority badges (red/yellow/green), progress bars, deadlines, one-click Add Progress |
 | 📥 **CSV Import** | Source-parity 3-step flow: upload → Upload and Extract (with Extracting… state) → review with smart category guessing → import; live-shaped error card with Start New Import retry |
-| 🧭 **Analytics** | 3/6/12-month windows with From/To date pickers, segmented 4-tab control (Overview/Expenses/Income/Investments), windowed monthly averages, income vs expenses trend, category donuts, sector allocation (Income tab renders empty, mirroring a verified source quirk) |
+| 🧭 **Analytics** | 3/6/12-month windows, segmented 4-tab control (Overview/Expenses/Income/Investments), windowed monthly averages, income vs expenses trend, category donuts, sector allocation, all-transaction CSV export (`financial-report-<date>.csv` — live parity); From/To date inputs render but are inert (verified source quirk), Income tab renders empty (verified source quirk) |
 | 🤖 **AI Coach & Insights** | Chat grounded in your live financial snapshot; dashboard insight cards with deterministic fallback |
 | 🔐 **GDPR Export & Restore** | One-click full JSON export; Settings page round-trips a Finara export file back into the database (finara-export import mode) |
-| 🧪 **Unit Tests** | Vitest suite (210 tests) covering money math, taxonomy, KPI computation (incl. income activity categories), filters, date formats, export normalization, source-exact UI maps, quick-select tile labels, the pinned shadcn primitive class sets, the live-probed semantic design tokens, the login-page class sets, and the round-7 dialog form-body + icon-order source contracts |
+| 🧪 **Unit Tests** | Vitest suite (242 tests) covering money math, taxonomy, KPI computation (incl. income activity categories), filters, date formats, export normalization (incl. the live snake_case GDPR shape), source-exact UI maps, quick-select tile labels, the pinned shadcn primitive class sets, the live-probed semantic design tokens, the login-page class sets, the round-7 dialog form-body + icon-order source contracts, the round-8 view-surface order contracts, and the round-9 functional-parity contracts (settings propagation, export shapes, inert From/To, import error card, AI-coach orders) |
 | 🌙 **Responsive** | Sidebar on desktop, full-screen mobile drawer with Synced badge; WCAG-minded focus states and aria labels; staggered CSS entrance animations (`prefers-reduced-motion` safe) |
 
 ## Architecture
@@ -73,7 +73,7 @@ Requires **Bun ≥ 1.3** (or Node.js ≥ 20 with npm — commands below use `bun
 
 - `bun run lint` → exits 0, no output.
 - `bun run typecheck` → exits 0, no output.
-- `bun run test` → 210 tests passing (Vitest).
+- `bun run test` → 242 tests passing (Vitest).
 - First visit to any API route (e.g. the dashboard) auto-seeds a six-month demo history: 4 accounts, 4 income sources, ~96 expenses, 3 budgets, 3 goals, 8 holdings. Seeding is idempotent and concurrency-safe (DB-level unique-key lock + completion marker).
 
 ## Demo Credentials
@@ -90,7 +90,8 @@ The login gate mirrors the original Finara sign-in screen. **It is a demo creden
 financial-dashboard/
 ├── 📂 src/
 │   ├── 📂 app/
-│   │   ├── 📄 page.tsx                    # Single-route SPA entry (login gate + 9 views)
+│   │   ├── 📄 page.tsx                    # `/` route (login gate + dashboard)
+│   │   ├── 📂 [view]/                     # Catch-all route (real paths: /Dashboard … /Settings + 404)
 │   │   ├── 📄 layout.tsx                  # Inter font, metadata, toaster
 │   │   ├── 📄 globals.css                 # Tailwind v4 tokens + Finara source-exact design system
 │   │   └── 📂 api/                        # 12 REST route groups (see API Reference)
@@ -102,7 +103,7 @@ financial-dashboard/
 │   └── 📂 lib/                            # money, categories, types, analytics, seed, api,
 │                                          # dashboard-kpis, expense-filters, date-format,
 │                                          # import-export, ui-maps (pure domain modules, TDD)
-│                                          # + __tests__/ (Vitest, 210 tests)
+│                                          # + __tests__/ (Vitest, 242 tests)
 ├── 📂 prisma/
 │   └── 📄 schema.prisma                   # 7 models, money as integer minor units
 ├── 📂 db/                                 # SQLite runtime storage (gitignored)
@@ -138,7 +139,7 @@ All routes return a uniform envelope: `{ "ok": true, "data": … }` or `{ "ok": 
 | `/api/settings` | GET, PUT | Currency, date format, notification toggles |
 | `/api/ai/chat` | POST | AI coach chat (messages array → grounded reply) |
 | `/api/ai/insights` | GET | Dashboard insight cards (LLM-polished, deterministic fallback) |
-| `/api/export` | GET | ⚠️ GDPR full-data JSON download |
+| `/api/export` | GET | ⚠️ GDPR full-data JSON download (live snake_case `{user,data,summary}` shape); `?type=transactions` returns the analytics transactions CSV |
 
 ## Environment Variables
 
@@ -192,6 +193,14 @@ drops the pt), edit submits read "Update X" (accounts: "Save Changes"), label id
 the live snake_case set, and every lucide icon in the app views renders `w-X h-X` with
 margins after — all pinned by `src/lib/__tests__/dialog-forms.test.ts`.
 
+Round 9 (ADR-022) pins **functional behavior**: saving a currency or date format in
+Settings reformats every figure and date app-wide (and persists reloads); the Analytics
+Export downloads a live-shaped all-transactions CSV (`financial-report-<date>.csv`);
+the GDPR export emits the live snake_case `{user, data, summary}` JSON with the account
+email in the filename; quick-amount chips follow the currency; the import error state
+is the live replacement card; and the AI coach dialog renders the live class orders —
+all pinned by `src/lib/__tests__/functional-parity.test.ts`.
+
 ## Testing & Verification
 
 The full gate (run before every push):
@@ -199,11 +208,11 @@ The full gate (run before every push):
 ```bash
 bun run lint        # ESLint 9 — must exit 0
 bun run typecheck   # tsc --noEmit — must exit 0
-bun run test        # Vitest — 156 unit tests, must all pass
+bun run test        # Vitest — 242 unit tests, must all pass
 bun run build       # next build — must exit 0
 ```
 
-The Vitest suite covers the pure domain layer with TDD-maintained specs: money math (minor units, monthly-equivalent normalization incl. annual), taxonomy sets (categories, frequencies, currencies, sectors, quick-select tile labels), dashboard KPI computation (goal-progress savings, placeholder-aware trends, largest-expense bucket, budget remaining/limit-0 footer semantics, income activity categories for the Recent Activity badges), expense filter/sort/pagination logic, date formats, Finara export normalization, the source-exact UI maps (sector hexes, goal emoji, priority/activity/expense-row badges, account icons), the shadcn primitive class-set pins (classic live-exact strings, element types, no `data-slot`, DialogTitle as a pure semantics wrapper, the dialog card base without `relative`), the live-probed semantic design tokens (classic shadcn neutral theme, light + dark, plus the v3 radius/blur scale pins), and the login-page class sets (raw Google button, ringed span logo, py-2 ring-2 inputs, slate-500 field icons). Browser verification is performed end-to-end before each push round (login incl. the invalid-credentials error alert, all nine views in light + dark, FAB Quick Add round-trip with the rotating toggle, full quick-select + manual add/edit/confirm-delete, income/goal/account/investment CRUD, filters, pagination, AI coach, CSV import, export restore, dark-mode toggle + persistence, mobile drawer, zero console errors), followed by computed-style probes (system font stack, semantic tokens, radii, blur, chart grid/axis colors in both themes) and a signature-multiset DOM re-diff against the captured live app (round-6: every residual delta classifies into the documented buckets — infra, a11y additions, lucide artifacts, live's duplicated toaster, seed-data counts, the login demo-credentials affordance). A formal Playwright E2E suite remains a backlog item — see Project_Architecture_Document.md §10.
+The Vitest suite covers the pure domain layer with TDD-maintained specs: money math (minor units, monthly-equivalent normalization incl. annual), taxonomy sets (categories, frequencies, currencies, sectors, quick-select tile labels), dashboard KPI computation (goal-progress savings, placeholder-aware trends, largest-expense bucket, budget remaining/limit-0 footer semantics, income activity categories for the Recent Activity badges), expense filter/sort logic, date formats, Finara export normalization (incl. the live snake_case GDPR shape + investments restore), the source-exact UI maps (sector hexes, goal emoji, priority/activity/expense-row badges, account icons), the shadcn primitive class-set pins (classic live-exact strings, element types, no `data-slot`, DialogTitle as a pure semantics wrapper, the dialog card base without `relative`), the live-probed semantic design tokens (classic shadcn neutral theme, light + dark, plus the v3 radius/blur scale pins), the login-page class sets (raw Google button, ringed span logo, py-2 ring-2 inputs, slate-500 field icons), the dialog form-body + icon-order source contracts, the view-surface order contracts, and the round-9 functional-parity contracts. Browser verification is performed end-to-end before each push round (login incl. the invalid-credentials error alert, all nine views in light + dark, FAB Quick Add round-trip with the rotating toggle, full quick-select + manual add/edit/confirm-delete, income/goal/account/investment CRUD, filters, AI coach, CSV import, export restore, settings propagation incl. currency/date-format round-trips, dark-mode toggle + persistence, mobile drawer, zero console errors), followed by computed-style probes (system font stack, semantic tokens, radii, blur, chart grid/axis colors in both themes) and a signature-multiset DOM re-diff against the captured live app (round-6: every residual delta classifies into the documented buckets — infra, a11y additions, lucide artifacts, live's duplicated toaster, seed-data counts, the login demo-credentials affordance). A formal Playwright E2E suite remains a backlog item — see Project_Architecture_Document.md §10.
 
 ## Security
 
