@@ -10,6 +10,7 @@ import { Bell, Download, FileText, Save, Shield, TriangleAlert, Upload, User } f
 import { mutate, useQuery } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { CURRENCIES, DATE_FORMATS } from "@/lib/categories";
+import { DEMO_EMAIL } from "@/lib/demo-user";
 import { CARD_PLAIN, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
 import type { SettingsDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -45,13 +46,15 @@ export function SettingsView() {
 
   const exportAllData = async () => {
     try {
-      const response = await fetch("/api/export", { headers: { Accept: "application/json" } });
+      const response = await fetch("/api/export", { headers: { Accept: "application/json" }, cache: "no-store" });
       if (!response.ok) throw new Error(`Export failed with status ${response.status}`);
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `finara-export-${new Date().toISOString().slice(0, 10)}.json`;
+      // Round 9: live embeds the account email in the export filename
+      // (probed: finara-export-<email>-<date>.json).
+      anchor.download = `finara-export-${DEMO_EMAIL}-${new Date().toISOString().slice(0, 10)}.json`;
       anchor.click();
       URL.revokeObjectURL(url);
       toast({ title: "Export ready", description: "Your data was downloaded as JSON." });

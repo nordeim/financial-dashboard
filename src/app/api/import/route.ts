@@ -94,6 +94,7 @@ async function importFinaraExport(payload: unknown) {
     normalized.incomeSources.length +
     normalized.goals.length +
     normalized.accounts.length +
+    normalized.investments.length +
     normalized.errors.length;
   if (totalRows === 0) return fail("The export file contains no importable records", 400);
   if (totalRows > 2000) return fail("Import is capped at 2000 rows per batch", 400);
@@ -102,12 +103,15 @@ async function importFinaraExport(payload: unknown) {
   if (normalized.incomeSources.length > 0) await db.incomeSource.createMany({ data: normalized.incomeSources });
   if (normalized.goals.length > 0) await db.goal.createMany({ data: normalized.goals });
   if (normalized.expenses.length > 0) await db.expense.createMany({ data: normalized.expenses });
+  // Round 9: the live export carries investments — restored like the rest.
+  if (normalized.investments.length > 0) await db.investment.createMany({ data: normalized.investments });
 
   const imported =
     normalized.expenses.length +
     normalized.incomeSources.length +
     normalized.goals.length +
-    normalized.accounts.length;
+    normalized.accounts.length +
+    normalized.investments.length;
   return ok({
     imported,
     skipped: normalized.errors.length,
