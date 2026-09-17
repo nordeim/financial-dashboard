@@ -243,7 +243,7 @@ export function ImportView() {
           {parseError ? (
             <div className="mb-6 flex flex-col items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-6 py-8 text-center" role="alert">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-                <X className="h-6 w-6 text-red-600" aria-hidden />
+                <X className="w-6 h-6 text-red-600" aria-hidden />
               </div>
               <h3 className="text-base font-semibold text-red-700">An Error Occurred</h3>
               <p className="max-w-md text-sm text-red-600">{parseError}</p>
@@ -283,7 +283,7 @@ export function ImportView() {
               </label>
               {pendingFile && !extracting ? (
                 <p className="mt-2 flex items-center justify-center gap-1 text-sm font-medium text-emerald-700 dark:text-emerald-400" aria-live="polite">
-                  <CheckCircle2 className="h-4 w-4" aria-hidden /> {pendingFile.name}
+                  <CheckCircle2 className="w-4 h-4" aria-hidden /> {pendingFile.name}
                 </p>
               ) : null}
               <p className="text-xs text-gray-500">CSV, XLS, XLSX up to 10MB</p>
@@ -297,7 +297,7 @@ export function ImportView() {
           >
             {extracting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden /> Extracting...
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden /> Extracting...
               </>
             ) : (
               "Upload and Extract"
@@ -309,22 +309,22 @@ export function ImportView() {
           <div className="space-y-4 p-6 pt-0">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                  <FileSpreadsheet className="h-4 w-4 text-emerald-600" aria-hidden />
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-600" aria-hidden />
                   <span className="font-semibold">{fileName}</span>
                   <span className="text-slate-400">· {rows.length} transactions detected</span>
                 </p>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={reset}>
-                    <X className="mr-1 h-4 w-4" aria-hidden /> Cancel
+                    <X className="w-4 h-4 mr-1" aria-hidden /> Cancel
                   </Button>
                   <Button size="sm" className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90" onClick={() => void runImport()} disabled={importing}>
                     {importing ? (
                       <>
-                        <Loader2 className="mr-1 h-4 w-4 animate-spin" aria-hidden /> Importing…
+                        <Loader2 className="w-4 h-4 mr-1 animate-spin" aria-hidden /> Importing…
                       </>
                     ) : (
                       <>
-                        <CheckCircle2 className="mr-1 h-4 w-4" aria-hidden /> Import {rows.length} Transactions
+                        <CheckCircle2 className="w-4 h-4 mr-1" aria-hidden /> Import {rows.length} Transactions
                       </>
                     )}
                   </Button>
@@ -392,7 +392,7 @@ export function ImportView() {
           {step === 3 && outcome ? (
             <div className="flex flex-col items-center gap-4 p-6 pt-0 text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-900/40">
-                <CheckCircle2 className="h-8 w-8 text-emerald-600" aria-hidden />
+                <CheckCircle2 className="w-8 h-8 text-emerald-600" aria-hidden />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">Import Complete</h3>

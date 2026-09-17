@@ -102,7 +102,7 @@ export function TrendPill({ value }: { value: number | null }) {
   const rounded = Math.round(value * 10) / 10;
   return (
     <div className="flex items-center gap-1">
-      <TrendingUp className="h-4 w-4 text-emerald-500" aria-hidden />
+      <TrendingUp className="w-4 h-4 text-emerald-500" aria-hidden />
       <span className="text-sm font-medium text-emerald-500">{rounded.toFixed(1)}%</span>
     </div>
   );
@@ -292,7 +292,7 @@ export function SurplusBadge({ amountMinor }: { amountMinor: number }) {
           : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
       )}
     >
-      <TrendingUp className="mr-1 h-3 w-3" aria-hidden />
+      <TrendingUp className="w-3 h-3 mr-1" aria-hidden />
       {formatSigned(positive ? amountMinor : -amountMinor)} {positive ? "surplus" : "deficit"}
     </Badge>
   );

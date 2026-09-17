@@ -98,7 +98,7 @@ export function DashboardView({
         </div>
         <div className="flex gap-3">
           <Button variant="outline" onClick={onOpenAiCoach} className="h-9">
-            <Brain className="h-4 w-4" aria-hidden /> AI Coach
+            <Brain className="w-4 h-4" aria-hidden /> AI Coach
           </Button>
           <Button
             variant="outline"
@@ -109,7 +109,7 @@ export function DashboardView({
             }}
             className="h-9"
           >
-            <RefreshCw className="h-4 w-4" aria-hidden /> Refresh
+            <RefreshCw className="w-4 h-4" aria-hidden /> Refresh
           </Button>
           <a
             href="/Expenses"
@@ -119,7 +119,7 @@ export function DashboardView({
             }}
           >
             <Button className="h-9 bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
-              <CirclePlus className="mr-2 h-5 w-5" aria-hidden /> Add Transaction
+              <CirclePlus className="w-5 h-5 mr-2" aria-hidden /> Add Transaction
             </Button>
           </a>
         </div>
@@ -227,14 +227,14 @@ export function DashboardView({
                         <div key={budget.category} className="space-y-2">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <div className={cn("h-3 w-3 rounded-full", CATEGORY_DOT[categoryId] ?? "bg-slate-400")} aria-hidden />
+                              <div className={cn("w-3 h-3 rounded-full", CATEGORY_DOT[categoryId] ?? "bg-slate-400")} aria-hidden />
                               <span className="font-medium text-neutral-800 capitalize dark:text-neutral-200">
                                 {budget.category.toLowerCase()}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
                               <CircleCheckBig
-                                className={cn("h-4 w-4", underBudget || !hasLimit ? "text-emerald-500" : "text-red-500")}
+                                className={cn("w-4 h-4", underBudget || !hasLimit ? "text-emerald-500" : "text-red-500")}
                                 aria-hidden
                               />
                               <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
@@ -299,14 +299,14 @@ export function DashboardView({
                               and the glyph inherits currentColor. */}
                           <div
                             className={cn(
-                              "flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-gray-600",
+                              "w-10 h-10 rounded-full bg-white dark:bg-gray-600 flex items-center justify-center",
                               isIncome ? "text-emerald-500" : "text-red-500",
                             )}
                           >
                             {isIncome ? (
-                              <ArrowUpRight className="h-5 w-5" aria-hidden />
+                              <ArrowUpRight className="w-5 h-5" aria-hidden />
                             ) : (
-                              <ArrowDownLeft className="h-5 w-5" aria-hidden />
+                              <ArrowDownLeft className="w-5 h-5" aria-hidden />
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
@@ -344,7 +344,7 @@ export function DashboardView({
                 actions={
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" onClick={onOpenAiCoach} className="h-8 gap-2 px-3 text-xs">
-                      <MessageCircle className="h-4 w-4" aria-hidden /> Ask AI
+                      <MessageCircle className="w-4 h-4" aria-hidden /> Ask AI
                     </Button>
                     <Button
                       size="icon"
@@ -353,7 +353,7 @@ export function DashboardView({
                       aria-label="Refresh insights"
                       className="h-9 w-9"
                     >
-                      <RefreshCw className="h-4 w-4" aria-hidden />
+                      <RefreshCw className="w-4 h-4" aria-hidden />
                     </Button>
                   </div>
                 }
@@ -362,7 +362,7 @@ export function DashboardView({
                   <ErrorNote message={insightsError} onRetry={() => void loadInsights()} />
                 ) : insightsLoading ? (
                   <div className="flex items-center justify-center gap-2 py-8" role="status" aria-label="Generating insights">
-                    <Loader2 className="h-5 w-5 animate-spin text-violet-500" aria-hidden />
+                    <Loader2 className="w-5 h-5 animate-spin text-violet-500" aria-hidden />
                     <span className="text-sm text-neutral-500 dark:text-neutral-400">Generating insights…</span>
                   </div>
                 ) : (
@@ -372,7 +372,7 @@ export function DashboardView({
                       {insights.length === 0 ? (
                         <div className="py-8 text-center">
                           <Brain
-                            className="mx-auto mb-3 h-12 w-12 text-neutral-300 dark:text-neutral-600"
+                            className="w-12 h-12 text-neutral-300 dark:text-neutral-600 mx-auto mb-3"
                             aria-hidden
                           />
                           <p className="text-neutral-500 dark:text-neutral-400">No insights available yet</p>
@@ -405,11 +405,11 @@ export function DashboardView({
                                 )}
                               >
                                 {insight.tone === "positive" ? (
-                                  <TrendingUp className="h-4 w-4" aria-hidden />
+                                  <TrendingUp className="w-4 h-4" aria-hidden />
                                 ) : insight.tone === "warning" ? (
-                                  <TrendingDown className="h-4 w-4" aria-hidden />
+                                  <TrendingDown className="w-4 h-4" aria-hidden />
                                 ) : (
-                                  <Brain className="h-4 w-4" aria-hidden />
+                                  <Brain className="w-4 h-4" aria-hidden />
                                 )}
                               </span>
                               <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">{insight.title}</h3>
@@ -437,7 +437,7 @@ export function DashboardView({
                 }}
               >
                 <Button variant="outline" className="h-16 w-full flex-col gap-2 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
-                  <TrendingUp className="h-5 w-5" aria-hidden />
+                  <TrendingUp className="w-5 h-5" aria-hidden />
                   <span className="text-sm">Add Income</span>
                 </Button>
               </a>
@@ -449,7 +449,7 @@ export function DashboardView({
                 }}
               >
                 <Button variant="outline" className="h-16 w-full flex-col gap-2 px-4 py-2 hover:bg-red-50 dark:hover:bg-red-900/20">
-                  <TrendingDown className="h-5 w-5" aria-hidden />
+                  <TrendingDown className="w-5 h-5" aria-hidden />
                   <span className="text-sm">Add Expense</span>
                 </Button>
               </a>
@@ -461,7 +461,7 @@ export function DashboardView({
                 }}
               >
                 <Button variant="outline" className="h-16 w-full flex-col gap-2 px-4 py-2 hover:bg-purple-50 dark:hover:bg-purple-900/20">
-                  <Target className="h-5 w-5" aria-hidden />
+                  <Target className="w-5 h-5" aria-hidden />
                   <span className="text-sm">Set Goal</span>
                 </Button>
               </a>
@@ -473,7 +473,7 @@ export function DashboardView({
                 }}
               >
                 <Button variant="outline" className="h-16 w-full flex-col gap-2 px-4 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20">
-                  <TrendingUp className="h-5 w-5" aria-hidden />
+                  <TrendingUp className="w-5 h-5" aria-hidden />
                   <span className="text-sm">View Reports</span>
                 </Button>
               </a>
@@ -489,10 +489,10 @@ export function DashboardView({
         <Button
           onClick={onQuickAdd}
           aria-label="Add transaction"
-          className="h-14 w-14 rounded-full bg-primary-sage px-4 py-2 text-primary-foreground shadow-xl hover:bg-primary-sage/90"
+          className="text-primary-foreground px-4 py-2 w-14 h-14 rounded-full bg-primary-sage hover:bg-primary-sage/90 shadow-xl"
         >
           <div style={{ transform: quickAddOpen ? "rotate(45deg)" : "none" }}>
-            <Plus className="h-6 w-6 text-white" aria-hidden />
+            <Plus className="w-6 h-6 text-white" aria-hidden />
           </div>
         </Button>
       </div>

@@ -143,10 +143,10 @@ export function AnalyticsView() {
               </SelectContent>
             </Select>
             <Button variant="outline" onClick={() => query.refresh()} className="h-9 gap-2">
-              <RefreshCw className="h-4 w-4" aria-hidden /> Refresh
+              <RefreshCw className="w-4 h-4" aria-hidden /> Refresh
             </Button>
             <Button variant="outline" onClick={exportCsv} className="h-9 gap-2">
-              <Download className="h-4 w-4" aria-hidden /> Export
+              <Download className="w-4 h-4" aria-hidden /> Export
             </Button>
           </div>
         }
@@ -169,7 +169,7 @@ export function AnalyticsView() {
             <div className={cn(CARD_SURFACE, "fade-in-up")}>
               <div className="flex flex-col space-y-1.5 p-6">
                 <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
-                  <TrendingUp className="h-5 w-5" aria-hidden /> Income vs Expenses Trend
+                  <TrendingUp className="w-5 h-5" aria-hidden /> Income vs Expenses Trend
                 </div>
               </div>
               <div className="p-6 pt-0">
@@ -208,7 +208,7 @@ export function AnalyticsView() {
                       <p className="mb-1 text-sm font-medium text-emerald-100">Avg Monthly Income</p>
                       <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgIncomeMinor)}</p>
                     </div>
-                    <TrendingUp className="h-8 w-8 text-emerald-200" aria-hidden />
+                    <TrendingUp className="w-8 h-8 text-emerald-200" aria-hidden />
                   </div>
                 </div>
               </div>
@@ -221,7 +221,7 @@ export function AnalyticsView() {
                     </div>
                     {/* Live quirk: the expenses average tile flips the trending-up
                         glyph 180° (renders as a down-arrow) in red-200. */}
-                    <TrendingUp className="h-8 w-8 rotate-180 text-red-200" aria-hidden />
+                    <TrendingUp className="w-8 h-8 rotate-180 text-red-200" aria-hidden />
                   </div>
                 </div>
               </div>
@@ -232,7 +232,7 @@ export function AnalyticsView() {
                       <p className="mb-1 text-sm font-medium text-blue-100">Avg Monthly Savings</p>
                       <p className="text-2xl font-bold">{formatMoney(query.data.overview.avgSavingsMinor)}</p>
                     </div>
-                    <Calendar className="h-8 w-8 text-blue-200" aria-hidden />
+                    <Calendar className="w-8 h-8 text-blue-200" aria-hidden />
                   </div>
                 </div>
               </div>
@@ -243,7 +243,7 @@ export function AnalyticsView() {
             <div className={cn(CARD_SURFACE, "fade-in-up")}>
               <div className="flex flex-col space-y-1.5 p-6">
                 <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
-                  <ChartPie className="h-5 w-5" aria-hidden /> Spending by Category
+                  <ChartPie className="w-5 h-5" aria-hidden /> Spending by Category
                 </div>
               </div>
               <div className="p-6 pt-0">
@@ -274,7 +274,7 @@ export function AnalyticsView() {
             <div className={cn(CARD_SURFACE, "fade-in-up stagger-1")}>
               <div className="flex flex-col space-y-1.5 p-6">
                 <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
-                  <ChartColumn className="h-5 w-5" aria-hidden /> Top Spending Categories
+                  <ChartColumn className="w-5 h-5" aria-hidden /> Top Spending Categories
                 </div>
               </div>
               <div className="p-6 pt-0">
@@ -312,7 +312,7 @@ export function AnalyticsView() {
             <div className={cn(CARD_SURFACE, "fade-in-up")}>
               <div className="flex flex-col space-y-1.5 p-6">
                 <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
-                  <ChartPie className="h-5 w-5" aria-hidden /> Portfolio Allocation by Sector
+                  <ChartPie className="w-5 h-5" aria-hidden /> Portfolio Allocation by Sector
                 </div>
               </div>
               <div className="p-6 pt-0">

@@ -124,7 +124,7 @@ export function LoginView({ onSignIn }: { onSignIn: (email: string) => void }) {
                         Email
                       </Label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-500" aria-hidden />
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" aria-hidden />
                         <input
                           id="email"
                           type="email"
@@ -142,7 +142,7 @@ export function LoginView({ onSignIn }: { onSignIn: (email: string) => void }) {
                         Password
                       </Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-500" aria-hidden />
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" aria-hidden />
                         <input
                           id="password"
                           type="password"
@@ -170,7 +170,7 @@ export function LoginView({ onSignIn }: { onSignIn: (email: string) => void }) {
                     >
                       {submitting ? (
                         <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden /> Signing in…
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden /> Signing in…
                         </>
                       ) : (
                         "Sign in"

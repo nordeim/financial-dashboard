@@ -182,7 +182,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
         subtitle="Track and categorize all your spending"
         actions={
           <Button onClick={onAddExpense} className="h-9 bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
-            <Plus className="mr-2 h-5 w-5" aria-hidden /> Add Expense
+            <Plus className="w-5 h-5 mr-2" aria-hidden /> Add Expense
           </Button>
         }
       />
@@ -202,7 +202,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                     <p className="mb-1 text-sm font-medium text-red-100">Total Expenses</p>
                     <p className="text-2xl font-bold">{formatMoney(totals.total)}</p>
                   </div>
-                  <TrendingDown className="h-8 w-8 text-red-200" aria-hidden />
+                  <TrendingDown className="w-8 h-8 text-red-200" aria-hidden />
                 </div>
               </div>
             </Card>
@@ -216,7 +216,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                       </p>
                       <p className="text-xl font-bold text-neutral-900 dark:text-white">{formatMoney(totals[category])}</p>
                     </div>
-                    <div className={cn("h-3 w-3 rounded-full", CATEGORY_DOT[category.toLowerCase()])} aria-hidden />
+                    <div className={cn("w-3 h-3 rounded-full", CATEGORY_DOT[category.toLowerCase()])} aria-hidden />
                   </div>
                 </div>
               </Card>
@@ -228,7 +228,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
             <div className="space-y-4">
               <div className="flex gap-3">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden />
                 <Input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
@@ -246,8 +246,8 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                 }}
                 aria-expanded={filtersOpen}
               >
-                <ClassicFilterIcon className="h-4 w-4" /> Filters{" "}
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-xs text-white">
+                <ClassicFilterIcon className="w-4 h-4" /> Filters{" "}
+                <span className="bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {activeFilterCount}
                 </span>
               </Button>
@@ -276,7 +276,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                 aria-label="Bulk expense actions"
               >
                 <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())} className="text-neutral-600 dark:text-neutral-300">
-                  <XCircle className="mr-1 h-4 w-4" aria-hidden /> Deselect All
+                  <XCircle className="w-4 h-4 mr-1" aria-hidden /> Deselect All
                 </Button>
                 <span className="text-sm font-medium text-neutral-700 dark:text-neutral-200">
                   {selectedIds.size} expense{selectedIds.size === 1 ? "" : "s"} selected
@@ -299,7 +299,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                     onClick={() => void bulkDelete()}
                     disabled={deleting}
                   >
-                    <Trash2 className="mr-1 h-4 w-4" aria-hidden /> Delete ({selectedIds.size})
+                    <Trash2 className="w-4 h-4 mr-1" aria-hidden /> Delete ({selectedIds.size})
                   </Button>
                 </div>
               </div>
@@ -313,7 +313,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <CardTitle className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
-                  <Receipt className="h-5 w-5" aria-hidden /> Expense History ({filtered.length})
+                  <Receipt className="w-5 h-5" aria-hidden /> Expense History ({filtered.length})
                 </CardTitle>
                 <Tabs value={tab} onValueChange={(value) => setTab(value as typeof tab)}>
                   <TabsList className="grid w-full grid-cols-4">
@@ -333,7 +333,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                   body="Start tracking your spending to better manage your budget"
                   action={
                     <Button onClick={onAddExpense} className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
-                      <Plus className="mr-1 h-4 w-4" aria-hidden /> Add Your First Expense
+                      <Plus className="w-4 h-4 mr-1" aria-hidden /> Add Your First Expense
                     </Button>
                   }
                 />
@@ -350,7 +350,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                           onCheckedChange={() => toggleSelected(expense.id)}
                           aria-label={`Select ${expense.description}`}
                         />
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white shadow-sm dark:bg-gray-600" aria-hidden>
+                        <div className="w-10 h-10 bg-white dark:bg-gray-600 rounded-lg flex items-center justify-center shadow-sm" aria-hidden>
                           <span className="text-lg">{subcategoryEmoji(expense.subcategory)}</span>
                         </div>
                         <div className="min-w-0 flex-1">
@@ -373,7 +373,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                               {subcategoryLabel(expense.subcategory).toLowerCase()}
                             </Badge>
                             <div className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
-                              <Calendar className="h-3 w-3" aria-hidden />
+                              <Calendar className="w-3 h-3" aria-hidden />
                               <span>{formatDate(expense.date, "MM/dd/yyyy")}</span>
                             </div>
                           </div>
@@ -382,23 +382,23 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-8 w-8 text-neutral-400 hover:text-blue-600"
+                            className="w-8 h-8 text-neutral-400 hover:text-blue-600"
                             onClick={() => {
                               setEditingExpense(expense);
                               setEditOpen(true);
                             }}
                             aria-label={`Edit ${expense.description}`}
                           >
-                            <Pen className="h-4 w-4" aria-hidden />
+                            <Pen className="w-4 h-4" aria-hidden />
                           </Button>
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-8 w-8 text-neutral-400 hover:text-red-600"
+                            className="w-8 h-8 text-neutral-400 hover:text-red-600"
                             onClick={() => void deleteExpense(expense)}
                             aria-label={`Delete ${expense.description}`}
                           >
-                            <Trash2 className="h-4 w-4" aria-hidden />
+                            <Trash2 className="w-4 h-4" aria-hidden />
                           </Button>
                         </div>
                       </div>
@@ -418,7 +418,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                         onClick={() => setPage((current) => Math.max(1, current - 1))}
                         aria-label="Previous page"
                       >
-                        <ChevronLeft className="h-4 w-4" aria-hidden />
+                        <ChevronLeft className="w-4 h-4" aria-hidden />
                       </Button>
                       {Array.from({ length: pageCount }, (_, index) => index + 1)
                         .filter(
@@ -454,7 +454,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                         onClick={() => setPage((current) => Math.min(pageCount, current + 1))}
                         aria-label="Next page"
                       >
-                        <ChevronRight className="h-4 w-4" aria-hidden />
+                        <ChevronRight className="w-4 h-4" aria-hidden />
                       </Button>
                     </nav>
                   ) : null}
@@ -471,10 +471,10 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
         <Button
           onClick={onQuickAdd}
           aria-label="Add transaction"
-          className="h-14 w-14 rounded-full bg-primary-sage px-4 py-2 text-primary-foreground shadow-xl hover:bg-primary-sage/90"
+          className="text-primary-foreground px-4 py-2 w-14 h-14 rounded-full bg-primary-sage hover:bg-primary-sage/90 shadow-xl"
         >
           <div style={{ transform: quickAddOpen ? "rotate(45deg)" : "none" }}>
-            <Plus className="h-6 w-6 text-white" aria-hidden />
+            <Plus className="w-6 h-6 text-white" aria-hidden />
           </div>
         </Button>
       </div>

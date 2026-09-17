@@ -125,7 +125,7 @@ export function SettingsView() {
           <div className={cn(CARD_SURFACE, "fade-in-up")}>
             <div className="flex flex-col space-y-1.5 p-6">
               <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
-                <User className="h-5 w-5" aria-hidden /> Profile Settings
+                <User className="w-5 h-5" aria-hidden /> Profile Settings
               </div>
             </div>
             <div className="space-y-4 p-6 pt-0">
@@ -168,7 +168,7 @@ export function SettingsView() {
           <div className={cn(CARD_SURFACE, "fade-in-up stagger-1")}>
             <div className="flex flex-col space-y-1.5 p-6">
               <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
-                <Bell className="h-5 w-5" aria-hidden /> Notifications
+                <Bell className="w-5 h-5" aria-hidden /> Notifications
               </div>
             </div>
             <div className="space-y-6 p-6 pt-0">
@@ -194,13 +194,13 @@ export function SettingsView() {
           <div className={cn(CARD_SURFACE, "fade-in-up stagger-2")}>
             <div className="flex flex-col space-y-1.5 p-6">
               <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
-                <Download className="h-5 w-5" aria-hidden /> Export Your Data
+                <Download className="w-5 h-5" aria-hidden /> Export Your Data
               </div>
             </div>
             <div className="space-y-4 p-6 pt-0">
               <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
                 <div className="flex items-start gap-3">
-                  <Shield className="mt-0.5 h-5 w-5 text-blue-600 dark:text-blue-400" aria-hidden />
+                  <Shield className="w-5 h-5 mt-0.5 text-blue-600 dark:text-blue-400" aria-hidden />
                   <div>
                     <h4 className="mb-1 font-semibold text-blue-800 dark:text-blue-200">GDPR Compliant Export</h4>
                     <p className="text-sm text-blue-700 dark:text-blue-300">
@@ -210,7 +210,7 @@ export function SettingsView() {
                 </div>
               </div>
               <Button className="w-full bg-blue-600 shadow hover:bg-blue-700" onClick={() => void exportAllData()}>
-                <Download className="mr-2 h-4 w-4" aria-hidden /> Export All Data
+                <Download className="w-4 h-4 mr-2" aria-hidden /> Export All Data
               </Button>
             </div>
           </div>
@@ -219,13 +219,13 @@ export function SettingsView() {
           <div className={cn(CARD_SURFACE, "fade-in-up stagger-3")}>
             <div className="flex flex-col space-y-1.5 p-6">
               <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
-                <Upload className="h-5 w-5" aria-hidden /> Import Data
+                <Upload className="w-5 h-5" aria-hidden /> Import Data
               </div>
             </div>
             <div className="space-y-4 p-6 pt-0">
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
                 <div className="flex items-start gap-3">
-                  <TriangleAlert className="mt-0.5 h-5 w-5 text-amber-600 dark:text-amber-400" aria-hidden />
+                  <TriangleAlert className="w-5 h-5 mt-0.5 text-amber-600 dark:text-amber-400" aria-hidden />
                   <div>
                     <h4 className="mb-1 font-semibold text-amber-800 dark:text-amber-200">Import Warning</h4>
                     <p className="text-sm text-amber-700 dark:text-amber-300">
@@ -257,7 +257,7 @@ export function SettingsView() {
           <div className={cn(CARD_SURFACE, "fade-in-up stagger-4")}>
             <div className="flex flex-col space-y-1.5 p-6">
               <div className="flex items-center gap-2 font-semibold leading-none tracking-tight text-primary-navy dark:text-white">
-                <FileText className="h-5 w-5" aria-hidden /> Your Data Summary
+                <FileText className="w-5 h-5" aria-hidden /> Your Data Summary
               </div>
             </div>
             <div className="p-6 pt-0">
@@ -266,7 +266,7 @@ export function SettingsView() {
                 <div key={tile.title} className="text-center">
                   <div className="mb-1 text-2xl font-bold text-gray-900 dark:text-white">{tile.title}</div>
                   <Badge variant="secondary" className={tile.pillClass}>
-                    {tile.icon ? <Shield className="mr-1 h-3 w-3" aria-hidden /> : null}
+                    {tile.icon ? <Shield className="w-3 h-3 mr-1" aria-hidden /> : null}
                     {tile.pill}
                   </Badge>
                 </div>
@@ -277,7 +277,7 @@ export function SettingsView() {
 
           <div className="flex justify-end">
             <Button onClick={() => void handleSave()} className="bg-primary-sage shadow hover:bg-primary-sage/90" disabled={saving}>
-              <Save className="h-4 w-4" aria-hidden /> {saving ? "Saving…" : "Save Settings"}
+              <Save className="w-4 h-4" aria-hidden /> {saving ? "Saving…" : "Save Settings"}
             </Button>
           </div>
         </div>

@@ -49,7 +49,7 @@ export function ExpenseFiltersPanel({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-1.5">
           <Label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-            <CalendarDays className="h-3.5 w-3.5" aria-hidden /> Date Range
+            <CalendarDays className="w-3.5 h-3.5" aria-hidden /> Date Range
           </Label>
           <Select
             value={draft.dateRange}
@@ -70,7 +70,7 @@ export function ExpenseFiltersPanel({
 
         <div className="space-y-1.5">
           <Label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-            <Tag className="h-3.5 w-3.5" aria-hidden /> Category
+            <Tag className="w-3.5 h-3.5" aria-hidden /> Category
           </Label>
           <Select
             value={draft.category}
@@ -163,7 +163,7 @@ export function ExpenseFiltersPanel({
               onClick={() => onDraftChange({ ...draft, sortDesc: !draft.sortDesc })}
               className="shrink-0 dark:border-slate-700 dark:bg-slate-900"
             >
-              {draft.sortDesc ? <ArrowDown className="h-4 w-4" aria-hidden /> : <ArrowUp className="h-4 w-4" aria-hidden />}
+              {draft.sortDesc ? <ArrowDown className="w-4 h-4" aria-hidden /> : <ArrowUp className="w-4 h-4" aria-hidden />}
             </Button>
           </div>
         </div>
@@ -218,7 +218,7 @@ export function ExpenseFiltersPanel({
           Cancel
         </Button>
         <Button type="button" size="sm" onClick={onApply} className="bg-emerald-500 hover:bg-emerald-600">
-          <CheckCircle2 className="mr-1 h-4 w-4" aria-hidden /> Apply Filters
+          <CheckCircle2 className="w-4 h-4 mr-1" aria-hidden /> Apply Filters
         </Button>
       </div>
       <p className="sr-only">
