@@ -55,7 +55,10 @@ export function parseRoute(pathname: string): AppRoute {
     };
   }
   if (lower === "/login") {
-    return { kind: "login", title: "Login | Finara" };
+    // Round-12 live probe (round-8 left the login title unprobed): the live
+    // app titles its login surface bare "Finara" — in BOTH the direct-visit
+    // and the unauth-redirect-from-deep-link cases.
+    return { kind: "login", title: "Finara" };
   }
   const view = PATH_TO_VIEW[lower];
   if (view) {

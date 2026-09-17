@@ -21,6 +21,7 @@ import type { SettingsDto } from "@/lib/types";
 import { parseRoute, pathForView, type AppRoute } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
+
 const SESSION_KEY = "finara-demo-session";
 
 /**
@@ -131,8 +132,29 @@ export function FinaraApp({ route: initialRoute }: { route: FinaraRouteInput }) 
 
   const applyRoute = useCallback((next: AppRoute) => {
     setRoute(next);
-    document.title = next.title;
   }, []);
+
+  // Title sync (round-12): applyRoute used to write document.title directly,
+  // but the App Router keeps <title> in the React tree — hydrating that node
+  // resets any render-phase write (the unauth-deep-link title fix silently
+  // lost that race). A post-commit effect is always the last writer.
+  useEffect(() => {
+    document.title = route.title;
+    // Round-12: the App Router renders <title> from the RSC tree and its
+    // hydration rewrites the node's textContent AFTER client effects run —
+    // silently clobbering client-side title corrections (observed on unauth
+    // deep links, which must settle on the live's bare "Finara", not the
+    // deep-link title). Guard the node: any external write is restored
+    // immediately; the restore itself converges (equal title -> no-op).
+    const titleNode = document.querySelector("title");
+    if (!titleNode) return;
+    const restore = () => {
+      if (document.title !== route.title) document.title = route.title;
+    };
+    const observer = new MutationObserver(restore);
+    observer.observe(titleNode, { childList: true, characterData: true, subtree: true });
+    return () => observer.disconnect();
+  }, [route.title]);
 
   const navigateToPath = useCallback(
     (path: string) => {
@@ -166,13 +188,29 @@ export function FinaraApp({ route: initialRoute }: { route: FinaraRouteInput }) 
   // The effect reads the LIVE store (not the render snapshot): on a full
   // reload the hydration render still sees the null server snapshot, and
   // redirecting then would clobber the URL of an authenticated visitor.
+  // Round-12: deps include `route` so a browser-back while logged out
+  // re-gates to /login exactly like the live app.
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (readSessionCache()) return;
     if (window.location.pathname === "/login") return;
     const from = encodeURIComponent(window.location.pathname + window.location.search);
     window.history.replaceState({}, "", `/login?from_url=${from}`);
-  }, [session]);
+  }, [session, route]);
+
+  // Round-12 live probe (captures/r12): the source app titles its login
+  // surface bare "Finara" — including when a logged-out visitor lands on a
+  // deep link (the redirect effect above only rewrites the URL; the deep-link
+  // title would otherwise stick). Render-time route adjustment (the
+  // documented guarded-setState pattern — same class as the authenticated
+  // /login bounce below); self-limiting because the target kind is "login".
+  // Like the redirect effect, this reads the LIVE session store — the
+  // hydration render's snapshot is always session-less, and trusting it
+  // would bounce authenticated visitors off their deep links. The window
+  // guard keeps the render phase SSR-safe.
+  if (typeof window !== "undefined" && route.kind !== "login" && !readSessionCache()) {
+    applyRoute(parseRoute("/login"));
+  }
 
   // Signing in returns to the deep link that brought us to the login page;
   // signing out falls back to the unauthenticated redirect above.
