@@ -77,6 +77,27 @@ export function setTheme(theme: Theme): void {
   writeTheme(theme);
 }
 
+/**
+ * Round-10 (live-probed): signing out of the source app CLEARS the persisted
+ * theme entirely (the stored key is gone — not set to "light"), and the light
+ * class is applied so the login page always renders light; the preferred
+ * theme comes back from the server-side user record on the next sign-in.
+ * Mirrors that reset here: remove the key, apply light in-memory + notify
+ * subscribers, but do NOT re-persist (the live key stays absent until the
+ * next manual toggle).
+ */
+export function resetTheme(): void {
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Storage unavailable — the in-memory reset below still applies.
+  }
+  cachedTheme = "light";
+  cacheLoaded = true;
+  applyThemeClass("light");
+  for (const listener of listeners) listener();
+}
+
 /** Stable client snapshot for useSyncExternalStore (M-3 idiom). */
 export function getThemeSnapshot(): Theme | null {
   return readThemeCache();

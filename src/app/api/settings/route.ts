@@ -3,23 +3,30 @@ import { errorResponse, fail, ok, safeJson } from "@/lib/api";
 import { ensureSeeded } from "@/lib/seed";
 import type { SettingsDto } from "@/lib/types";
 
-const SETTING_KEYS = ["currency", "dateFormat", "pushNotifications", "emailAlerts", "budgetWarnings", "monthlyReports"] as const;
+const SETTING_KEYS = ["currency", "dateFormat", "theme", "pushNotifications", "emailAlerts", "budgetWarnings", "monthlyReports"] as const;
 type SettingKey = (typeof SETTING_KEYS)[number];
 
 const DEFAULTS: Record<SettingKey, string> = {
   currency: "USD",
   dateFormat: "MM/dd/yyyy",
+  // Round-10: the live app persists the theme on the user record; a fresh
+  // account starts light. Mirrors that here as a settings row.
+  theme: "light",
   pushNotifications: "false",
   emailAlerts: "false",
   budgetWarnings: "true",
   monthlyReports: "false",
 };
 
+const THEMES = ["light", "dark"] as const;
+
 function toDto(rows: { key: string; value: string }[]): SettingsDto {
   const map = new Map(rows.map((row) => [row.key, row.value]));
+  const rawTheme = map.get("theme") ?? DEFAULTS.theme;
   return {
     currency: map.get("currency") ?? DEFAULTS.currency,
     dateFormat: map.get("dateFormat") ?? DEFAULTS.dateFormat,
+    theme: (THEMES as readonly string[]).includes(rawTheme) ? (rawTheme as SettingsDto["theme"]) : "light",
     pushNotifications: (map.get("pushNotifications") ?? DEFAULTS.pushNotifications) === "true",
     emailAlerts: (map.get("emailAlerts") ?? DEFAULTS.emailAlerts) === "true",
     budgetWarnings: (map.get("budgetWarnings") ?? DEFAULTS.budgetWarnings) === "true",
@@ -40,6 +47,7 @@ export async function GET() {
 interface SettingsPayload {
   currency?: unknown;
   dateFormat?: unknown;
+  theme?: unknown;
   pushNotifications?: unknown;
   emailAlerts?: unknown;
   budgetWarnings?: unknown;
@@ -56,6 +64,9 @@ export async function PUT(request: Request) {
     }
     if (typeof body.dateFormat === "string" && body.dateFormat.length <= 20) {
       updates.push({ key: "dateFormat", value: body.dateFormat });
+    }
+    if (typeof body.theme === "string" && (THEMES as readonly string[]).includes(body.theme)) {
+      updates.push({ key: "theme", value: body.theme });
     }
     for (const key of ["pushNotifications", "emailAlerts", "budgetWarnings", "monthlyReports"] as const) {
       const value = body[key];

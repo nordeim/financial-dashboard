@@ -19,6 +19,7 @@ import {
   TrendingUp,
   Wallet,
   Wifi,
+  X,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -32,6 +33,25 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { VIEW_PATHS } from "@/lib/routes";
 import { getServerTheme, getThemeSnapshot, subscribeTheme, toggleTheme, type Theme } from "@/components/finara/theme";
+
+/**
+ * Round-10 (live-probed): the live app persists its theme on the user record
+ * (PUT User/me fires on every toggle), which is what restores dark after a
+ * sign-out/sign-in cycle (sign-out clears the local copy). Mirror the
+ * persistence with a fire-and-forget settings PUT — the local apply stays
+ * synchronous and a failed PUT never blocks or reverts it.
+ */
+function toggleThemeAndPersist(): void {
+  toggleTheme();
+  // After the toggle the snapshot IS the new theme — persist exactly that.
+  void fetch("/api/settings", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ theme: getThemeSnapshot() ?? "light" }),
+  }).catch(() => {
+    // Best-effort persistence only — the local theme already applied.
+  });
+}
 
 // Source-exact nav items (icons verified against the live sidebar DOM 2026-09-15).
 export const NAV_ITEMS = [
@@ -122,7 +142,7 @@ function UserMenu({
       <DropdownMenuContent align="end" side="top" className="w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => toggleTheme()}>
+        <DropdownMenuItem onSelect={() => toggleThemeAndPersist()}>
           {isDark ? <Sun className="w-4 h-4 mr-2" aria-hidden /> : <Moon className="w-4 h-4 mr-2" aria-hidden />}
           <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
         </DropdownMenuItem>
@@ -258,7 +278,7 @@ export function MobileTopNav({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => toggleTheme()}
+              onClick={() => toggleThemeAndPersist()}
               aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
               className="w-8 h-8 text-gray-700 dark:text-gray-300"
             >
@@ -273,7 +293,9 @@ export function MobileTopNav({
               aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
               className="h-9 w-9 text-gray-700 dark:text-gray-300"
             >
-              <Menu className="w-5 h-5" aria-hidden />
+              {/* Round-10 (live-probed): the live menu button swaps its glyph to
+                  lucide-x (w-5 h-5) while the drawer is open. */}
+              {menuOpen ? <X className="w-5 h-5" aria-hidden /> : <Menu className="w-5 h-5" aria-hidden />}
             </Button>
           </div>
         </div>

@@ -16,6 +16,8 @@ import { AddTransactionDialog, type TransactionKind } from "@/components/finara/
 import { QuickAddDialog } from "@/components/finara/quick-add-dialog";
 import { AiCoachDialog } from "@/components/finara/ai-coach-dialog";
 import { NotFoundView } from "@/components/finara/ui-bits";
+import { resetTheme, setTheme } from "@/components/finara/theme";
+import type { SettingsDto } from "@/lib/types";
 import { parseRoute, pathForView, type AppRoute } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
@@ -180,10 +182,26 @@ export function FinaraApp({ route: initialRoute }: { route: FinaraRouteInput }) 
       const target = fromUrlTarget(window.location.search) ?? "/";
       navigateToPath(target);
     }
+    // Round-10 (live-probed): the source app re-applies the SERVER-side user
+    // theme after sign-in (its User/me hydration) — sign-out cleared the local
+    // copy. The session renders immediately; the theme lands asynchronously,
+    // exactly like the live flow.
+    fetch("/api/settings", { cache: "no-store" })
+      .then((response) => (response.ok ? (response.json() as Promise<{ ok: boolean; data?: SettingsDto }>) : null))
+      .then((payload) => {
+        if (payload?.ok && payload.data) setTheme(payload.data.theme);
+      })
+      .catch(() => {
+        // Offline/unavailable — the locally stored (or default) theme stands.
+      });
   };
 
   const handleSignOut = () => {
     writeSession(null);
+    // Round-10 (live-probed): the source app's sign-out clears the persisted
+    // theme and drops the dark class, so the login page always renders light.
+    // Both sign-out surfaces (user menu + mobile drawer) route through here.
+    resetTheme();
     setMobileMenuOpen(false);
     setQuickAddOpen(false);
     setRoute(parseRoute("/"));

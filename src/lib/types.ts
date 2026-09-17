@@ -136,6 +136,9 @@ export interface AnalyticsDto {
 export interface SettingsDto {
   currency: string;
   dateFormat: string;
+  /** Round-10: the preferred theme persists server-side (live User.theme) and
+   *  is re-applied on sign-in; the login page itself always renders light. */
+  theme: "light" | "dark";
   pushNotifications: boolean;
   emailAlerts: boolean;
   budgetWarnings: boolean;

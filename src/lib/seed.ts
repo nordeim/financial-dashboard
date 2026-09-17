@@ -170,6 +170,9 @@ async function seed(): Promise<void> {
     data: [
       { key: "currency", value: "USD" },
       { key: "dateFormat", value: "MM/dd/yyyy" },
+      // Round-10: the preferred theme persists like the live user record's
+      // theme field; a fresh account starts light.
+      { key: "theme", value: "light" },
       { key: "pushNotifications", value: "false" },
       { key: "emailAlerts", value: "false" },
       { key: "budgetWarnings", value: "false" },
