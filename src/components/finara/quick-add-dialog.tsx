@@ -112,7 +112,14 @@ export function QuickAddDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={close}>
+    // modal={false} (round-12 live probe): Radix's modal lock sets
+    // pointer-events:none on <body>, which deadens the z-50 FAB while the
+    // chooser is open — but the live's FAB STAYS clickable and acts as the
+    // close toggle (elementFromPoint at its center resolves inside the FAB).
+    // Non-modal also matches the live's plain-div chooser (no focus trap,
+    // no aria-hidden on the app behind). Overlay-click dismiss is the
+    // content's own onPointerDown below; Escape still closes.
+    <Dialog open={open} onOpenChange={close} modal={false}>
       {/* z-40 overlay: the sage FAB (z-50) stays above the chooser and acts
           as the close toggle on the live app (its plus icon rotates to an X). */}
       <DialogContent
@@ -124,6 +131,17 @@ export function QuickAddDialog({
           // Live probe (round 6): the Quick Add chooser DOES dismiss on an
           // overlay click (unlike the full modals, which stay open).
           if (event.target === event.currentTarget) close(false);
+        }}
+        onInteractOutside={(event) => {
+          // Round-12: non-modal Radix dismisses on outside POINTERDOWN and
+          // on outside FOCUS (the FAB takes focus on mousedown). Either path
+          // closes the chooser before the FAB's own click-toggle runs, which
+          // then re-opens it (close→toggle double fire — traced live). On
+          // the live app the FAB is the ONLY outside actor and plain divs
+          // carry no dismiss/focus logic, so suppress Radix's outside
+          // interaction handling entirely; the overlay-click dismiss above
+          // and Escape still close.
+          event.preventDefault();
         }}
       >
         <div className="p-6">
