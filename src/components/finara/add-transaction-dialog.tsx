@@ -252,13 +252,15 @@ export function AddTransactionDialog({
       >
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-              {isExpense ? (
+            <DialogTitle asChild>
+              <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
+                {isExpense ? (
                 <Receipt className="w-5 h-5" aria-hidden />
-              ) : (
+                ) : (
                 <DollarSign className="w-5 h-5" aria-hidden />
-              )}
-              {isExpense ? (isEditing ? "Edit Expense" : "Add Expense") : "Add Income Source"}
+                )}
+                {isExpense ? (isEditing ? "Edit Expense" : "Add Expense") : "Add Income Source"}
+              </div>
             </DialogTitle>
             <button
               type="button"
@@ -335,7 +337,9 @@ export function AddTransactionDialog({
               />
             </div>
 
-            <div>
+            {/* Round 13 (F5, live-probed): the quick-amount label sits in
+                the same space-y-2 field wrapper as every other field. */}
+            <div className="space-y-2">
               <Label className="text-sm font-medium leading-none">Quick Add Amount</Label>
               <div className="flex flex-wrap gap-2">
                 {EXPENSE_QUICK_AMOUNTS.map((units) => (
@@ -480,7 +484,9 @@ export function AddTransactionDialog({
               />
             </div>
 
-            <div>
+            {/* Round 13 (F5, live-probed): the quick-amount label sits in
+                the same space-y-2 field wrapper as every other field. */}
+            <div className="space-y-2">
               <Label className="text-sm font-medium leading-none">Quick Add Amount</Label>
               <div className="flex flex-wrap gap-2">
                 {INCOME_QUICK_AMOUNTS.map((units) => (

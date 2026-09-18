@@ -125,7 +125,8 @@ export function QuickAddDialog({
       <DialogContent
         showCloseButton={false}
         overlayClassName="z-40"
-        className="max-w-md"
+        widthWrapperClassName="w-full max-w-md"
+        cardClassName="rounded-xl border text-card-foreground shadow bg-white dark:bg-gray-800"
         aria-describedby={undefined}
         onPointerDown={(event) => {
           // Live probe (round 6): the Quick Add chooser DOES dismiss on an
@@ -161,7 +162,7 @@ export function QuickAddDialog({
 
           {step === "chooser" ? (
             <div className="space-y-3">
-              <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">What would you like to add?</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">What would you like to add?</p>
               <Button
                 variant="outline"
                 onClick={() => start("income")}

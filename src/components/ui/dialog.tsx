@@ -38,14 +38,18 @@ export const DIALOG_CARD_BASE =
 // stayed open through a real overlay click; only the Quick Add chooser
 // dismisses — it wires its own onPointerDown). The backdrop therefore lives
 // ON the overlay, not as a separate Radix Close button.
+// Round-13 re-probe (2026-09-18): the live overlay carries NO animate
+// utilities — its fade is framer-motion inline style (opacity: 1;
+// transform: none), so the steady-state DOM has just the plain classes.
 const DIALOG_OVERLAY_BASE =
-  "fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+  "fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
 
 function DialogContent({
   className,
   cardClassName,
   overlayClassName,
   backdropClassName,
+  widthWrapperClassName,
   children,
   showCloseButton = true,
   ...props
@@ -65,6 +69,14 @@ function DialogContent({
   overlayClassName?: string
   /** Classes for the backdrop layer (live Add Account renders bg-black/60). */
   backdropClassName?: string
+  /**
+   * Round 13 (Quick Add chooser structure): the live chooser renders a
+   * width wrapper (`w-full max-w-md`, its motion transform div) BETWEEN the
+   * overlay and the card, and the card itself carries no width classes
+   * (`rounded-xl border text-card-foreground shadow bg-white dark:bg-gray-800`).
+   * Full modals keep the direct overlay > card shape (live-verified).
+   */
+  widthWrapperClassName?: string
   showCloseButton?: boolean
 }) {
   return (
@@ -73,15 +85,23 @@ function DialogContent({
         className={cn(DIALOG_OVERLAY_BASE, backdropClassName, overlayClassName)}
         {...props}
       >
-        <div className={cardClassName ?? cn(DIALOG_CARD_BASE, className)}>
-          {children}
-          {showCloseButton && (
-            <DialogPrimitive.Close className="absolute right-6 top-6 inline-flex h-9 w-9 items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </DialogPrimitive.Close>
-          )}
-        </div>
+        {widthWrapperClassName ? (
+          <div className={widthWrapperClassName}>
+            <div className={cardClassName ?? cn(DIALOG_CARD_BASE, className)}>
+              {children}
+            </div>
+          </div>
+        ) : (
+          <div className={cardClassName ?? cn(DIALOG_CARD_BASE, className)}>
+            {children}
+            {showCloseButton && (
+              <DialogPrimitive.Close className="absolute right-6 top-6 inline-flex h-9 w-9 items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </DialogPrimitive.Close>
+            )}
+          </div>
+        )}
       </DialogPrimitive.Content>
     </DialogPortal>
   )

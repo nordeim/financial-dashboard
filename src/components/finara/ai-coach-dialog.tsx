@@ -74,9 +74,11 @@ export function AiCoachDialog({
         <DialogHeader className="shrink-0">
           {/* Round-6: live header row — title + in-flow close button. */}
           <div className="flex items-center justify-between">
-            <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-              <Bot className="w-5 h-5" aria-hidden />
-              AI Financial Coach
+            <DialogTitle asChild>
+              <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
+                <Bot className="w-5 h-5" aria-hidden />
+                AI Financial Coach
+              </div>
             </DialogTitle>
             <button
               type="button"
