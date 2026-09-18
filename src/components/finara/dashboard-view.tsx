@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   ArrowDownLeft,
@@ -11,7 +12,6 @@ import {
   CircleCheckBig,
   CirclePlus,
   Landmark,
-  Loader2,
   MessageCircle,
   Plus,
   RefreshCw,
@@ -19,11 +19,12 @@ import {
   TrendingDown,
   TrendingUp,
   Wallet,
+  X,
 } from "lucide-react";
-import { useQuery, useSettings } from "@/hooks/use-api";
+import { mutate, useQuery, useSettings } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney } from "@/lib/money";
-import { ACTIVITY_BADGE, CATEGORY_DOT } from "@/lib/ui-maps";
+import { ACTIVITY_BADGE, CATEGORY_DOT, INSIGHT_ICON_DEFAULT, INSIGHT_TYPE_BADGE, INSIGHT_TYPE_ICON } from "@/lib/ui-maps";
 import { formatDate } from "@/lib/date-format";
 import { budgetRemainingLabel } from "@/lib/dashboard-kpis";
 import { EmptyState, ErrorNote, GradientCard, LoadingRows, SectionCard, StatCard, SurplusBadge } from "@/components/finara/ui-bits";
@@ -74,6 +75,16 @@ export function DashboardView({
     }
   }, []);
 
+  // Round 13 (live-probed): dismissing an insight persists is_dismissed and
+  // removes the row locally — the live's update() call, no toast, no refetch.
+  const dismissInsight = useCallback(
+    async (insight: AiInsightDto) => {
+      setInsights((current) => current.filter((entry) => entry.id !== insight.id));
+      await mutate(`/api/ai/insights/${insight.id}`, "PATCH", { is_dismissed: true });
+    },
+    [],
+  );
+
   // Insights load once on mount.
   useEffect(() => {
     void loadInsights();
@@ -94,7 +105,7 @@ export function DashboardView({
     <>
       {/* Page header (live-exact: AI Coach + Refresh outline buttons; the sage
           Add Transaction button is an anchor that navigates to /Expenses). */}
-      <div className="fade-in-up flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl lg:text-4xl font-bold text-primary-navy dark:text-white mb-2">Financial Dashboard</h1>
           <p className="text-neutral-600 dark:text-neutral-400">Real-time overview of your financial health</p>
@@ -137,7 +148,7 @@ export function DashboardView({
       ) : (
         <>
           {/* KPI row (live: md:2 / lg:4, gap-6) */}
-          <div className="fade-in-up stagger-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <StatCard
               label="Monthly Income"
               value={formatMoney(data.kpis.monthlyIncomeMinor, { currency })}
@@ -168,7 +179,7 @@ export function DashboardView({
           </div>
 
           {/* Action tiles (live: only Bank Sync + Portfolio are interactive) */}
-          <div className="fade-in-up stagger-2 grid md:grid-cols-4 gap-6 mb-8">
+          <div className="grid md:grid-cols-4 gap-6 mb-8">
             <GradientCard
               title="Largest Expense Category"
               value={data.kpis.largestExpenseCategory ?? "N/A"}
@@ -207,7 +218,7 @@ export function DashboardView({
           </div>
 
           {/* Feature grid (live: Budget col-span-2 + right column stacks Recent Activity + AI Insights) */}
-          <div className="fade-in-up stagger-3 grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
               <SectionCard
                 title="Budget Overview"
@@ -247,19 +258,15 @@ export function DashboardView({
                               </span>
                             </div>
                           </div>
-                          <div
-                            className="relative w-full overflow-hidden rounded-full h-2 bg-gray-200 dark:bg-gray-700"
-                            role="progressbar"
-                            aria-valuenow={Math.round(percentUsed)}
-                            aria-valuemin={0}
-                            aria-valuemax={100}
+                          {/* Round 13 (F6): the live's Progress renders
+                              data-state=indeterminate with the manual
+                              translateX transform — the primitive replicates
+                              it (value stays out of Radix's aria). */}
+                          <Progress
+                            value={Math.min(percentUsed, 100)}
+                            className="h-2 bg-gray-200 dark:bg-gray-700"
                             aria-label={`${budget.category} budget: ${Math.round(percentUsed)}% used`}
-                          >
-                            <div
-                              className="h-full w-full flex-1 bg-primary transition-all"
-                              style={{ transform: `translateX(-${100 - Math.min(percentUsed, 100)}%)` }}
-                            />
-                          </div>
+                          />
                           <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400">
                             <span>{percentUsed.toFixed(1)}% used</span>
                             <span
@@ -350,14 +357,20 @@ export function DashboardView({
                     <Button size="sm" variant="outline" onClick={onOpenAiCoach} className="gap-2">
                       <MessageCircle className="w-4 h-4" aria-hidden /> Ask AI
                     </Button>
+                    {/* Round 13: live refresh — ghost icon, no re-stated size
+                        classes (size="icon" carries them), disabled while
+                        loading, and the RefreshCw glyph ROTATES (framer-motion
+                        on the live; CSS spin here). */}
                     <Button
                       size="icon"
                       variant="ghost"
                       onClick={() => void loadInsights()}
                       aria-label="Refresh insights"
-                      className="h-9 w-9"
+                      disabled={insightsLoading}
                     >
-                      <RefreshCw className="w-4 h-4" aria-hidden />
+                      <div className={insightsLoading ? "animate-spin" : undefined}>
+                        <RefreshCw className="w-4 h-4" aria-hidden />
+                      </div>
                     </Button>
                   </div>
                 }
@@ -365,10 +378,12 @@ export function DashboardView({
                 {insightsError ? (
                   <ErrorNote message={insightsError} onRetry={() => void loadInsights()} />
                 ) : insightsLoading ? (
-                  <div className="flex items-center justify-center gap-2 py-8" role="status" aria-label="Generating insights">
-                    <Loader2 className="w-5 h-5 animate-spin text-violet-500" aria-hidden />
-                    <span className="text-sm text-neutral-500 dark:text-neutral-400">Generating insights…</span>
-                  </div>
+                  /* Round 13 (live-probed): while loading the body renders
+                     NOTHING — only the refresh glyph spins. No "generating"
+                     placeholder block. */
+                  <ScrollArea className="h-80">
+                    <div className="space-y-4" />
+                  </ScrollArea>
                 ) : (
                   /* Live body: fixed-height scroll area wrapping the insight feed. */
                   <ScrollArea className="h-80">
@@ -382,42 +397,46 @@ export function DashboardView({
                           </p>
                         </div>
                       ) : (
-                        insights.map((insight) => (
-                          <div
-                            key={insight.id}
-                            className={cn(
-                              "rounded-xl border p-4",
-                              insight.tone === "positive"
-                                ? "border-emerald-200 bg-emerald-50/60 dark:border-emerald-800 dark:bg-emerald-900/20"
-                                : insight.tone === "warning"
-                                  ? "border-amber-200 bg-amber-50/60 dark:border-amber-800 dark:bg-amber-900/20"
-                                  : "border-neutral-200 bg-neutral-50/60 dark:border-gray-600 dark:bg-gray-700/30",
-                            )}
-                          >
-                            <div className="mb-2 flex items-center gap-2">
-                              <span
-                                className={cn(
-                                  "flex h-8 w-8 items-center justify-center rounded-lg",
-                                  insight.tone === "positive"
-                                    ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-400"
-                                    : insight.tone === "warning"
-                                      ? "bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-400"
-                                      : "bg-neutral-100 text-neutral-500 dark:bg-gray-700 dark:text-neutral-300",
-                                )}
-                              >
-                                {insight.tone === "positive" ? (
-                                  <TrendingUp className="w-4 h-4" aria-hidden />
-                                ) : insight.tone === "warning" ? (
-                                  <TrendingDown className="w-4 h-4" aria-hidden />
-                                ) : (
-                                  <Brain className="w-4 h-4" aria-hidden />
-                                )}
-                              </span>
-                              <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">{insight.title}</h3>
+                        insights.map((insight, index) => {
+                          const TypeIcon = INSIGHT_TYPE_ICON[insight.insightType] ?? INSIGHT_ICON_DEFAULT;
+                          return (
+                            <div
+                              key={insight.id}
+                              className="insight-row p-4 bg-neutral-50/50 dark:bg-gray-700/30 rounded-xl"
+                              style={{ animationDelay: `${index * 0.1}s` }}
+                            >
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <TypeIcon className="w-4 h-4 text-neutral-600 dark:text-neutral-300" aria-hidden />
+                                  <Badge variant="secondary" className={INSIGHT_TYPE_BADGE[insight.insightType] ?? INSIGHT_TYPE_BADGE.trend}>
+                                    {insight.insightType}
+                                  </Badge>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => void dismissInsight(insight)}
+                                  aria-label={`Dismiss insight: ${insight.title}`}
+                                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground w-6 h-6 text-neutral-400 hover:text-neutral-600"
+                                >
+                                  <X className="w-3 h-3" aria-hidden />
+                                </button>
+                              </div>
+                              <h4 className="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{insight.title}</h4>
+                              <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-2">{insight.description}</p>
+                              {insight.suggestedAction ? (
+                                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2 mt-2">
+                                  <p className="text-sm text-blue-800 dark:text-blue-300 font-medium">
+                                    💡 Suggestion: {insight.suggestedAction}
+                                  </p>
+                                </div>
+                              ) : null}
+                              <div className="flex items-center justify-between mt-3 text-xs text-neutral-500 dark:text-neutral-400">
+                                <span>Confidence: {Math.round(insight.confidenceScore * 100)}%</span>
+                                {insight.category ? <span>Category: {insight.category}</span> : null}
+                              </div>
                             </div>
-                            <p className="text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">{insight.body}</p>
-                          </div>
-                        ))
+                          );
+                        })
                       )}
                     </div>
                   </ScrollArea>
@@ -427,7 +446,7 @@ export function DashboardView({
           </div>
 
           {/* Quick Actions (live: plain mt-12 panel, NOT a Card; anchor-wrapped buttons) */}
-          <div className="fade-in-up mt-12 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6">
+          <div className="mt-12 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6">
             <h3 className="text-xl font-bold text-primary-navy dark:text-white mb-4">Quick Actions</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <a

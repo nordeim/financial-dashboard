@@ -1,4 +1,4 @@
-import { Banknote, Building, Landmark, type LucideIcon } from "lucide-react";
+import { Banknote, Brain, Building, Landmark, Lightbulb, Target, TrendingUp, TriangleAlert, type LucideIcon } from "lucide-react";
 
 /**
  * Source-exact UI maps captured from the live Finara app on 2026-09-15.
@@ -92,3 +92,29 @@ export const ACCOUNT_TYPE_ICONS: Record<string, LucideIcon> = {
 
 /** Shared goal tile gradient (every category uses the same purple ramp). */
 export const GOAL_TILE_GRADIENT = "bg-gradient-to-r from-purple-500 to-purple-600";
+
+/**
+ * AI Insights maps (round 13, live-probed 2026-09-18). The live card
+ * renders the RAW insight_type id as the badge text with per-type colors,
+ * and maps each type to a lucide icon: anomaly|alert → TriangleAlert,
+ * trend → TrendingUp, opportunity → Lightbulb, prediction → Target,
+ * default (and the empty state) → Brain.
+ */
+export const INSIGHT_TYPE_BADGE: Record<string, string> = {
+  anomaly: "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300",
+  alert: "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300",
+  trend: "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300",
+  opportunity: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300",
+  prediction: "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300",
+};
+
+export const INSIGHT_TYPE_ICON: Record<string, LucideIcon> = {
+  anomaly: TriangleAlert,
+  alert: TriangleAlert,
+  trend: TrendingUp,
+  opportunity: Lightbulb,
+  prediction: Target,
+};
+
+/** Fallback icon for unknown types (the live's default case). */
+export const INSIGHT_ICON_DEFAULT: LucideIcon = Brain;
