@@ -133,7 +133,7 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
           />
         </div>
       ) : (
-        <div className="fade-in-up grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {accounts.map((account) => {
             const TypeIcon = ACCOUNT_TYPE_ICONS[account.type] ?? Landmark;
             return (
@@ -216,7 +216,9 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
           aria-describedby={undefined}
         >
           <DialogHeader>
-            <DialogTitle className="font-semibold leading-none tracking-tight">{editing ? "Edit Account" : "Add Account"}</DialogTitle>
+            <DialogTitle asChild>
+              <div className="font-semibold leading-none tracking-tight">{editing ? "Edit Account" : "Add Account"}</div>
+            </DialogTitle>
           </DialogHeader>
           <div className="p-6 pt-0">
           <form onSubmit={handleSubmit} className="space-y-4">

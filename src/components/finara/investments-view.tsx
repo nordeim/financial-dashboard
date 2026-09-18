@@ -170,7 +170,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
       ) : (
         <>
           {/* KPI row (live: blue + emerald gradients, white return card, w-12 bare icons) */}
-          <div className="fade-in-up grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg">
               <div className="p-6">
                 <div className="flex items-center justify-between">
@@ -210,7 +210,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
           </div>
 
           {/* Holdings grid (live: table col-span-2 + sector list right) */}
-          <div className="fade-in-up stagger-1 grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
               <div className={cn(CARD_PLAIN)}>
                 <div className="flex flex-col space-y-1.5 p-6">
@@ -340,10 +340,12 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
         <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto" showCloseButton={false} aria-describedby={undefined}>
           <DialogHeader>
             <div className="flex items-center justify-between">
-              <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
+              <DialogTitle asChild>
+              <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                 <TrendingUp className="w-5 h-5" aria-hidden />
                 {editing ? "Edit Investment" : "Add Investment"}
-              </DialogTitle>
+              </div>
+            </DialogTitle>
               <button
                 type="button"
                 onClick={() => setDialogOpen(false)}

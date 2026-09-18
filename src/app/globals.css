@@ -338,28 +338,26 @@
 .dark .border-gray-200 { border-color: #334155; }
 .dark .border-gray-300 { border-color: #475569; }
 
-/* Staggered entrance animations (CSS-only approximation of the live
-   framer-motion fade/slide; reduced-motion safe). */
-@keyframes finara-fade-up {
+/* Insight card entrance (round 13 — the live's framer-motion rows fade in
+   from the left with a 0.1s stagger; CSS replication, reduced-motion safe).
+   The page-wide fade-in-up/stagger entrance animations were REMOVED with
+   the live app's round-13 update (probed 2026-09-18: zero fade-in-up
+   elements, zero matching CSS rules, animationName none). */
+@keyframes finara-insight-in {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateX(-20px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(0);
   }
 }
-.fade-in-up {
-  animation: finara-fade-up 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+.insight-row {
+  animation: finara-insight-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.1s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.2s; }
-.stagger-5 { animation-delay: 0.25s; }
 @media (prefers-reduced-motion: reduce) {
-  .fade-in-up {
+  .insight-row {
     animation: none;
   }
 }

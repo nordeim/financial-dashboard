@@ -125,7 +125,7 @@ export function SettingsView() {
       ) : (
         <div className="space-y-6">
           {/* Profile Settings (live: user icon header + two selects) */}
-          <div className={cn(CARD_PLAIN, "fade-in-up")}>
+          <div className={cn(CARD_PLAIN)}>
             <div className="flex flex-col space-y-1.5 p-6">
               <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                 <User className="w-5 h-5" aria-hidden /> Profile Settings
@@ -168,7 +168,7 @@ export function SettingsView() {
           </div>
 
           {/* Notifications (live: bell icon, text-base labels, space-y-6 rows) */}
-          <div className={cn(CARD_PLAIN, "fade-in-up stagger-1")}>
+          <div className={cn(CARD_PLAIN)}>
             <div className="flex flex-col space-y-1.5 p-6">
               <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                 <Bell className="w-5 h-5" aria-hidden /> Notifications
@@ -194,7 +194,7 @@ export function SettingsView() {
           </div>
 
           {/* Export Your Data (live: blue info box + full-width blue button) */}
-          <div className={cn(CARD_PLAIN, "fade-in-up stagger-2")}>
+          <div className={cn(CARD_PLAIN)}>
             <div className="flex flex-col space-y-1.5 p-6">
               <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                 <Download className="w-5 h-5" aria-hidden /> Export Your Data
@@ -219,7 +219,7 @@ export function SettingsView() {
           </div>
 
           {/* Import Data (live: amber warning box + visible file input) */}
-          <div className={cn(CARD_PLAIN, "fade-in-up stagger-3")}>
+          <div className={cn(CARD_PLAIN)}>
             <div className="flex flex-col space-y-1.5 p-6">
               <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                 <Upload className="w-5 h-5" aria-hidden /> Import Data
@@ -257,7 +257,7 @@ export function SettingsView() {
           </div>
 
           {/* Your Data Summary (live: text-2xl titles + colored pills) */}
-          <div className={cn(CARD_PLAIN, "fade-in-up stagger-4")}>
+          <div className={cn(CARD_PLAIN)}>
             <div className="flex flex-col space-y-1.5 p-6">
               <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                 <FileText className="w-5 h-5" aria-hidden /> Your Data Summary

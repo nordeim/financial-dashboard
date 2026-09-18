@@ -130,7 +130,7 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
       ) : (
         <>
           {/* Hero total card (live: emerald gradient, text-4xl, w-20 icon circle) */}
-          <div className="fade-in-up mb-8">
+          <div className="mb-8">
             <div className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-xl">
               <div className="p-8">
               <div className="flex items-center justify-between">
@@ -163,7 +163,7 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
               />
             </div>
           ) : (
-            <div className="fade-in-up stagger-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sources.map((source) => (
                 <div key={source.id} className={CARD_HOVER}>
                   <div className="p-6">
@@ -232,9 +232,11 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
         <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto" showCloseButton={false} aria-describedby={undefined}>
           <DialogHeader>
             <div className="flex items-center justify-between">
-              <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
+              <DialogTitle asChild>
+              <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                 <DollarSign className="w-5 h-5" aria-hidden /> Edit Income Source
-              </DialogTitle>
+              </div>
+            </DialogTitle>
               <button
                 type="button"
                 onClick={() => setEditOpen(false)}

@@ -157,7 +157,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
       ) : (
         <>
           {/* Summary cards (live: red gradient total Card + dotted category cards, mb-8) */}
-          <div className="fade-in-up grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white border-0 shadow-lg">
               <div className="p-6">
                 <div className="flex items-center justify-between">
@@ -187,7 +187,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
           </div>
 
           {/* Search + Filters (live: bare on the page, mb-6, NOT inside a card) */}
-          <div className="fade-in-up stagger-1 mb-6">
+          <div className="mb-6">
             <div className="space-y-4">
               <div className="flex gap-3">
                 <div className="flex-1 relative">
@@ -293,7 +293,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
 
           {/* Expense History (live: separate card, receipt icon title, tabs in
               the CardHeader row, NO card-hover) */}
-          <Card className={cn(CARD_PLAIN, "fade-in-up stagger-2")}>
+          <Card className={cn(CARD_PLAIN)}>
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <CardTitle className="flex items-center gap-2 text-primary-navy dark:text-white">

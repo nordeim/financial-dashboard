@@ -155,7 +155,7 @@ export function AnalyticsView() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-8">
-            <div className={cn(CARD_PLAIN, "fade-in-up")}>
+            <div className={cn(CARD_PLAIN)}>
               <div className="flex flex-col space-y-1.5 p-6">
                 <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                   <TrendingUp className="w-5 h-5" aria-hidden /> Income vs Expenses Trend
@@ -192,7 +192,7 @@ export function AnalyticsView() {
               </div>
             </div>
 
-            <div className="fade-in-up stagger-1 grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-3 gap-6">
               <div className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-lg">
                 <div className="p-6">
                   <div className="flex items-center justify-between">
@@ -232,7 +232,7 @@ export function AnalyticsView() {
           </TabsContent>
 
           <TabsContent value="expenses" className="space-y-8">
-            <div className={cn(CARD_PLAIN, "fade-in-up")}>
+            <div className={cn(CARD_PLAIN)}>
               <div className="flex flex-col space-y-1.5 p-6">
                 <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                   <ChartPie className="w-5 h-5" aria-hidden /> Spending by Category
@@ -264,7 +264,7 @@ export function AnalyticsView() {
               </div>
             </div>
 
-            <div className={cn(CARD_PLAIN, "fade-in-up stagger-1")}>
+            <div className={cn(CARD_PLAIN)}>
               <div className="flex flex-col space-y-1.5 p-6">
                 <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                   <ChartColumn className="w-5 h-5" aria-hidden /> Top Spending Categories
@@ -302,7 +302,7 @@ export function AnalyticsView() {
               Income shows the empty pane in both apps. */}
 
           <TabsContent value="investments" className="space-y-8">
-            <div className={cn(CARD_PLAIN, "fade-in-up")}>
+            <div className={cn(CARD_PLAIN)}>
               <div className="flex flex-col space-y-1.5 p-6">
                 <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
                   <ChartPie className="w-5 h-5" aria-hidden /> Portfolio Allocation by Sector

@@ -238,7 +238,7 @@ export function ImportView() {
          * entirely — a plain card with border-red-500, centered p-8 body,
          * big CircleAlert (h-16 w-16 — a live h-first exception), text-xl
          * title, neutral-500 message, default-primary Start New Import. */
-        <div className="fade-in-up rounded-xl border bg-card text-card-foreground shadow border-red-500" role="alert">
+        <div className="rounded-xl border bg-card text-card-foreground shadow border-red-500" role="alert">
           <div className="flex flex-col items-center justify-center p-8">
             <CircleAlert className="h-16 w-16 text-red-500" aria-hidden />
             <h3 className="mt-4 text-xl font-bold">An Error Occurred</h3>
@@ -249,7 +249,7 @@ export function ImportView() {
           </div>
         </div>
       ) : (
-      <div className="fade-in-up rounded-xl border bg-card text-card-foreground shadow">
+      <div className="rounded-xl border bg-card text-card-foreground shadow">
         <div className="flex flex-col space-y-1.5 p-6">
           <div className="font-semibold leading-none tracking-tight">
             {step === 1 ? "Step 1: Upload File" : step === 2 ? "Step 2: Review & Categorize" : "Step 3: Done"}
