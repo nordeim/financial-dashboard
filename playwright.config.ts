@@ -41,6 +41,10 @@ export default defineConfig({
     env: {
       ...process.env,
       DATABASE_URL: E2E_DB,
+      // Round 13: the insights LLM polish rewrites text nondeterministically
+      // — one run's polished title substring-collided with spec assertions.
+      // The gate stays hermetic: deterministic insight drafts only.
+      FINARA_INSIGHTS_LLM_OFF: "1",
     },
   },
 });

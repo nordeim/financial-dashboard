@@ -17,7 +17,16 @@ test.describe("settings propagation", () => {
 
     await navigateToView(page, "Dashboard", "Financial Dashboard");
     await expect(page.getByText("€").first()).toBeVisible();
-    await expect(page.getByText(/\$\d/)).toHaveCount(0);
+    // Round 13: the only permitted $-text is the persisted AI-insight
+    // record content — paragraphs inside an insight row (the dashboard's
+    // only h4s). Records are immutable content generated with the
+    // creation-time currency, exactly like the live's externally-generated
+    // TransactionInsight rows (refresh re-lists, never regenerates).
+    // Everything else renders live and must show €.
+    const staleDollars = await page
+      .getByText(/\$\d/)
+      .evaluateAll((els) => els.filter((el) => !el.matches("h4 ~ p")).length);
+    expect(staleDollars).toBe(0);
     await restoreDefaultSettings(page);
   });
 

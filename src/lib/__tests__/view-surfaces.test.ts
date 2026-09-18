@@ -285,23 +285,23 @@ describe("app shell + route sync (F1/F10)", () => {
 describe("dashboard view (F19/F4/F5/F6)", () => {
   it("header uses the standard live order", () => {
     expect(src.dashboard).toContain(
-      'fade-in-up flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4',
+      'flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4',
     );
   });
 
   it("KPI grid, gradient row and bottom grid orders", () => {
     expect(src.dashboard).toContain(
-      'fade-in-up stagger-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8',
+      'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8',
     );
-    expect(src.dashboard).toContain('fade-in-up stagger-2 grid md:grid-cols-4 gap-6 mb-8');
-    expect(src.dashboard).toContain('fade-in-up stagger-3 grid lg:grid-cols-3 gap-8');
+    expect(src.dashboard).toContain('grid md:grid-cols-4 gap-6 mb-8');
+    expect(src.dashboard).toContain('grid lg:grid-cols-3 gap-8');
     expect(src.dashboard).toContain('"grid grid-cols-2 md:grid-cols-4 gap-4"');
     expect(src.dashboard).toContain('"lg:col-span-2 space-y-8"');
   });
 
   it("Quick Actions panel + button orders", () => {
     expect(src.dashboard).toContain(
-      'fade-in-up mt-12 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6',
+      'mt-12 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6',
     );
     expect(src.dashboard).toContain(
       '"px-4 py-2 w-full h-16 flex-col gap-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"',
@@ -321,7 +321,7 @@ describe("dashboard view (F19/F4/F5/F6)", () => {
       '"flex items-center gap-3 p-3 rounded-lg bg-neutral-50/50 dark:bg-gray-700/30 hover:bg-neutral-100/50 dark:hover:bg-gray-700/50 transition-colors"',
     );
     expect(src.dashboard).toContain(
-      '"relative w-full overflow-hidden rounded-full h-2 bg-gray-200 dark:bg-gray-700"',
+      '<Progress',
     );
     expect(src.uiBits).toContain(
       '"w-16 h-16 bg-white/20 rounded-full flex items-center justify-center"',
@@ -345,7 +345,7 @@ describe("dashboard view (F19/F4/F5/F6)", () => {
 describe("income view (F2/F3/F4/F5/F6)", () => {
   it("source grid replaces the space-y stack", () => {
     expect(src.income).toContain(
-      'fade-in-up stagger-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6',
+      'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6',
     );
     expect(src.income).not.toContain('"space-y-8"');
   });
@@ -377,7 +377,7 @@ describe("accounts view (F2/F3/F5)", () => {
 
   it("grid replaces the stack; header/footer merges", () => {
     expect(src.accounts).toContain(
-      'fade-in-up grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6',
+      'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6',
     );
     expect(src.accounts).toContain('"space-y-1.5 p-6 flex flex-row items-start justify-between"');
     expect(src.accounts).toContain('"p-6 pt-0 flex-grow flex flex-col justify-end"');
@@ -388,8 +388,8 @@ describe("accounts view (F2/F3/F5)", () => {
 
 describe("investments view (F2/F4/F5/F9)", () => {
   it("KPI + holdings grids", () => {
-    expect(src.investments).toContain('fade-in-up grid grid-cols-1 md:grid-cols-3 gap-6 mb-8');
-    expect(src.investments).toContain('fade-in-up stagger-1 grid lg:grid-cols-3 gap-8');
+    expect(src.investments).toContain('grid grid-cols-1 md:grid-cols-3 gap-6 mb-8');
+    expect(src.investments).toContain('grid lg:grid-cols-3 gap-8');
     expect(src.investments).not.toContain('"space-y-8"');
   });
 
@@ -411,9 +411,9 @@ describe("goals view (F2/F5/F9)", () => {
     // (live-probed post-reload at 100% and 150%).
     expect(src.goals).toContain('className={cn(CARD_HOVER, complete && "ring-2 ring-emerald-200 dark:ring-emerald-700")}');
     expect(src.goals).toContain(
-      'fade-in-up grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8',
+      'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8',
     );
-    expect(src.goals).toContain('"relative w-full overflow-hidden rounded-full bg-primary/20 h-2"');
+    expect(src.goals).toContain('<Progress');
     expect(src.goals).toContain('"tracking-tight text-lg font-bold text-neutral-900 dark:text-neutral-100 truncate"');
     expect(src.goals).toContain('"flex items-center gap-2 mt-1"');
     expect(src.goals).toContain('"p-6 pt-0 space-y-4"');
@@ -424,7 +424,7 @@ describe("goals view (F2/F5/F9)", () => {
 describe("analytics view (F17/F2/F5)", () => {
   it("KPI grid + filter row + card restate surface", () => {
     expect(src.analytics).toContain(
-      'fade-in-up stagger-1 grid md:grid-cols-3 gap-6',
+      'grid md:grid-cols-3 gap-6',
     );
     expect(src.analytics).toContain('"flex gap-3 flex-wrap"');
     expect(src.analytics).not.toContain('<div className="space-y-8">');
@@ -437,7 +437,7 @@ describe("analytics view (F17/F2/F5)", () => {
 
 describe("settings view (F18/F2/F5/F6)", () => {
   it("restate cards, grids, info boxes, icons and buttons", () => {
-    expect(src.settings).toContain('cn(CARD_PLAIN, "fade-in-up")');
+    expect(src.settings).toContain('cn(CARD_PLAIN)');
     expect(src.settings).toContain('"grid md:grid-cols-2 gap-4"');
     expect(src.settings).toContain('"grid grid-cols-2 md:grid-cols-4 gap-4"');
     expect(src.settings).toContain(
@@ -469,7 +469,7 @@ describe("settings view (F18/F2/F5/F6)", () => {
 describe("import view (F16)", () => {
   it("plain card + content/dropzone/label/button orders", () => {
     expect(src.import).toContain(
-      '"fade-in-up rounded-xl border bg-card text-card-foreground shadow"',
+      '"rounded-xl border bg-card text-card-foreground shadow"',
     );
     expect(src.import).toContain('"p-6 pt-0 space-y-4"');
     expect(src.import).toContain('"p-6 border-2 border-dashed rounded-lg text-center"');

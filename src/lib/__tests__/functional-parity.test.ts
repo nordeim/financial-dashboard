@@ -47,6 +47,13 @@ const src = {
   investmentsView: read("src/components/finara/investments-view.tsx"),
   goalsView: read("src/components/finara/goals-view.tsx"),
   addTransaction: read("src/components/finara/add-transaction-dialog.tsx"),
+  quickAdd: read("src/components/finara/quick-add-dialog.tsx"),
+  loginView: read("src/components/finara/login-view.tsx"),
+  sidebar: read("src/components/finara/sidebar.tsx"),
+  finaraApp: read("src/components/finara/finara-app.tsx"),
+  uiBits: read("src/components/finara/ui-bits.tsx"),
+  filtersPanel: read("src/components/finara/expense-filters-panel.tsx"),
+  progress: read("src/components/ui/progress.tsx"),
 };
 
 describe("money: currency helpers (F6/F11)", () => {
@@ -572,5 +579,167 @@ describe("round 12: the FAB stays clickable while its chooser is open (live-prob
     // outside paths are suppressed; the FAB is the only outside actor.
     expect(quickAdd).toContain("onInteractOutside={(event) => {");
     expect(quickAdd).toContain("event.preventDefault();");
+  });
+});
+
+describe("round 13 F1: AI Insights render persisted records (live redesign, probed 2026-09-18)", () => {
+  it("the insights route lists records and never regenerates when records exist", () => {
+    const route = read("src/app/api/ai/insights/route.ts");
+    // Live: TransactionInsight.list("-created_date", 10) then filter
+    // !is_dismissed — the GET is a pure list; refresh re-lists.
+    expect(route).toContain("orderBy: { createdAt: \"desc\" }");
+    expect(route).toContain("take: 10");
+    // Live mechanics: fetch the 10 newest, THEN filter dismissed client-list
+    // side (fetch-then-filter, like TransactionInsight.list + .filter).
+    expect(route).toContain("!row.isDismissed");
+    // Generation only when the table is COMPLETELY empty (dismissed records
+    // still count as records — dismissing everything must leave the empty
+    // state showing, like the live).
+    expect(route).toContain("db.insight.count()");
+  });
+
+  it("the dismiss endpoint mirrors the live's update {is_dismissed: true}", () => {
+    const route = read("src/app/api/ai/insights/[id]/route.ts");
+    expect(route).toContain("PATCH");
+    expect(route).toContain("isDismissed: true");
+  });
+
+  it("the DTO carries the live record fields (insightType/confidenceScore/suggestedAction/category)", () => {
+    expect(read("src/lib/types.ts")).toContain("insightType: InsightType;");
+    expect(read("src/lib/types.ts")).toContain("suggestedAction?: string;");
+    expect(read("src/lib/types.ts")).toContain("confidenceScore: number;");
+    expect(read("src/lib/types.ts")).toContain("category?: string;");
+    expect(read("src/lib/types.ts")).not.toContain("tone:");
+  });
+
+  it("the dashboard renders the live card anatomy (type icon + badge, dismiss X, suggested-action callout, confidence footer)", () => {
+    const view = read("src/components/finara/dashboard-view.tsx");
+    expect(view).toContain("p-4 bg-neutral-50/50 dark:bg-gray-700/30 rounded-xl");
+    expect(view).toContain("flex items-start justify-between mb-2");
+    expect(view).toContain("w-6 h-6 text-neutral-400 hover:text-neutral-600");
+    expect(view).toContain("font-semibold text-neutral-900 dark:text-neutral-100 mb-2");
+    expect(view).toContain("text-sm text-neutral-600 dark:text-neutral-300 mb-2");
+    expect(view).toContain("bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2 mt-2");
+    expect(view).toContain("text-sm text-blue-800 dark:text-blue-300 font-medium");
+    expect(view).toContain("flex items-center justify-between mt-3 text-xs text-neutral-500 dark:text-neutral-400");
+    expect(view).toContain("💡 Suggestion:");
+    expect(view).toContain("Confidence:");
+  });
+
+  it("the refresh icon rotates while loading and the body renders blank, not a generating block (live: nothing while loading)", () => {
+    const view = read("src/components/finara/dashboard-view.tsx");
+    expect(view).not.toContain("Generating insights");
+    expect(view).toMatch(/animate-spin/);
+  });
+
+  it("the dismiss flow calls PATCH and removes the row locally (live behavior)", () => {
+    const view = read("src/components/finara/dashboard-view.tsx");
+    expect(view).toContain("`/api/ai/insights/${insight.id}`");
+    expect(view).toContain("current.filter((entry) => entry.id !== insight.id)");
+  });
+
+  it("the ui-maps module owns the insight badge/icon maps (no forked values in the view)", () => {
+    const maps = read("src/lib/ui-maps.ts");
+    expect(maps).toContain("INSIGHT_TYPE_BADGE");
+    expect(maps).toContain("anomaly");
+    expect(maps).toContain("prediction");
+    // View consumes the maps, never a forked hex.
+    const view = read("src/components/finara/dashboard-view.tsx");
+    expect(view).toContain("INSIGHT_TYPE_BADGE");
+    expect(view).not.toContain("bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300");
+  });
+});
+
+describe("round 13 F2: entrance animations removed (live renders zero fade-in-up/stagger)", () => {
+  it("no view source references fade-in-up or stagger classes", () => {
+    for (const [name, source] of Object.entries(src)) {
+      expect(source.includes("fade-in-up"), `${name} still renders fade-in-up`).toBe(false);
+      expect(source.includes("stagger-"), `${name} still renders stagger-N`).toBe(false);
+    }
+  });
+
+  it("globals.css drops the fade-in-up keyframes and stagger delays", () => {
+    const css = read("src/app/globals.css");
+    expect(css).not.toContain(".fade-in-up");
+    expect(css).not.toContain(".stagger-");
+  });
+});
+
+describe("round 13 F3: full-modal titles render DIVs (live renders div titles, not h2)", () => {
+  it("every full-modal DialogTitle renders asChild around a div", () => {
+    for (const name of ["addTransaction"]) {
+      const source = src[name];
+      const matches = source.match(/<DialogTitle[^>]*>/g) ?? [];
+      const asChild = source.match(/<DialogTitle asChild>/g) ?? [];
+      expect(matches.length, `${name}: expected DialogTitle usages`).toBeGreaterThan(0);
+      expect(matches.length, `${name}: every title must be asChild`).toBe(asChild.length);
+    }
+  });
+
+  it("the AI coach title renders as a div through asChild", () => {
+    expect(src.aiCoach).toContain("<DialogTitle asChild>");
+    expect(src.aiCoach).toMatch(/<div className="font-semibold leading-none tracking-tight/);
+  });
+});
+
+describe("round 13 F4: Quick Add chooser structure (live: overlay > w-full max-w-md wrapper > plain card)", () => {
+  it("the chooser card carries no width classes — the wrapper owns w-full max-w-md", () => {
+    const quickAdd = read("src/components/finara/quick-add-dialog.tsx");
+    expect(quickAdd).toContain('"w-full max-w-md"');
+  });
+
+  it("the chooser subtitle renders the live class order (text-sm first, mb-4 last)", () => {
+    const quickAdd = read("src/components/finara/quick-add-dialog.tsx");
+    expect(quickAdd).toContain('"text-sm text-gray-600 dark:text-gray-400 mb-4"');
+  });
+});
+
+describe("round 13 F5: the Quick Add Amount label sits in a space-y-2 field wrapper", () => {
+  it("the expense form wraps the label like every other field", () => {
+    const dialog = read("src/components/finara/add-transaction-dialog.tsx");
+    expect(dialog).toMatch(/<div className="space-y-2">\s*<Label[^>]*>\s*Quick Add Amount/);
+  });
+});
+
+describe("round 13 F6: Progress renders the live indeterminate mechanism (probed)", () => {
+  it("the primitive keeps the value out of Radix (data-state=indeterminate, no aria-valuenow) with the manual transform", () => {
+    const progress = read("src/components/ui/progress.tsx");
+    expect(progress).not.toMatch(/value=\{value\}/);
+    expect(progress).toContain("translateX(-${100 - (value || 0)}%)");
+  });
+
+  it("the views render the Progress primitive instead of raw progressbar divs (data-state/data-max come from Radix)", () => {
+    expect(src.dashboardView).toMatch(/<Progress/);
+    expect(src.goalsView).toMatch(/<Progress/);
+    expect(src.dashboardView).not.toContain("aria-valuenow");
+    expect(src.goalsView).not.toContain("aria-valuenow");
+    expect(src.dashboardView).not.toContain('role="progressbar"');
+    expect(src.goalsView).not.toContain('role="progressbar"');
+  });
+});
+
+describe("round 13 (E2E-gate follow-up): the insights LLM polish is hermetic and positionally joined", () => {
+  // The E2E gate caught the LLM polish rewriting insight titles
+  // nondeterministically (one run's polished title substring-collided with
+  // the KPI label assertion) AND the title-keyed join losing
+  // confidence/category whenever a title was rewritten. The polish is now
+  // env-gated off in E2E and the join lives in the pure seam.
+  it("the route joins polished output through mergePolishedDrafts — never a title-keyed lookup", () => {
+    const route = read("src/app/api/ai/insights/route.ts");
+    expect(route).toContain("mergePolishedDrafts");
+    expect(route).not.toContain(".title === entry.title");
+    expect(route).not.toContain("?? 0.8");
+  });
+
+  it("the polish attempt is gated behind FINARA_INSIGHTS_LLM_OFF (deterministic when set)", () => {
+    const route = read("src/app/api/ai/insights/route.ts");
+    expect(route).toContain("FINARA_INSIGHTS_LLM_OFF");
+    // The gate wraps the ZAI attempt — set means deterministic drafts.
+    expect(route).toMatch(/FINARA_INSIGHTS_LLM_OFF[^\n]*\n\s*try \{\n[^\n]*ZAI\.create/);
+  });
+
+  it("the E2E webServer pins the flag so the gate stays hermetic", () => {
+    const config = read("playwright.config.ts");
+    expect(config).toContain("FINARA_INSIGHTS_LLM_OFF");
   });
 });

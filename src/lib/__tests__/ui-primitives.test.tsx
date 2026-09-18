@@ -325,3 +325,43 @@ describe("Select popup source contracts (round-11 live capture — portal surfac
     expect(selectSource).toContain('<Check className="h-4 w-4" />');
   });
 });
+
+describe("round 13: dialog overlay base (animate utilities removed with the live update)", () => {
+  it("the overlay no longer carries animate-in/out utilities (live: plain classes + framer-motion inline)", () => {
+    const dialog = readFileSync(join(process.cwd(), "src/components/ui/dialog.tsx"), "utf8");
+    const base = dialog.match(/DIALOG_OVERLAY_BASE =\s*\n?\s*"([^"]+)"/);
+    expect(base).not.toBeNull();
+    expect(base?.[1]).toBe("fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50");
+  });
+});
+
+describe("round 13: DialogTitle renders asChild divs (live titles are DIVs)", () => {
+  it("asChild forwards the semantics onto the caller's div", () => {
+    const html = render(
+      <Dialog>
+        <DialogTitle asChild>
+          <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
+            Add Expense
+          </div>
+        </DialogTitle>
+      </Dialog>,
+    );
+    const all = decode(html);
+    expect(all).toContain("<div");
+    expect(all).not.toContain("<h2");
+    expect(all).toContain(
+      'class="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white"',
+    );
+  });
+});
+
+describe("round 13: Progress indeterminate mechanism (live-probed)", () => {
+  it("never renders aria-valuenow and carries data-state=indeterminate + the manual transform", () => {
+    const html = render(<Progress value={24.5} aria-label="x" />);
+    const all = decode(html);
+    expect(all).not.toContain("aria-valuenow");
+    expect(all).toContain('data-state="indeterminate"');
+    expect(all).toContain("translateX(-75.5%)");
+    expect(all).toContain('data-max="100"');
+  });
+});
