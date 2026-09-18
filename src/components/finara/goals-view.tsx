@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {CircleCheckBig, Clock, DollarSign, Loader2, Pen, Plus, Target, TrendingUp} from "lucide-react";
 import { mutate, useQuery, useSettings } from "@/hooks/use-api";
@@ -171,7 +172,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
           />
         </div>
       ) : (
-        <div className="fade-in-up grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {goals.map((goal) => {
             const progress = percent(goal.currentAmountMinor, goal.targetAmountMinor);
             // Progress-based (round-11 live probe): a negative-target goal
@@ -245,19 +246,15 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                       <span className="text-neutral-600 dark:text-neutral-300">Progress</span>
                       <span className="font-medium text-neutral-800 dark:text-neutral-100">{progress.toFixed(1)}%</span>
                     </div>
-                    <div
-                      className="relative w-full overflow-hidden rounded-full bg-primary/20 h-2"
-                      role="progressbar"
-                      aria-valuenow={Math.round(progress)}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
+                    {/* Round 13 (F6): the live's Progress renders
+                        data-state=indeterminate (value never reaches
+                        Radix's aria) with the manual translateX fill —
+                        the primitive replicates it exactly. */}
+                    <Progress
+                      value={Math.min(progress, 100)}
+                      className="h-2"
                       aria-label={`${goal.name} progress: ${Math.round(progress)}%`}
-                    >
-                      <div
-                        className="h-full w-full flex-1 bg-primary transition-all"
-                        style={{ transform: `translateX(-${100 - Math.min(progress, 100)}%)` }}
-                      />
-                    </div>
+                    />
                     <div className="flex justify-between text-sm text-neutral-500 dark:text-neutral-400">
                       <span>{formatMoney(goal.currentAmountMinor, { currency })}</span>
                       <span>{formatMoney(goal.targetAmountMinor, { currency })}</span>
@@ -303,9 +300,11 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
             dark:border-gray-700 (live-probed). */}
         <DialogContent className="max-w-md dark:bg-gray-900 dark:text-white" showCloseButton={false} aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-              <Target className="w-5 h-5" aria-hidden />
-              {editing ? "Edit Goal" : "Create New Goal"}
+            <DialogTitle asChild>
+              <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
+                <Target className="w-5 h-5" aria-hidden />
+                {editing ? "Edit Goal" : "Create New Goal"}
+              </div>
             </DialogTitle>
           </DialogHeader>
           <div className="p-6 pt-0">
@@ -414,9 +413,11 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
             button, no description, p-6 pt-0 body. */}
         <DialogContent className="max-w-sm dark:bg-gray-900 dark:text-white" showCloseButton={false} aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-              <TrendingUp className="w-5 h-5" aria-hidden />
-              Add Progress
+            <DialogTitle asChild>
+              <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
+                <TrendingUp className="w-5 h-5" aria-hidden />
+                Add Progress
+              </div>
             </DialogTitle>
           </DialogHeader>
           <div className="p-6 pt-0">
