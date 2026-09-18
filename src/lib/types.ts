@@ -145,11 +145,22 @@ export interface SettingsDto {
   monthlyReports: boolean;
 }
 
+/**
+ * The live app's insight record set (round 13, probed 2026-09-18):
+ * TransactionInsight entities carry insight_type / title / description /
+ * suggested_action / confidence_score / category; the dashboard lists them
+ * "-created_date" (limit 10, non-dismissed) and can dismiss each one.
+ */
+export type InsightType = "anomaly" | "alert" | "trend" | "opportunity" | "prediction";
+
 export interface AiInsightDto {
   id: string;
+  insightType: InsightType;
   title: string;
-  body: string;
-  tone: "positive" | "neutral" | "warning";
+  description: string;
+  suggestedAction?: string;
+  confidenceScore: number;
+  category?: string;
 }
 
 export interface AiChatMessage {

@@ -94,3 +94,18 @@ model Setting {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// Persisted AI insights (round 13 — mirrors the live TransactionInsight
+// entities: listed "-created_date" limit 10, non-dismissed, dismissable).
+model Insight {
+  id              String   @id @default(cuid())
+  insightType     String // anomaly | alert | trend | opportunity | prediction
+  title           String
+  description     String
+  suggestedAction String?
+  confidenceScore Float    @default(0.8)
+  category        String?
+  isDismissed     Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
