@@ -68,6 +68,7 @@ export function AiCoachDialog({
           reproduce from DIALOG_CARD_BASE, hence the full cardClassName. */}
       <DialogContent
         cardClassName="rounded-xl border text-card-foreground shadow w-full max-w-2xl h-[80vh] bg-white dark:bg-gray-800 flex flex-col"
+        overlayStyle={{ opacity: 1, transform: "none" }}
         showCloseButton={false}
         aria-describedby={undefined}
       >

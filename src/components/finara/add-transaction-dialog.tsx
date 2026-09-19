@@ -247,6 +247,7 @@ export function AddTransactionDialog({
           absolute close is off. */}
       <DialogContent
         className={isExpense ? "max-h-[90vh] max-w-2xl overflow-y-auto" : "max-h-[90vh] max-w-lg overflow-y-auto"}
+        overlayStyle={{ opacity: 1, transform: "none" }}
         showCloseButton={false}
         aria-describedby={undefined}
       >
@@ -446,7 +447,8 @@ export function AddTransactionDialog({
               <Button type="submit" className="flex-1 bg-primary-sage text-white shadow hover:bg-primary-sage/90" disabled={submitting}>
                 {submitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden /> Saving…
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden />
+                    Saving…
                   </>
                 ) : isEditing ? (
                   "Update Expense"
@@ -571,7 +573,8 @@ export function AddTransactionDialog({
               <Button type="submit" className="flex-1 bg-primary-sage text-white shadow hover:bg-primary-sage/90" disabled={submitting}>
                 {submitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden /> Saving…
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden />
+                    Saving…
                   </>
                 ) : isEditing ? (
                   "Update Income"

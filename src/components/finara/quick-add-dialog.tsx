@@ -125,7 +125,13 @@ export function QuickAddDialog({
       <DialogContent
         showCloseButton={false}
         overlayClassName="z-40"
+        overlayStyle={{ opacity: 1, animation: "fin-overlay-in 320ms ease-out" }}
         widthWrapperClassName="w-full max-w-md"
+        widthWrapperStyle={{
+          opacity: 1,
+          transform: "none",
+          animation: "fin-scale-in 320ms cubic-bezier(0.3, 0.6, 0.4, 1.05)",
+        }}
         cardClassName="rounded-xl border text-card-foreground shadow bg-white dark:bg-gray-800"
         aria-describedby={undefined}
         onPointerDown={(event) => {
@@ -146,7 +152,7 @@ export function QuickAddDialog({
         }}
       >
         <div className="p-6">
-          <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center justify-between mb-6">
             <DialogTitle asChild>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Quick Add</h3>
             </DialogTitle>
@@ -166,7 +172,7 @@ export function QuickAddDialog({
               <Button
                 variant="outline"
                 onClick={() => start("income")}
-                className="h-12 w-full justify-start gap-3"
+                className="w-full justify-start gap-3 h-12"
               >
                 <TrendingUp className="w-5 h-5 text-emerald-500" aria-hidden />
                 <span>Add Income</span>
@@ -174,7 +180,7 @@ export function QuickAddDialog({
               <Button
                 variant="outline"
                 onClick={() => start("expense")}
-                className="h-12 w-full justify-start gap-3"
+                className="w-full justify-start gap-3 h-12"
               >
                 <TrendingDown className="w-5 h-5 text-red-500" aria-hidden />
                 <span>Add Expense</span>
@@ -223,7 +229,8 @@ export function QuickAddDialog({
                   disabled={submitting || !description.trim() || !amount.trim()}
                   className="flex-1 bg-primary-sage hover:bg-primary-sage/90"
                 >
-                  <Check className="w-4 h-4 mr-1" aria-hidden /> Add
+                  <Check className="w-4 h-4 mr-1" aria-hidden />
+                  Add
                 </Button>
               </div>
             </form>

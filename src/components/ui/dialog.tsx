@@ -33,23 +33,33 @@ export const DIALOG_CARD_BASE =
   "w-full max-w-2xl rounded-xl border bg-white text-card-foreground shadow dark:bg-gray-800"
 
 // Round-6 live probe (2026-09-17): the live overlay itself carries
-// bg-black/50 (`fixed inset-0 bg-black/50 flex items-center justify-center
-// p-4 z-50`) and clicking it does NOT dismiss the full modals (Add Expense
+// bg-black/50 and clicking it does NOT dismiss the full modals (Add Expense
 // stayed open through a real overlay click; only the Quick Add chooser
 // dismisses — it wires its own onPointerDown). The backdrop therefore lives
 // ON the overlay, not as a separate Radix Close button.
 // Round-13 re-probe (2026-09-18): the live overlay carries NO animate
 // utilities — its fade is framer-motion inline style (opacity: 1;
 // transform: none), so the steady-state DOM has just the plain classes.
+// Round-14 re-probe (2026-09-19): the live class ORDER is
+// `fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50`
+// (bg second, z-50 LAST); every overlay carries its settled framer-motion
+// style via the new `overlayStyle` prop ({opacity: 1, transform: "none"}
+// full modals; {opacity: 1} the Add Account + chooser overlays — the
+// chooser additionally animates its open via fin-overlay-in). The Add
+// Account overlay moves z-50 mid-string (bg-black/60 second) and passes a
+// full-replacement overlayClassName (tw-merge keeps a later full list's
+// order — verified).
 const DIALOG_OVERLAY_BASE =
-  "fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+  "fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
 
 function DialogContent({
   className,
   cardClassName,
   overlayClassName,
   backdropClassName,
+  overlayStyle,
   widthWrapperClassName,
+  widthWrapperStyle,
   children,
   showCloseButton = true,
   ...props
@@ -70,6 +80,13 @@ function DialogContent({
   /** Classes for the backdrop layer (live Add Account renders bg-black/60). */
   backdropClassName?: string
   /**
+   * Round 14: the overlay's settled framer-motion inline style — full
+   * modals pass {opacity: 1, transform: "none"}, Add Account and the
+   * Quick Add chooser pass {opacity: 1} (the chooser adds its open
+   * animation through the same style object).
+   */
+  overlayStyle?: React.CSSProperties
+  /**
    * Round 13 (Quick Add chooser structure): the live chooser renders a
    * width wrapper (`w-full max-w-md`, its motion transform div) BETWEEN the
    * overlay and the card, and the card itself carries no width classes
@@ -77,16 +94,19 @@ function DialogContent({
    * Full modals keep the direct overlay > card shape (live-verified).
    */
   widthWrapperClassName?: string
+  /** Round 14: the width wrapper's settled motion style + open animation. */
+  widthWrapperStyle?: React.CSSProperties
   showCloseButton?: boolean
 }) {
   return (
     <DialogPortal>
       <DialogPrimitive.Content
         className={cn(DIALOG_OVERLAY_BASE, backdropClassName, overlayClassName)}
+        style={overlayStyle}
         {...props}
       >
         {widthWrapperClassName ? (
-          <div className={widthWrapperClassName}>
+          <div className={widthWrapperClassName} style={widthWrapperStyle}>
             <div className={cardClassName ?? cn(DIALOG_CARD_BASE, className)}>
               {children}
             </div>
