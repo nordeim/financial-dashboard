@@ -70,11 +70,11 @@ describe("round 14 F1: the entrance-motion system (live framer-motion, CSS-repli
   // stagger. The clone replicates WITHOUT framer-motion (repo policy): the
   // settled inline style + an inline `animation` referencing keyframes that
   // exist ONLY under prefers-reduced-motion: no-preference.
-  it("globals.css defines the three entrance keyframes, gated to no-preference motion", () => {
+  it("globals.css defines the entrance keyframes, gated to no-preference motion", () => {
     const m = src.globals.match(/@media \(prefers-reduced-motion: no-preference\) \{([\s\S]*?)\n\}/);
     expect(m).not.toBeNull();
     const block = m?.[1] ?? "";
-    for (const name of ["fin-card-in", "fin-overlay-in", "fin-scale-in"]) {
+    for (const name of ["fin-card-in", "fin-overlay-in", "fin-scale-in", "fin-drawer-in"]) {
       expect(block).toContain(`@keyframes ${name}`);
     }
     // The card entrance replicates the measured spring: from opacity 0 /
@@ -91,7 +91,10 @@ describe("round 14 F1: the entrance-motion system (live framer-motion, CSS-repli
     // Settled state matches the live wrapper inline style byte-for-byte…
     expect(src.uiBits).toMatch(/opacity: 1,\s*\n\s*transform: "none"/);
     // …and the entrance runs via the keyframes with a per-element delay.
-    expect(src.uiBits).toContain("fin-card-in 330ms");
+    // Round-16: entranceStyle gained the animationName parameter (the
+    // drawer's fin-drawer-in) — the card entrance stays the default.
+    expect(src.uiBits).toContain("`${animationName} 330ms ease-out backwards`");
+    expect(src.uiBits).toContain('animationName: "fin-card-in" | "fin-drawer-in" = "fin-card-in"');
     expect(src.uiBits).toContain("animationDelay");
   });
 
@@ -894,5 +897,39 @@ describe("round 13 (E2E-gate follow-up): the insights LLM polish is hermetic and
   it("the E2E webServer pins the flag so the gate stays hermetic", () => {
     const config = read("playwright.config.ts");
     expect(config).toContain("FINARA_INSIGHTS_LLM_OFF");
+  });
+});
+
+describe("round 16 F6: the mobile drawer mounts with the live slide-in motion (rAF-sampled 2026-09-19)", () => {
+  // The live's mobile drawer is conditionally rendered (absent from the DOM
+  // when closed — probed) and mounts with translateX(−300px) → 0 + opacity
+  // 0 → 1 (~330ms spring, +35px overshoot at ~200ms, settled ~567ms at
+  // `opacity: 1; transform: none;`). The round-14 motion system never
+  // covered the drawer. Replicated with a `fin-drawer-in` keyframe under
+  // the same prefers-reduced-motion gating as the other fin-* keyframes.
+  it("globals.css defines fin-drawer-in, gated to no-preference motion", () => {
+    const m = src.globals.match(/@media \(prefers-reduced-motion: no-preference\) \{([\s\S]*?)\n\}/);
+    expect(m).not.toBeNull();
+    const block = m?.[1] ?? "";
+    expect(block).toContain("@keyframes fin-drawer-in");
+    // The slide-in replicates the sampled frames: from −300px/opacity 0,
+    // overshoot past 0, settle.
+    const kf = src.globals.match(/@keyframes fin-drawer-in \{[\s\S]*?\n  \}/)?.[0] ?? "";
+    expect(kf).toContain("opacity: 0");
+    expect(kf).toContain("translateX(-300px)");
+    expect(kf).toMatch(/translateX\(\d+(?:\.\d+)?px\)/);
+  });
+
+  it("the drawer div carries the settled style + the fin-drawer-in animation", () => {
+    expect(src.sidebar).toMatch(
+      /className="lg:hidden fixed inset-0 z-40 bg-slate-800 dark:bg-gray-900"\s+style=\{entranceStyle\(0, "fin-drawer-in"\)\}/,
+    );
+  });
+
+  it("entranceStyle takes the animation name (default fin-card-in, drawer fin-drawer-in)", () => {
+    expect(src.uiBits).toMatch(
+      /entranceStyle\(\s*delayMs: number,\s*animationName: "fin-card-in" \| "fin-drawer-in" = "fin-card-in",?\s*\)/,
+    );
+    expect(src.uiBits).toContain("`${animationName} 330ms ease-out backwards`");
   });
 });

@@ -113,6 +113,51 @@ describe("icon class order (live: w-X h-X, margin after)", () => {
     expect(offenders).toEqual([]);
   });
 
+  it("renders no h-first size pairs in dynamic/ternary icon classNames (round-16 gap)", () => {
+    // Round-16 find: the sidebar's nav icons rendered h-first through
+    // `<item.icon className={compact ? "h-6 w-6" : "h-5 w-5"} />` — invisible
+    // to the ban above because BOTH filters miss it: the tag is a member
+    // expression (not a lucide-imported name) and the className is a ternary
+    // (not a literal or template). Scan the two gap shapes generically:
+    //  1. member-expression tags (`<item.icon …>` — icon indirection), and
+    //  2. lucide-imported names with ternary/cn() className values,
+    // extracting EVERY quoted string in the className expression and
+    // flagging h-first size pairs (same allowlist files as the ban above).
+    const hFirst = /h-\d+(?:\.\d+)? w-\d+(?:\.\d+)?/;
+    const offenders: string[] = [];
+    for (const [file, source] of Object.entries(sources)) {
+      if (file.includes("import-view") || file.includes("login-view")) continue;
+      // 1. member-expression tags: capture the whole tag, then its className.
+      for (const m of source.matchAll(/<[a-z][a-zA-Z]*\.[A-Za-z][\w.]*\b[^>]*>/g)) {
+        const tag = m[0];
+        const cls = tag.match(/className=\{([^}]*)\}/) ?? tag.match(/className="([^"]*)"/);
+        if (cls) {
+          for (const s of cls[1].matchAll(/"([^"]*)"/g)) {
+            if (hFirst.test(s[1])) offenders.push(`${file}: ${m[0].slice(0, 90)}`);
+          }
+        }
+      }
+      // 2. lucide-imported names with brace className (ternary / cn()).
+      const lucideImports = new Set<string>();
+      for (const im of source.matchAll(/import\s*\{([^}]*)\}\s*from\s*"lucide-react"/g)) {
+        for (const name of im[1].split(",")) {
+          const trimmed = name.trim();
+          if (trimmed.length > 0) lucideImports.add(trimmed);
+        }
+      }
+      for (const name of lucideImports) {
+        // className expressions (cn()/ternaries) contain no inner braces, so
+        // [^}]* captures exactly the expression; the tag then closes.
+        for (const m of source.matchAll(new RegExp(`<${name}\\b[^>]*?className=\\{([^}]*)\\}[^>]*>`, "g"))) {
+          for (const s of m[1].matchAll(/"([^"]*)"/g)) {
+            if (hFirst.test(s[1])) offenders.push(`${file}: <${name} … ${s[1]}`);
+          }
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
   it("keeps the live size-first spelling on representative icons", () => {
     expect(sources["src/components/finara/dashboard-view.tsx"]).toContain('"w-5 h-5"');
     expect(sources["src/components/finara/sidebar.tsx"]).toContain('"w-5 h-5"');

@@ -612,3 +612,92 @@ describe("round 14 F6: icon+text whitespace (live renders NO space text node)", 
     expect(offenders).toEqual([]);
   });
 });
+
+describe("round 16: sidebar + shell raw-order pins (live re-probe 2026-09-19)", () => {
+  // The round-16 re-probe added a RAW-order diff (tag|exact-class-attribute
+  // multisets) on top of the rounds-4–15 sorted diff — the sorted diff is
+  // structurally blind to class ORDER, and the live's sidebar/shell chrome
+  // renders several strings in a different order than the clone. The pins
+  // below lock the live's current RAW strings; the `not.toContain` arms
+  // guard the drifted orders out permanently.
+  it("renders the sidebar chrome strings in the live raw order (F4c/d/e/f/g)", () => {
+    // The gradient container (live: flex flex-col flex-1 min-h-0 sidebar-gradient).
+    expect(src.sidebar).toContain('"flex flex-col flex-1 min-h-0 sidebar-gradient"');
+    expect(src.sidebar).not.toContain('"sidebar-gradient flex min-h-0 flex-1 flex-col"');
+    // The sidebar header block (live: flex items-center h-16 px-6 border-b …).
+    expect(src.sidebar).toContain('"flex items-center h-16 px-6 border-b border-slate-700/30"');
+    expect(src.sidebar).not.toContain('"flex h-16 items-center border-b border-slate-700/30 px-6"');
+    // BOTH navs render the live order — the round-8 pin passed via the
+    // drawer string while the desktop nav drifted (a coverage gap).
+    expect((src.sidebar.match(/flex-1 px-4 py-6 space-y-2/g) ?? []).length).toBe(2);
+    expect(src.sidebar).not.toContain("flex-1 space-y-2 px-4 py-6");
+    // The sidebar bottom block (live: p-4 first).
+    expect(src.sidebar).toContain('"p-4 space-y-3 border-t border-slate-700/30"');
+    expect(src.sidebar).not.toContain('"space-y-3 border-t border-slate-700/30 p-4"');
+    // The drawer bottom block (live: p-4 first).
+    expect(src.sidebar).toContain('"p-4 border-t border-slate-700/30"');
+    expect(src.sidebar).not.toContain('"border-t border-slate-700/30 p-4"');
+  });
+
+  it("renders the nav icons size-first and the logo icon size-before-color (F4a/b)", () => {
+    // Live nav icons: w-5 h-5 (desktop) / w-6 h-6 (drawer) — the clone
+    // rendered h-first, an ADR-020 violation the dialog-forms ban missed
+    // (dynamic `item.icon` tag + ternary className — both regex gaps).
+    expect(src.sidebar).toContain('compact ? "w-6 h-6" : "w-5 h-5"');
+    expect(src.sidebar).not.toContain('"h-6 w-6"');
+    expect(src.sidebar).not.toContain('"h-5 w-5"');
+    // Live logo icon: size then color (w-6 h-6 text-emerald-400).
+    expect(src.sidebar).toContain('cn(compact ? "w-5 h-5" : "w-6 h-6", "text-emerald-400")');
+  });
+
+  it("renders the nav pill className before tabIndex (F4h — live attr order)", () => {
+    expect(src.sidebar).toMatch(/className=\{cn\(\s*"flex items-center gap-3"[\s\S]*?\)\}\s+tabIndex=\{0\}/);
+    expect(src.sidebar).not.toMatch(/<div\s+tabIndex=\{0\}\s+className=\{cn\(\s*"flex items-center gap-3"/);
+  });
+
+  it("renders SyncedBadge through the outline variant (F1 — live renders the Badge base only)", () => {
+    // Live (2026-09-19): no variant classes at all — tw-merge drops the
+    // outline's text-foreground under the tail's text-green-600, producing
+    // the live string byte-exactly (the default variant's border-transparent
+    // shadow hover:bg-primary/80 must NOT survive).
+    expect(src.sidebar).toContain(
+      '<Badge variant="outline" className="gap-1 text-green-600 border-green-300 dark:text-green-400 dark:border-green-600">',
+    );
+    expect(src.sidebar).not.toContain(
+      '<Badge className="gap-1 text-green-600 border-green-300 dark:text-green-400 dark:border-green-600">',
+    );
+  });
+
+  it("renders MobileTopNav as a fragment — the top bar and drawer are shell children (F3)", () => {
+    // Live (probed): both the mobile top bar and the drawer sit DIRECTLY in
+    // the shell's div.flex — the clone's classless wrapper div is an extra
+    // structural layer.
+    const body = src.sidebar.slice(src.sidebar.indexOf("export function MobileTopNav"));
+    expect(body).toMatch(/return \(\s*<>/);
+    expect(body).not.toMatch(/return \(\s*<div>/);
+  });
+
+  it("renders the inner gradient pane in the live raw order (F5)", () => {
+    // Live (all 9 views): dark pair before transition/font; the live now
+    // carries transition-colors on EVERY pane (the round-4 dashboard/expenses
+    // quirk is retired by the live update).
+    expect(src.app).toContain(
+      '"min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300 font-sans"',
+    );
+    expect(src.app).not.toContain(
+      '"min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 font-sans transition-colors duration-300 dark:from-gray-900 dark:to-gray-800"',
+    );
+  });
+
+  it("motion-wraps the Investments KPI cards — no direct entrance styles (F2)", () => {
+    // Live: each of the three KPI cards (Portfolio Value / Total Gain/Loss /
+    // Total Return) sits inside a classless motion wrapper, like the
+    // Holdings/Sector cards — the round-14 KPI row applied entranceStyle
+    // directly on the card roots instead.
+    expect((src.investments.match(/<MotionWrap delayMs=\{100\}>/g) ?? []).length).toBe(1);
+    expect((src.investments.match(/<MotionWrap delayMs=\{200\}>/g) ?? []).length).toBe(1);
+    expect((src.investments.match(/<MotionWrap delayMs=\{300\}>/g) ?? []).length).toBe(1);
+    expect((src.investments.match(/<MotionWrap/g) ?? []).length).toBe(5);
+    expect(src.investments).not.toContain("entranceStyle");
+  });
+});
