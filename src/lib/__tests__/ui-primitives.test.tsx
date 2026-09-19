@@ -331,7 +331,10 @@ describe("round 13: dialog overlay base (animate utilities removed with the live
     const dialog = readFileSync(join(process.cwd(), "src/components/ui/dialog.tsx"), "utf8");
     const base = dialog.match(/DIALOG_OVERLAY_BASE =\s*\n?\s*"([^"]+)"/);
     expect(base).not.toBeNull();
-    expect(base?.[1]).toBe("fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50");
+    // Round-14 re-pin (live 2026-09-19): bg-black/50 sits SECOND and z-50
+    // LAST on every live overlay (Add Account: bg-black/60 second, z-50
+    // third — handled per call site via the full-replacement merge).
+    expect(base?.[1]).toBe("fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50");
   });
 });
 

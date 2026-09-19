@@ -113,3 +113,68 @@ describe("LoginView submit + footer buttons (live: gap-1 px-3 py-2 ring-2; sign-
     expect(signup).not.toContain("font-medium");
   });
 });
+
+/**
+ * Round-14 re-pins (live re-probe 2026-09-19): the live login page was
+ * restyled — ten class-ORDER deltas, the Google label gained a <span>
+ * wrapper, and the field icons render h-FIRST (`h-4 w-4` — the login joins
+ * the Select-chevron/CloudUpload h-first exception group). Element set and
+ * all other strings verified unchanged.
+ */
+describe("LoginView round-14 class orders (live 2026-09-19)", () => {
+  it("renders the live main + card + inner-pad orders", () => {
+    const html = renderLogin();
+    expect(html).toContain(
+      '<main class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">',
+    );
+    expect(html).toContain(
+      'class="text-card-foreground relative overflow-hidden border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-2xl"',
+    );
+    expect(html).toContain('class="p-8 sm:p-10 md:pt-12 md:pb-10 md:px-10"');
+  });
+
+  it("renders the live stack + logo wrapper + blur orders", () => {
+    const html = renderLogin();
+    expect(html).toContain('class="flex flex-col items-center text-center space-y-6 sm:space-y-8"');
+    expect(html).toContain('class="relative group"');
+    expect(html).toContain(
+      'class="absolute inset-0 bg-gradient-to-br from-slate-200 to-slate-300 rounded-full blur-xl opacity-30 group-hover:opacity-40 transition-opacity duration-300"',
+    );
+  });
+
+  it("renders the live h1 + subtitle orders", () => {
+    const html = renderLogin();
+    expect(html).toContain('class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight"');
+    expect(html).toContain('class="text-slate-500 text-sm sm:text-base font-medium"');
+  });
+
+  it("wraps the Google label in a span (live structural change)", () => {
+    const html = renderLogin();
+    expect(html).toMatch(/<div class=" transition-transform duration-200 -ml-4">[\s\S]{0,900}?<span>Continue with Google<\/span>/);
+  });
+
+  it("renders the live divider-span order (text-slate-500 before font-medium)", () => {
+    const html = renderLogin();
+    expect(html).toContain('class="bg-white px-3 text-slate-500 font-medium tracking-wider"');
+  });
+
+  it("renders the field icons h-FIRST (the login exception to the app-wide w-first rule)", () => {
+    const html = renderLogin();
+    expect(html).toMatch(
+      /class="lucide lucide-mail absolute left-3 top-1\/2 transform -translate-y-1\/2 h-4 w-4 text-slate-500"/,
+    );
+    expect(html).toMatch(
+      /class="lucide lucide-lock absolute left-3 top-1\/2 transform -translate-y-1\/2 h-4 w-4 text-slate-500"/,
+    );
+  });
+
+  it("renders the live bottom-row order (sm:flex-row directly after flex-col)", () => {
+    const html = renderLogin();
+    expect(html).toContain('class="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0"');
+  });
+
+  it("renders the img attributes in the live order (class first)", () => {
+    const html = renderLogin();
+    expect(html).toMatch(/<img class="aspect-square h-full w-full object-cover" alt="Finara logo" src="/);
+  });
+});

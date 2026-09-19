@@ -54,7 +54,154 @@ const src = {
   uiBits: read("src/components/finara/ui-bits.tsx"),
   filtersPanel: read("src/components/finara/expense-filters-panel.tsx"),
   progress: read("src/components/ui/progress.tsx"),
+  globals: read("src/app/globals.css"),
+  budgetsRoute: read("src/app/api/budgets/route.ts"),
 };
+
+describe("round 14 F1: the entrance-motion system (live framer-motion, CSS-replicated)", () => {
+  // Round-13 F2 ("entrance animations removed app-wide") was a misdiagnosis:
+  // the live's entrances run on framer-motion wrapper divs animating INLINE
+  // styles — CSS `animationName` is always `none` for those, and the CSS
+  // classes were genuinely gone. The 2026-09-19 re-probe (style-attribute
+  // audit + rAF computed-style sampling) found the wrappers on every view:
+  // settled `style="opacity: 1; transform: none;"` around/onto header rows,
+  // KPI cards, tiles, list rows, and panels, animating opacity 0→1 +
+  // translateY 20px→0 over ~330ms (spring, −2.3px overshoot), ~100ms
+  // stagger. The clone replicates WITHOUT framer-motion (repo policy): the
+  // settled inline style + an inline `animation` referencing keyframes that
+  // exist ONLY under prefers-reduced-motion: no-preference.
+  it("globals.css defines the three entrance keyframes, gated to no-preference motion", () => {
+    const m = src.globals.match(/@media \(prefers-reduced-motion: no-preference\) \{([\s\S]*?)\n\}/);
+    expect(m).not.toBeNull();
+    const block = m?.[1] ?? "";
+    for (const name of ["fin-card-in", "fin-overlay-in", "fin-scale-in"]) {
+      expect(block).toContain(`@keyframes ${name}`);
+    }
+    // The card entrance replicates the measured spring: from opacity 0 /
+    // translateY(20px) with the −2.3px overshoot frame.
+    const card = src.globals.match(/@keyframes fin-card-in \{[\s\S]*?\n  \}/)?.[0] ?? "";
+    expect(card).toContain("opacity: 0");
+    expect(card).toContain("translateY(20px)");
+    expect(card).toContain("translateY(-2.3px)");
+  });
+
+  it("ui-bits exports entranceStyle (settled live style + CSS animation) and the MotionWrap classless wrapper", () => {
+    expect(src.uiBits).toContain("export function entranceStyle");
+    expect(src.uiBits).toContain("export function MotionWrap");
+    // Settled state matches the live wrapper inline style byte-for-byte…
+    expect(src.uiBits).toMatch(/opacity: 1,\s*\n\s*transform: "none"/);
+    // …and the entrance runs via the keyframes with a per-element delay.
+    expect(src.uiBits).toContain("fin-card-in 330ms");
+    expect(src.uiBits).toContain("animationDelay");
+  });
+
+  it("every view header carries the entrance — ViewHeader's three modes all style/animate", () => {
+    // actions mode (the flex row), no-actions mode (the mb-8 wrapper), and
+    // bare mode (Import's motion div around h1+p — a wrapper the clone was
+    // missing entirely).
+    const headerRow = src.uiBits.match(
+      /<div\s+className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4"\s+style=\{entranceStyle\(0\)\}/,
+    );
+    expect(headerRow).not.toBeNull();
+    expect(src.uiBits).toMatch(/<div className="mb-8"[^>]*entranceStyle/);
+    // bare mode wraps its h1+p in MotionWrap (live: classless motion div).
+    expect(src.uiBits).toMatch(/bare[\s\S]{0,200}MotionWrap/);
+  });
+
+  it("the dashboard pins the measured wrapper map: header, KPIs, tiles, budget, rows, panel", () => {
+    const v = src.dashboardView;
+    // 4 KPI StatCards wrapped (classless wrappers around each StatCard).
+    expect((v.match(/<MotionWrap/g) ?? []).length).toBeGreaterThanOrEqual(6);
+    // Tiles/rows/panels carry the style on their own classed roots.
+    expect((v.match(/entranceStyle\(/g) ?? []).length).toBeGreaterThanOrEqual(7);
+    // Budget rows container + Quick Actions panel + activity rows animate.
+    expect(v).toMatch(/className="space-y-2"[^>]*entranceStyle|entranceStyle[^>]*className="space-y-2"/);
+    expect(v).toMatch(/Quick Actions[\s\S]{0,400}/);
+    // List rows stagger 50ms capped (min(i, 8)) — the live's per-row
+    // stagger would take 9.8s on the 98-row seed (documented adaptation).
+    expect(v).toContain("650 + Math.min(index, 8) * 50");
+  });
+
+  it("the refresh icons keep their spin mechanism but gain the live settled wrapper style", () => {
+    // Live: `<div style="transform: none;">` around BOTH refresh-cw icons
+    // (header Refresh + AI Insights refresh). The clone spins via the
+    // animate-spin class on the wrapper while loading (CSS animations
+    // override the inline transform during playback — visually identical).
+    const v = src.dashboardView;
+    const settled = v.match(/style=\{\{ transform: "none" \}\}/g) ?? [];
+    expect(settled.length).toBe(2);
+    // The header Refresh button icon is wrapped (was rendered bare before).
+    expect(v).toMatch(/dashboardQuery\.loading \? "animate-spin" : undefined/);
+  });
+
+  it("the other views wrap their cards (income/accounts/goals/investments/settings/import/analytics)", () => {
+    // Each view's motion inventory from the 2026-09-19 audit — counts are
+    // per the live wrapper map (header comes from ViewHeader).
+    expect((src.incomeView.match(/MotionWrap/g) ?? []).length).toBeGreaterThanOrEqual(2);
+    expect((src.accountsView.match(/MotionWrap/g) ?? []).length).toBeGreaterThanOrEqual(1);
+    expect((src.goalsView.match(/MotionWrap/g) ?? []).length).toBeGreaterThanOrEqual(1);
+    expect((src.investmentsView.match(/MotionWrap|entranceStyle/g) ?? []).length).toBeGreaterThanOrEqual(5);
+    expect((src.settingsView.match(/MotionWrap|entranceStyle/g) ?? []).length).toBeGreaterThanOrEqual(4);
+    expect((src.importView.match(/MotionWrap/g) ?? []).length).toBeGreaterThanOrEqual(1);
+    expect((src.analyticsView.match(/MotionWrap|entranceStyle/g) ?? []).length).toBeGreaterThanOrEqual(3);
+    expect((src.expensesView.match(/MotionWrap|entranceStyle/g) ?? []).length).toBeGreaterThanOrEqual(5);
+  });
+});
+
+describe("round 14 F2: dialog overlays — live class order + settled motion styles", () => {
+  it("DIALOG_OVERLAY_BASE renders the live order (bg-black/50 second, z-50 last)", () => {
+    expect(src.dialog).toContain(
+      '"fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"',
+    );
+  });
+
+  it("DialogContent threads overlayStyle + widthWrapperStyle onto the overlay/wrapper", () => {
+    expect(src.dialog).toContain("overlayStyle");
+    expect(src.dialog).toContain("widthWrapperStyle");
+    expect(src.dialog).toMatch(/<DialogPrimitive\.Content[^>]*style=\{overlayStyle\}/);
+    expect(src.dialog).toMatch(/widthWrapperClassName \?\s*\(\s*<div[^>]*style=\{widthWrapperStyle\}/);
+  });
+
+  it("the full modals pass the settled {opacity: 1, transform: none}; Add Account passes {opacity: 1} + its full overlay order", () => {
+    expect(src.addTransaction).toMatch(/overlayStyle=\{\{ opacity: 1, transform: "none" \}\}/);
+    expect(src.aiCoach).toMatch(/overlayStyle=\{\{ opacity: 1, transform: "none" \}\}/);
+    // The view-local dialogs (goal/progress/income-edit/investment-edit) are
+    // the same bg-black/50 full-modal family — same settled style.
+    expect(src.goalsView).toMatch(/overlayStyle=\{\{ opacity: 1, transform: "none" \}\}/);
+    expect(src.incomeView).toMatch(/overlayStyle=\{\{ opacity: 1, transform: "none" \}\}/);
+    expect(src.investmentsView).toMatch(/overlayStyle=\{\{ opacity: 1, transform: "none" \}\}/);
+    // Live Add Account overlay: `fixed inset-0 bg-black/60 z-50 flex
+    // items-center justify-center p-4` + style opacity 1 — z-50 sits mid-
+    // string, so it needs the full-replacement merge (tw-merge keeps a
+    // later full list's order).
+    expect(src.accountsView).toContain(
+      'overlayClassName="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"',
+    );
+    expect(src.accountsView).toMatch(/overlayStyle=\{\{ opacity: 1 \}\}/);
+    expect(src.accountsView).not.toContain('backdropClassName="bg-black/60"');
+  });
+});
+
+describe("round 14 F3: Quick Add chooser — orders + open animation", () => {
+  it("the header row renders mb-6 LAST (live order)", () => {
+    expect(src.quickAdd).toContain('"flex items-center justify-between mb-6"');
+    expect(src.quickAdd).not.toContain('"mb-6 flex items-center justify-between"');
+  });
+
+  it("the option buttons render h-12 LAST (live tail order)", () => {
+    expect((src.quickAdd.match(/className="w-full justify-start gap-3 h-12"/g) ?? []).length).toBe(2);
+    expect(src.quickAdd).not.toContain('"h-12 w-full justify-start gap-3"');
+  });
+
+  it("the overlay fades in and the width wrapper scales in (live framer-motion, CSS-replicated)", () => {
+    // Overlay settled style `opacity: 1;` + the ~320ms fade; wrapper
+    // `opacity: 1; transform: none;` + the 0.9→1 scale-in.
+    expect(src.quickAdd).toMatch(/overlayStyle=\{\{ opacity: 1, animation: "fin-overlay-in[^"]*" \}\}/);
+    expect(src.quickAdd).toMatch(
+      /widthWrapperStyle=\{\{\s*opacity: 1,\s*transform: "none",\s*animation: "fin-scale-in[^"]*",?\s*\}\}/,
+    );
+  });
+});
 
 describe("money: currency helpers (F6/F11)", () => {
   it("exposes currencySymbol with Intl symbols", () => {
@@ -652,7 +799,13 @@ describe("round 13 F1: AI Insights render persisted records (live redesign, prob
 
 describe("round 13 F2: entrance animations removed (live renders zero fade-in-up/stagger)", () => {
   it("no view source references fade-in-up or stagger classes", () => {
+    // Round-14 amendment: the live's entrance system was re-found (it runs
+    // on framer-motion inline styles — see the round-14 F1 block above);
+    // what stays true from round 13 is that the CSS-CLASS animations
+    // (.fade-in-up/.stagger-N) are gone. The sweep covers the component
+    // sources (globals.css is checked by name below).
     for (const [name, source] of Object.entries(src)) {
+      if (name === "globals") continue;
       expect(source.includes("fade-in-up"), `${name} still renders fade-in-up`).toBe(false);
       expect(source.includes("stagger-"), `${name} still renders stagger-N`).toBe(false);
     }

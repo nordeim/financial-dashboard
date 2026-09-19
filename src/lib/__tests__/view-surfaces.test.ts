@@ -553,3 +553,62 @@ describe("quick add step-2 (F13)", () => {
   });
 });
 
+
+describe("round 14 F5: Expenses Expense History header (live: title + Tabs as direct CardHeader children)", () => {
+  it("renders NO flex-wrap wrapper — CardTitle and Tabs sit directly in the CardHeader", () => {
+    expect(src.expenses).not.toContain('"flex flex-wrap items-center justify-between gap-2"');
+    // The CardTitle and the Tabs both render inside CardHeader, after it.
+    expect(src.expenses).toMatch(/<CardHeader>\s*\n\s*<CardTitle[^>]*>\s*\n\s*<Receipt/);
+  });
+
+  it("renders the title text with NO leading space after the Receipt icon", () => {
+    // Live textContent: "Expense History (1)" — the icon is followed
+    // directly by the text (no whitespace text node).
+    expect(src.expenses).not.toMatch(/aria-hidden \/> Expense History/);
+    expect(src.expenses).toMatch(/aria-hidden \/>[\s\n]*\{\`?Expense History|aria-hidden \/>[\s\n]*Expense History/);
+  });
+});
+
+describe("round 14 F6: icon+text whitespace (live renders NO space text node)", () => {
+  // Live-probed 2026-09-19 across views: every icon+text pair renders
+  // `<svg/>Text` with no whitespace text node — including mr-1 spaced icons
+  // (the step-2 Add button renders `</svg>Add`). The clone's single-line
+  // JSX `<Icon /> Text` emits a leading space in textContent; the fix is
+  // the multi-line idiom (whitespace across newlines is stripped by JSX).
+  const finaraViewFiles = [
+    "src/components/finara/accounts-view.tsx",
+    "src/components/finara/add-transaction-dialog.tsx",
+    "src/components/finara/ai-coach-dialog.tsx",
+    "src/components/finara/analytics-view.tsx",
+    "src/components/finara/dashboard-view.tsx",
+    "src/components/finara/expense-filters-panel.tsx",
+    "src/components/finara/expenses-view.tsx",
+    "src/components/finara/goals-view.tsx",
+    "src/components/finara/import-view.tsx",
+    "src/components/finara/income-view.tsx",
+    "src/components/finara/investments-view.tsx",
+    "src/components/finara/quick-add-dialog.tsx",
+    "src/components/finara/settings-view.tsx",
+    "src/components/finara/sidebar.tsx",
+  ] as const;
+
+  it("no finara view renders a single-line `icon /> Text` pair (space-emitting pattern)", () => {
+    // Round-14 strengthening after the Filters-button find: the ban covers
+    // ANY capitalized icon component self-closed on the same line as
+    // following text (the live renders `</svg>Filters<span>2</span>` with
+    // zero whitespace text nodes — including the count badge junction).
+    const offenders: string[] = [];
+    for (const file of finaraViewFiles) {
+      const source = read(file);
+      const patterns = [
+        /aria-hidden \/> [A-Za-z0-9{(]/g,
+        /<[A-Z][A-Za-z0-9]*[^>]*\/> [A-Za-z0-9{("]/g,
+      ];
+      for (const pattern of patterns) {
+        const matches = source.match(pattern) ?? [];
+        for (const m of matches) offenders.push(`${file}: ${m.slice(0, 60)}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+});

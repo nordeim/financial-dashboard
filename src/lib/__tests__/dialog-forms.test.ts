@@ -77,14 +77,16 @@ function iconClassNames(source: string): string[] {
 
 describe("icon class order (live: w-X h-X, margin after)", () => {
   it("renders no h-first size pairs on finara lucide icons", () => {
-    // Live-evidenced exceptions (exact strings, round 9): the import
-    // dropzone's CloudUpload renders `mx-auto h-12 w-12 text-gray-400` and
-    // the import error card's CircleAlert renders `h-16 w-16 text-red-500`
-    // — both h-first on the live app.
-    const allowHFirstClass = /^(?:mx-auto h-12 w-12 text-gray-400|h-16 w-16 text-red-500)$/;
+    // Live-evidenced exceptions (exact strings): the import dropzone's
+    // CloudUpload renders `mx-auto h-12 w-12 text-gray-400` and the import
+    // error card's CircleAlert renders `h-16 w-16 text-red-500` (round 9);
+    // the login field icons render `h-4 w-4` (round-14 re-probe — the
+    // live restyled the login page; Mail/Lock join the h-first group).
+    const allowHFirstClass =
+      /^(?:mx-auto h-12 w-12 text-gray-400|h-16 w-16 text-red-500|absolute left-3 top-1\/2 transform -translate-y-1\/2 h-4 w-4 text-slate-500)$/;
     const offenders: string[] = [];
     for (const [file, source] of Object.entries(sources)) {
-      if (!file.includes("import-view")) {
+      if (!file.includes("import-view") && !file.includes("login-view")) {
         for (const cls of iconClassNames(source)) {
           const m = cls.match(/h-\d+(?:\.\d+)? w-\d+(?:\.\d+)?/);
           if (m) offenders.push(`${file}: "${cls}"`);
