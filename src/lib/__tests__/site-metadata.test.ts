@@ -64,6 +64,20 @@ import {
  *    {SITE_DESCRIPTION.slice(0, 80)}.` on the eight non-dashboard view
  *    routes (a 98-char mid-word truncation, probed on all 8).
  *  - R18-F5 The live head carries NO keywords meta.
+ *
+ * The round-19 re-probe (same day) found the live head moved a THIRD
+ * time — the round-17/18 pins held everywhere except (all live-probed):
+ *
+ *  - R19-F1 The `X on Finara.` description template now applies to the
+ *    MAIN description and og:description metas too: the eight
+ *    non-dashboard view routes render `{ViewLabel} on Finara.
+ *    {SITE_DESCRIPTION.slice(0, 80)}.` (the same 98-char mid-word
+ *    truncation as the round-18 twitter:description template, probed on
+ *    all 8) on description + og:description + twitter:description;
+ *    /, /Dashboard, /login and 404s keep the FULL text on all three.
+ *  - R19-F2 /login renders twitter:image:alt "Base44 link preview"
+ *    alongside the og:image descriptor; app pages keep the bare
+ *    twitter:image (no alt, no dims — the og dims stay og-only).
  */
 
 const read = (rel: string): string =>
@@ -185,18 +199,21 @@ describe("round 18 F2: the per-route icon links (apple-touch-icon + sizes are lo
   });
 });
 
-describe("round 17 F4 + r18 F3: buildRouteMetadata — the per-route title/og/image seam", () => {
+describe("round 17 F4 + r18 F3 + r19 F1: buildRouteMetadata — the per-route title/og/image/description seam", () => {
   it("returns the COMPLETE openGraph block with the BARE image (Next merges metadata shallowly per key)", () => {
     const meta = buildRouteMetadata("/Goals");
     expect(meta.openGraph).toEqual({
       title: "Goals | Finara",
-      description: SITE_DESCRIPTION,
+      // Round 19 (F1): the view routes carry the 'X on Finara.' template
+      // on og:description too — the FULL text lives only on /, /Dashboard,
+      // /login and 404s now.
+      description: `Goals on Finara. ${SITE_DESCRIPTION.slice(0, 80)}.`,
       url: "/Goals",
       siteName: "Finara",
       type: "website",
       images: [{ url: "/finara-logo.png" }],
     });
-    expect(meta.description).toBe(SITE_DESCRIPTION);
+    expect(meta.description).toBe(`Goals on Finara. ${SITE_DESCRIPTION.slice(0, 80)}.`);
   });
 
   it("the login og:image carries dims + the live's alt (login-only, live-probed)", () => {
@@ -247,6 +264,34 @@ describe("round 17 F4 + r18 F3: buildRouteMetadata — the per-route title/og/im
     expect(meta.alternates?.canonical).toBe("/login");
   });
 
+  it("r19 F1: the eight view routes carry the 'X on Finara.' template on description AND og:description", () => {
+    const truncated = `${SITE_DESCRIPTION.slice(0, 80)}.`;
+    const cases: Array<[string, string]> = [
+      ["/Income", "Income on Finara. "],
+      ["/Expenses", "Expenses on Finara. "],
+      ["/Accounts", "Accounts on Finara. "],
+      ["/Investments", "Investments on Finara. "],
+      ["/Import", "Import on Finara. "],
+      ["/Analytics", "Analytics on Finara. "],
+      ["/Goals", "Goals on Finara. "],
+      ["/Settings", "Settings on Finara. "],
+    ];
+    for (const [path, prefix] of cases) {
+      const meta = buildRouteMetadata(path);
+      expect(meta.description, `description for ${path}`).toBe(prefix + truncated);
+      expect(meta.openGraph?.description, `og:description for ${path}`).toBe(prefix + truncated);
+      expect(meta.description?.length).toBe(prefix.length + 80 + 1);
+    }
+  });
+
+  it("r19 F1: home/dashboard/login/404 keep the FULL site description on description AND og:description", () => {
+    for (const path of ["/", "/Dashboard", "/login", "/NonexistentPage"]) {
+      const meta = buildRouteMetadata(path);
+      expect(meta.description, `full description for ${path}`).toBe(SITE_DESCRIPTION);
+      expect(meta.openGraph?.description, `full og:description for ${path}`).toBe(SITE_DESCRIPTION);
+    }
+  });
+
   it("not-found routes camelCase-split their title and canonicalize the raw path", () => {
     const meta = buildRouteMetadata("/NonexistentPage");
     expect(meta.title).toBe("Nonexistent Page | Finara");
@@ -284,12 +329,12 @@ describe("round 18 F4: the twitter block (per-route description, bare image, twi
     }
   });
 
-  it("every route carries card/title/bare-image (the explicit block replaces the og derivation)", () => {
+  it("every route carries card/title/image (the explicit block replaces the og derivation)", () => {
     // Next's Twitter type is a union; TwitterMetadata (the base) carries no
     // card — narrow with `in` before reading it.
     const cardOf = (t: ReturnType<typeof buildRouteMetadata>["twitter"]): string | undefined =>
       t && "card" in t ? t.card : undefined;
-    for (const path of ["/", "/Dashboard", "/login", "/Goals", "/NonexistentPage"]) {
+    for (const path of ["/", "/Dashboard", "/Goals", "/NonexistentPage"]) {
       const meta = buildRouteMetadata(path);
       expect(cardOf(meta.twitter)).toBe("summary_large_image");
       expect(meta.twitter?.images).toEqual([{ url: "/finara-logo.png" }]);
@@ -297,6 +342,15 @@ describe("round 18 F4: the twitter block (per-route description, bare image, twi
     }
     const goals = buildRouteMetadata("/Goals").twitter;
     expect(goals?.title).toBe("Goals | Finara");
+  });
+
+  it("r19 F2: the login twitter image carries the live's alt (login-only, live-probed)", () => {
+    // /login renders twitter:image:alt "Base44 link preview" alongside the
+    // og:image descriptor; NO twitter:image width/height on any route (the
+    // og dims stay og-only — the round-18 shape).
+    expect(buildRouteMetadata("/login").twitter?.images).toEqual([
+      { url: "/finara-logo.png", alt: "Base44 link preview" },
+    ]);
   });
 
   it("renders twitter:url (the absolute canonical) via the other escape hatch", () => {
