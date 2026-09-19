@@ -1,6 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { FinaraApp } from "@/components/finara/finara-app";
-import { buildRouteMetadata } from "@/lib/route-metadata";
+import { buildRouteMetadata, buildRouteViewport } from "@/lib/route-metadata";
 import { parseRoute } from "@/lib/routes";
 
 /**
@@ -18,7 +18,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { view } = await params;
   // Round 17: per-route title + canonical + og (the live's head mirrors the
   // document title per route; the dashboard canonical normalizes to "/").
+  // Round 18: the seam also carries the per-route twitter block, the
+  // login-only icons, and the login-only og:image descriptor.
   return buildRouteMetadata("/" + view.join("/"));
+}
+
+/**
+ * Round 18 (live-probed 2026-09-19): the viewport/theme-color pair moved
+ * to the LOGIN route only — app pages render the plain viewport. The seam
+ * returns the complete object per route (deterministic regardless of
+ * Next's layout→page viewport merge semantics).
+ */
+export async function generateViewport({ params }: PageProps): Promise<Viewport> {
+  const { view } = await params;
+  return buildRouteViewport("/" + view.join("/"));
 }
 
 export default async function CatchAllViewPage({ params }: PageProps) {

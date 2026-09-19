@@ -11,30 +11,30 @@ const inter = Inter({
 });
 
 /**
- * Head metadata (round 17, live-probed 2026-09-19).
+ * Head metadata (round 17, live-probed 2026-09-19; per-route structure
+ * re-pinned round 18, same day).
  *
- * The live app's <head> carries theme-color #000000,
- * viewport-fit=cover, its exact description text, the Finara logo as the
- * favicon/apple-touch-icon, the apple-mobile-web-* PWA metas, and
- * per-route og:title/og:url (provided by buildRouteMetadata in the page
- * files). The live's manifest.json link 302s to nothing (a broken base44
- * template asset) and is deliberately NOT replicated.
+ * The layout carries the SHARED head: the plain viewport, the exact
+ * description text, the bare Finara-logo icon link, and the
+ * apple-mobile-web-* PWA metas. Per-route fields come from
+ * buildRouteMetadata/buildRouteViewport in the page files — round 18
+ * moved theme-color + viewport-fit=cover, the apple-touch-icon, and the
+ * og:image dims/alt to the LOGIN route only (live-probed). The live's
+ * manifest.json link 302s to nothing (a broken base44 template asset)
+ * and is deliberately NOT replicated, as is its app-page icon
+ * `type="image/svg+xml"` mislabel (the href is a PNG).
  */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  viewportFit: "cover",
-  themeColor: "#000000",
 };
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteBaseUrl()),
   title: "Finara — Smart Finance Tracker",
   description: SITE_DESCRIPTION,
-  keywords: ["finance", "budget", "expenses", "income", "investments", "savings goals", "AI finance coach"],
   icons: {
     icon: "/finara-logo.png",
-    apple: "/finara-logo.png",
   },
   appleWebApp: {
     capable: true,
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   openGraph: {
     siteName: "Finara",
     type: "website",
-    images: [{ url: "/finara-logo.png", width: 480, height: 480 }],
+    images: [{ url: "/finara-logo.png" }],
   },
 };
 
