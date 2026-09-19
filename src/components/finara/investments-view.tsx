@@ -13,7 +13,16 @@ import { useToast } from "@/hooks/use-toast";
 import { formatMoney } from "@/lib/money";
 import { INVESTMENT_TYPES, SECTORS, investmentTypeLabel } from "@/lib/categories";
 import { SECTOR_COLORS } from "@/lib/ui-maps";
-import {CARD_PLAIN, ClassicTrash2, EmptyState, ErrorNote, LoadingRows, ViewHeader} from "@/components/finara/ui-bits";
+import {
+  CARD_PLAIN,
+  ClassicTrash2,
+  EmptyState,
+  ErrorNote,
+  LoadingRows,
+  MotionWrap,
+  ViewHeader,
+  entranceStyle,
+} from "@/components/finara/ui-bits";
 import type { InvestmentDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -158,7 +167,8 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
         subtitle="Track your investment portfolio performance"
         actions={
           <Button onClick={openCreate} className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
-            <Plus className="w-5 h-5 mr-2" aria-hidden /> Add Investment
+            <Plus className="w-5 h-5 mr-2" aria-hidden />
+            Add Investment
           </Button>
         }
       />
@@ -171,7 +181,10 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
         <>
           {/* KPI row (live: blue + emerald gradients, white return card, w-12 bare icons) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg">
+            <div
+              className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg"
+              style={entranceStyle(100)}
+            >
               <div className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -182,7 +195,10 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                 </div>
               </div>
             </div>
-            <div className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-lg">
+            <div
+              className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-lg"
+              style={entranceStyle(200)}
+            >
               <div className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -193,7 +209,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                 </div>
               </div>
             </div>
-            <div className={cn(CARD_PLAIN)}>
+            <div className={cn(CARD_PLAIN)} style={entranceStyle(300)}>
               <div className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -212,10 +228,12 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
           {/* Holdings grid (live: table col-span-2 + sector list right) */}
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
+              <MotionWrap delayMs={400}>
               <div className={cn(CARD_PLAIN)}>
                 <div className="flex flex-col space-y-1.5 p-6">
                   <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-                    <Wallet className="w-5 h-5" aria-hidden /> Portfolio Holdings
+                    <Wallet className="w-5 h-5" aria-hidden />
+                    Portfolio Holdings
                   </div>
                 </div>
                 <div className="p-6 pt-0">
@@ -280,14 +298,17 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                   )}
                 </div>
               </div>
+              </MotionWrap>
             </div>
 
             {/* Sector Allocation (live: colored-dot list, fixed per-sector colors) */}
             <div>
+              <MotionWrap delayMs={500}>
               <div className={cn(CARD_PLAIN)}>
                 <div className="flex flex-col space-y-1.5 p-6">
                   <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-                    <ChartPie className="w-5 h-5" aria-hidden /> Sector Allocation
+                    <ChartPie className="w-5 h-5" aria-hidden />
+                    Sector Allocation
                   </div>
                 </div>
                 <div className="p-6 pt-0">
@@ -314,6 +335,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                   )}
                 </div>
               </div>
+              </MotionWrap>
             </div>
           </div>
 
@@ -325,7 +347,8 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
                 body="Add your investments to start tracking your portfolio performance."
                 action={
                   <Button onClick={openCreate} className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
-                    <Plus className="w-4 h-4 mr-1" aria-hidden /> Add Your First Investment
+                    <Plus className="w-4 h-4 mr-1" aria-hidden />
+                    Add Your First Investment
                   </Button>
                 }
               />
@@ -337,7 +360,7 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         {/* Round-6 live matrix: Add/Edit Investment = max-w-md + scroll,
             trending-up icon, header row + in-flow close, no description. */}
-        <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto" showCloseButton={false} aria-describedby={undefined}>
+        <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto" overlayStyle={{ opacity: 1, transform: "none" }} showCloseButton={false} aria-describedby={undefined}>
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle asChild>
@@ -478,7 +501,8 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
               <Button type="submit" className="flex-1 bg-primary-sage text-white shadow hover:bg-primary-sage/90" disabled={submitting}>
                 {submitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden /> Saving…
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden />
+                    Saving…
                   </>
                 ) : editing ? (
                   "Update Investment"

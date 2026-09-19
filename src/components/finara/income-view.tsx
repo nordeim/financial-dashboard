@@ -13,7 +13,17 @@ import { mutate, useQuery, useSettings } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney, monthlyEquivalent, toMinorUnits } from "@/lib/money";
 import { FREQUENCY_LABELS, INCOME_CATEGORIES, INCOME_FREQUENCIES, incomeCategoryLabel } from "@/lib/categories";
-import {CARD_HOVER, CARD_PLAIN, ClassicTrash2, EmptyState, ErrorNote, LoadingRows, ViewHeader} from "@/components/finara/ui-bits";
+import {
+  CARD_HOVER,
+  CARD_PLAIN,
+  ClassicTrash2,
+  EmptyState,
+  ErrorNote,
+  LoadingRows,
+  MotionWrap,
+  ViewHeader,
+  entranceStyle,
+} from "@/components/finara/ui-bits";
 import type { IncomeSourceDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -118,7 +128,8 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
         subtitle="Track and manage all your income streams"
         actions={
           <Button onClick={onAddIncome} className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
-            <Plus className="w-5 h-5 mr-2" aria-hidden /> Add Income Source
+            <Plus className="w-5 h-5 mr-2" aria-hidden />
+            Add Income Source
           </Button>
         }
       />
@@ -129,8 +140,9 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
         <LoadingRows rows={4} />
       ) : (
         <>
-          {/* Hero total card (live: emerald gradient, text-4xl, w-20 icon circle) */}
-          <div className="mb-8">
+          {/* Hero total card (live: emerald gradient, text-4xl, w-20 icon
+              circle; round-14: the mb-8 container carries the entrance). */}
+          <div className="mb-8" style={entranceStyle(100)}>
             <div className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-xl">
               <div className="p-8">
               <div className="flex items-center justify-between">
@@ -157,15 +169,17 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                 body="Start by adding your income sources to track your financial progress"
                 action={
                   <Button onClick={onAddIncome} className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
-                    <Plus className="w-4 h-4" aria-hidden /> Add Your First Income Source
+                    <Plus className="w-4 h-4" aria-hidden />
+                    Add Your First Income Source
                   </Button>
                 }
               />
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sources.map((source) => (
-                <div key={source.id} className={CARD_HOVER}>
+              {sources.map((source, sourceIndex) => (
+                <MotionWrap key={source.id} delayMs={200 + Math.min(sourceIndex, 8) * 100}>
+                <div className={CARD_HOVER}>
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
@@ -220,6 +234,7 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
                     </div>
                   </div>
                 </div>
+                </MotionWrap>
               ))}
             </div>
           )}
@@ -229,12 +244,13 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         {/* Round-6 live matrix: Edit Income Source = max-w-lg + scroll, dollar
             icon, header row + in-flow close, no description, p-6 pt-0 body. */}
-        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto" showCloseButton={false} aria-describedby={undefined}>
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto" overlayStyle={{ opacity: 1, transform: "none" }} showCloseButton={false} aria-describedby={undefined}>
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle asChild>
               <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-                <DollarSign className="w-5 h-5" aria-hidden /> Edit Income Source
+                <DollarSign className="w-5 h-5" aria-hidden />
+                Edit Income Source
               </div>
             </DialogTitle>
               <button
@@ -350,7 +366,8 @@ export function IncomeView({ onAddIncome, refreshKey = 0 }: { onAddIncome: () =>
               <Button type="submit" className="flex-1 bg-primary-sage text-white shadow hover:bg-primary-sage/90" disabled={submitting}>
                 {submitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden /> Saving…
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden />
+                    Saving…
                   </>
                 ) : (
                   "Update Income"

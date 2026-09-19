@@ -10,7 +10,7 @@ import { mutate } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { toMinorUnits } from "@/lib/money";
 import { EXPENSE_CATEGORIES, SUBCATEGORIES, subcategoryLabel } from "@/lib/categories";
-import { ViewHeader } from "@/components/finara/ui-bits";
+import { MotionWrap, ViewHeader } from "@/components/finara/ui-bits";
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
@@ -249,7 +249,10 @@ export function ImportView() {
           </div>
         </div>
       ) : (
-      <div className="rounded-xl border bg-card text-card-foreground shadow">
+        /* Round-14: the live wraps the step card in a motion div (settled
+           opacity 1/none, ~100ms after the header). */
+        <MotionWrap delayMs={100}>
+        <div className="rounded-xl border bg-card text-card-foreground shadow">
         <div className="flex flex-col space-y-1.5 p-6">
           <div className="font-semibold leading-none tracking-tight">
             {step === 1 ? "Step 1: Upload File" : step === 2 ? "Step 2: Review & Categorize" : "Step 3: Done"}
@@ -291,7 +294,8 @@ export function ImportView() {
               </Label>
               {pendingFile && !extracting ? (
                 <p className="mt-2 flex items-center justify-center gap-1 text-sm font-medium text-emerald-700 dark:text-emerald-400" aria-live="polite">
-                  <CheckCircle2 className="w-4 h-4" aria-hidden /> {pendingFile.name}
+                  <CheckCircle2 className="w-4 h-4" aria-hidden />
+                  {pendingFile.name}
                 </p>
               ) : null}
               <p className="text-xs text-gray-500">CSV, XLS, XLSX up to 10MB</p>
@@ -306,7 +310,8 @@ export function ImportView() {
           >
             {extracting ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden /> Extracting...
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden />
+                Extracting...
               </>
             ) : (
               "Upload and Extract"
@@ -324,16 +329,19 @@ export function ImportView() {
                 </p>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={reset}>
-                    <X className="w-4 h-4 mr-1" aria-hidden /> Cancel
+                    <X className="w-4 h-4 mr-1" aria-hidden />
+                    Cancel
                   </Button>
                   <Button size="sm" className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90" onClick={() => void runImport()} disabled={importing}>
                     {importing ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-1 animate-spin" aria-hidden /> Importing…
+                        <Loader2 className="w-4 h-4 mr-1 animate-spin" aria-hidden />
+                        Importing…
                       </>
                     ) : (
                       <>
-                        <CheckCircle2 className="w-4 h-4 mr-1" aria-hidden /> Import {rows.length} Transactions
+                        <CheckCircle2 className="w-4 h-4 mr-1" aria-hidden />
+                        Import {rows.length} Transactions
                       </>
                     )}
                   </Button>
@@ -425,7 +433,8 @@ export function ImportView() {
               </div>
             </div>
           ) : null}
-      </div>
+        </div>
+        </MotionWrap>
       )}
     </>
   );

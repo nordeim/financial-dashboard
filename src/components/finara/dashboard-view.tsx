@@ -27,7 +27,17 @@ import { formatMoney } from "@/lib/money";
 import { ACTIVITY_BADGE, CATEGORY_DOT, INSIGHT_ICON_DEFAULT, INSIGHT_TYPE_BADGE, INSIGHT_TYPE_ICON } from "@/lib/ui-maps";
 import { formatDate } from "@/lib/date-format";
 import { budgetRemainingLabel } from "@/lib/dashboard-kpis";
-import { EmptyState, ErrorNote, GradientCard, LoadingRows, SectionCard, StatCard, SurplusBadge } from "@/components/finara/ui-bits";
+import {
+  EmptyState,
+  ErrorNote,
+  GradientCard,
+  LoadingRows,
+  MotionWrap,
+  SectionCard,
+  StatCard,
+  SurplusBadge,
+  entranceStyle,
+} from "@/components/finara/ui-bits";
 import type { AiInsightDto, DashboardDto } from "@/lib/types";
 import type { ViewId } from "@/components/finara/sidebar";
 import { cn } from "@/lib/utils";
@@ -105,7 +115,10 @@ export function DashboardView({
     <>
       {/* Page header (live-exact: AI Coach + Refresh outline buttons; the sage
           Add Transaction button is an anchor that navigates to /Expenses). */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
+      <div
+        className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4"
+        style={entranceStyle(0)}
+      >
         <div>
           <h1 className="text-3xl lg:text-4xl font-bold text-primary-navy dark:text-white mb-2">Financial Dashboard</h1>
           <p className="text-neutral-600 dark:text-neutral-400">Real-time overview of your financial health</p>
@@ -114,7 +127,8 @@ export function DashboardView({
           {/* Round 8 (F6): the live outline header buttons re-pass gap-2 so it
               lands at the tail: `… h-9 px-4 py-2 gap-2`. */}
           <Button variant="outline" onClick={onOpenAiCoach} className="h-9 px-4 py-2 gap-2">
-            <Brain className="w-4 h-4" aria-hidden /> AI Coach
+            <Brain className="w-4 h-4" aria-hidden />
+            AI Coach
           </Button>
           <Button
             variant="outline"
@@ -125,7 +139,13 @@ export function DashboardView({
             }}
             className="h-9 px-4 py-2 gap-2"
           >
-            <RefreshCw className="w-4 h-4" aria-hidden /> Refresh
+            <div
+              style={{ transform: "none" }}
+              className={dashboardQuery.loading ? "animate-spin" : undefined}
+            >
+              <RefreshCw className="w-4 h-4" aria-hidden />
+            </div>
+            Refresh
           </Button>
           <a
             href="/Expenses"
@@ -135,7 +155,8 @@ export function DashboardView({
             }}
           >
             <Button className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
-              <CirclePlus className="w-5 h-5 mr-2" aria-hidden /> Add Transaction
+              <CirclePlus className="w-5 h-5 mr-2" aria-hidden />
+              Add Transaction
             </Button>
           </a>
         </div>
@@ -149,33 +170,41 @@ export function DashboardView({
         <>
           {/* KPI row (live: md:2 / lg:4, gap-6) */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <StatCard
-              label="Monthly Income"
-              value={formatMoney(data.kpis.monthlyIncomeMinor, { currency })}
-              icon={TrendingUp}
-              iconClass="bg-gradient-to-r from-emerald-500 to-emerald-600"
-              trend={data.kpis.incomeChangePercent}
-            />
-            <StatCard
-              label="Monthly Expenses"
-              value={formatMoney(data.kpis.monthlyExpensesMinor, { currency })}
-              icon={TrendingDown}
-              iconClass="bg-gradient-to-r from-red-500 to-red-600"
-              trend={data.kpis.expenseChangePercent}
-            />
-            <StatCard
-              label="Net Balance"
-              value={formatMoney(data.kpis.netBalanceMinor, { currency })}
-              icon={Wallet}
-              iconClass="bg-gradient-to-r from-blue-500 to-blue-600"
-              trend={data.kpis.netChangePercent}
-            />
-            <StatCard
-              label="Savings Progress"
-              value={`${data.kpis.savingsProgressPercent.toFixed(1)}%`}
-              icon={Target}
-              iconClass="bg-gradient-to-r from-purple-500 to-purple-600"
-            />
+            <MotionWrap delayMs={100}>
+              <StatCard
+                label="Monthly Income"
+                value={formatMoney(data.kpis.monthlyIncomeMinor, { currency })}
+                icon={TrendingUp}
+                iconClass="bg-gradient-to-r from-emerald-500 to-emerald-600"
+                trend={data.kpis.incomeChangePercent}
+              />
+            </MotionWrap>
+            <MotionWrap delayMs={200}>
+              <StatCard
+                label="Monthly Expenses"
+                value={formatMoney(data.kpis.monthlyExpensesMinor, { currency })}
+                icon={TrendingDown}
+                iconClass="bg-gradient-to-r from-red-500 to-red-600"
+                trend={data.kpis.expenseChangePercent}
+              />
+            </MotionWrap>
+            <MotionWrap delayMs={300}>
+              <StatCard
+                label="Net Balance"
+                value={formatMoney(data.kpis.netBalanceMinor, { currency })}
+                icon={Wallet}
+                iconClass="bg-gradient-to-r from-blue-500 to-blue-600"
+                trend={data.kpis.netChangePercent}
+              />
+            </MotionWrap>
+            <MotionWrap delayMs={400}>
+              <StatCard
+                label="Savings Progress"
+                value={`${data.kpis.savingsProgressPercent.toFixed(1)}%`}
+                icon={Target}
+                iconClass="bg-gradient-to-r from-purple-500 to-purple-600"
+              />
+            </MotionWrap>
           </div>
 
           {/* Action tiles (live: only Bank Sync + Portfolio are interactive) */}
@@ -186,6 +215,7 @@ export function DashboardView({
               subtitle={data.kpis.largestExpenseCategory ? formatMoney(data.kpis.largestExpenseMinor, { currency }) : formatMoney(0, { currency })}
               icon={TrendingDown}
               gradient="bg-gradient-to-r from-orange-500 to-orange-600"
+              style={entranceStyle(500)}
               capitalizeValue
             />
             <GradientCard
@@ -194,6 +224,7 @@ export function DashboardView({
               subtitle="Goals in progress"
               icon={Target}
               gradient="bg-gradient-to-r from-cyan-500 to-cyan-600"
+              style={entranceStyle(600)}
             />
             <GradientCard
               title="Bank Sync"
@@ -201,6 +232,7 @@ export function DashboardView({
               subtitle="Upload CSV files"
               icon={Landmark}
               gradient="bg-gradient-to-r from-blue-500 to-blue-600"
+              style={entranceStyle(700)}
               onClick={() => onNavigate("import")}
               href="/Import"
               ariaLabel="Import data. Upload CSV bank files."
@@ -211,6 +243,7 @@ export function DashboardView({
               subtitle="Track holdings"
               icon={Wallet}
               gradient="bg-gradient-to-r from-purple-500 to-purple-600"
+              style={entranceStyle(800)}
               onClick={() => onNavigate("investments")}
               href="/Investments"
               ariaLabel="Portfolio investments. Track holdings."
@@ -220,6 +253,7 @@ export function DashboardView({
           {/* Feature grid (live: Budget col-span-2 + right column stacks Recent Activity + AI Insights) */}
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
+              <MotionWrap delayMs={300}>
               <SectionCard
                 title="Budget Overview"
                 badge={<SurplusBadge amountMinor={data.budgetSurplusMinor} currency={currency} />}
@@ -240,7 +274,11 @@ export function DashboardView({
                       const remainingLabel = budgetRemainingLabel(budget.limitMinor, budget.remainingMinor, currency);
                       const percentUsed = budget.percentUsed;
                       return (
-                        <div key={budget.category} className="space-y-2">
+                        <div
+                          key={budget.category}
+                          className="space-y-2"
+                          style={entranceStyle(360)}
+                        >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <div className={cn("w-3 h-3 rounded-full", CATEGORY_DOT[categoryId] ?? "bg-slate-400")} aria-hidden />
@@ -285,9 +323,11 @@ export function DashboardView({
                   </div>
                 )}
               </SectionCard>
+              </MotionWrap>
             </div>
 
             <div className="space-y-8">
+              <MotionWrap delayMs={400}>
               <SectionCard title="Recent Activity">
                 {data.recentTransactions.length === 0 ? (
                   <EmptyState
@@ -297,7 +337,7 @@ export function DashboardView({
                   />
                 ) : (
                   <div className="space-y-4">
-                    {data.recentTransactions.slice(0, 6).map((transaction) => {
+                    {data.recentTransactions.slice(0, 6).map((transaction, index) => {
                       const isIncome = transaction.kind === "income";
                       const badgeKey = (transaction.category ?? "").toLowerCase();
                       const badgeText = badgeKey;
@@ -305,6 +345,7 @@ export function DashboardView({
                         <div
                           key={transaction.id}
                           className="flex items-center gap-3 p-3 rounded-lg bg-neutral-50/50 dark:bg-gray-700/30 hover:bg-neutral-100/50 dark:hover:bg-gray-700/50 transition-colors"
+                          style={entranceStyle(650 + Math.min(index, 8) * 50)}
                         >
                           {/* Live-exact: the text color lives on the circle div
                               and the glyph inherits currentColor. */}
@@ -348,6 +389,7 @@ export function DashboardView({
                   </div>
                 )}
               </SectionCard>
+              </MotionWrap>
 
               <SectionCard
                 title="AI Insights"
@@ -355,7 +397,8 @@ export function DashboardView({
                 actions={
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" onClick={onOpenAiCoach} className="gap-2">
-                      <MessageCircle className="w-4 h-4" aria-hidden /> Ask AI
+                      <MessageCircle className="w-4 h-4" aria-hidden />
+                      Ask AI
                     </Button>
                     {/* Round 13: live refresh — ghost icon, no re-stated size
                         classes (size="icon" carries them), disabled while
@@ -368,7 +411,10 @@ export function DashboardView({
                       aria-label="Refresh insights"
                       disabled={insightsLoading}
                     >
-                      <div className={insightsLoading ? "animate-spin" : undefined}>
+                      <div
+                        style={{ transform: "none" }}
+                        className={insightsLoading ? "animate-spin" : undefined}
+                      >
                         <RefreshCw className="w-4 h-4" aria-hidden />
                       </div>
                     </Button>
@@ -446,7 +492,10 @@ export function DashboardView({
           </div>
 
           {/* Quick Actions (live: plain mt-12 panel, NOT a Card; anchor-wrapped buttons) */}
-          <div className="mt-12 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6">
+          <div
+            className="mt-12 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6"
+            style={entranceStyle(600)}
+          >
             <h3 className="text-xl font-bold text-primary-navy dark:text-white mb-4">Quick Actions</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <a

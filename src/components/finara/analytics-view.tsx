@@ -24,7 +24,14 @@ import { useQuery, useSettings } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatMoney } from "@/lib/money";
 import { SECTOR_COLORS } from "@/lib/ui-maps";
-import { CARD_PLAIN, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
+import {
+  CARD_PLAIN,
+  ErrorNote,
+  LoadingRows,
+  MotionWrap,
+  ViewHeader,
+  entranceStyle,
+} from "@/components/finara/ui-bits";
 import { Input } from "@/components/ui/input";
 import type { AnalyticsDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -132,10 +139,17 @@ export function AnalyticsView() {
               </SelectContent>
             </Select>
             <Button variant="outline" onClick={() => query.refresh()} className="gap-2">
-              <RefreshCw className="w-4 h-4" aria-hidden /> Refresh
+              <div
+                style={{ transform: "none" }}
+                className={query.loading ? "animate-spin" : undefined}
+              >
+                <RefreshCw className="w-4 h-4" aria-hidden />
+              </div>
+              Refresh
             </Button>
             <Button variant="outline" onClick={exportCsv} className="gap-2">
-              <Download className="w-4 h-4" aria-hidden /> Export
+              <Download className="w-4 h-4" aria-hidden />
+              Export
             </Button>
           </div>
         }
@@ -155,10 +169,12 @@ export function AnalyticsView() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-8">
+            <MotionWrap delayMs={100}>
             <div className={cn(CARD_PLAIN)}>
               <div className="flex flex-col space-y-1.5 p-6">
                 <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-                  <TrendingUp className="w-5 h-5" aria-hidden /> Income vs Expenses Trend
+                  <TrendingUp className="w-5 h-5" aria-hidden />
+                  Income vs Expenses Trend
                 </div>
               </div>
               <div className="p-6 pt-0">
@@ -191,8 +207,9 @@ export function AnalyticsView() {
                 </div>
               </div>
             </div>
+            </MotionWrap>
 
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-3 gap-6" style={entranceStyle(200)}>
               <div className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-lg">
                 <div className="p-6">
                   <div className="flex items-center justify-between">
@@ -235,7 +252,8 @@ export function AnalyticsView() {
             <div className={cn(CARD_PLAIN)}>
               <div className="flex flex-col space-y-1.5 p-6">
                 <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-                  <ChartPie className="w-5 h-5" aria-hidden /> Spending by Category
+                  <ChartPie className="w-5 h-5" aria-hidden />
+                  Spending by Category
                 </div>
               </div>
               <div className="p-6 pt-0">
@@ -267,7 +285,8 @@ export function AnalyticsView() {
             <div className={cn(CARD_PLAIN)}>
               <div className="flex flex-col space-y-1.5 p-6">
                 <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-                  <ChartColumn className="w-5 h-5" aria-hidden /> Top Spending Categories
+                  <ChartColumn className="w-5 h-5" aria-hidden />
+                  Top Spending Categories
                 </div>
               </div>
               <div className="p-6 pt-0">
@@ -305,7 +324,8 @@ export function AnalyticsView() {
             <div className={cn(CARD_PLAIN)}>
               <div className="flex flex-col space-y-1.5 p-6">
                 <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-                  <ChartPie className="w-5 h-5" aria-hidden /> Portfolio Allocation by Sector
+                  <ChartPie className="w-5 h-5" aria-hidden />
+                  Portfolio Allocation by Sector
                 </div>
               </div>
               <div className="p-6 pt-0">

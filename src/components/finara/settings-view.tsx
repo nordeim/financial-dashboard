@@ -11,7 +11,14 @@ import { mutate, useQuery } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { CURRENCIES, DATE_FORMATS } from "@/lib/categories";
 import { DEMO_EMAIL } from "@/lib/demo-user";
-import { CARD_PLAIN, ErrorNote, LoadingRows, ViewHeader } from "@/components/finara/ui-bits";
+import {
+  CARD_PLAIN,
+  ErrorNote,
+  LoadingRows,
+  MotionWrap,
+  ViewHeader,
+  entranceStyle,
+} from "@/components/finara/ui-bits";
 import type { SettingsDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -125,10 +132,12 @@ export function SettingsView() {
       ) : (
         <div className="space-y-6">
           {/* Profile Settings (live: user icon header + two selects) */}
+          <MotionWrap delayMs={100}>
           <div className={cn(CARD_PLAIN)}>
             <div className="flex flex-col space-y-1.5 p-6">
               <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-                <User className="w-5 h-5" aria-hidden /> Profile Settings
+                <User className="w-5 h-5" aria-hidden />
+                Profile Settings
               </div>
             </div>
             <div className="p-6 pt-0 space-y-4">
@@ -166,12 +175,15 @@ export function SettingsView() {
               </div>
             </div>
           </div>
+          </MotionWrap>
 
           {/* Notifications (live: bell icon, text-base labels, space-y-6 rows) */}
+          <MotionWrap delayMs={200}>
           <div className={cn(CARD_PLAIN)}>
             <div className="flex flex-col space-y-1.5 p-6">
               <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-                <Bell className="w-5 h-5" aria-hidden /> Notifications
+                <Bell className="w-5 h-5" aria-hidden />
+                Notifications
               </div>
             </div>
             <div className="p-6 pt-0 space-y-6">
@@ -192,12 +204,15 @@ export function SettingsView() {
               ))}
             </div>
           </div>
+          </MotionWrap>
 
           {/* Export Your Data (live: blue info box + full-width blue button) */}
+          <MotionWrap delayMs={300}>
           <div className={cn(CARD_PLAIN)}>
             <div className="flex flex-col space-y-1.5 p-6">
               <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-                <Download className="w-5 h-5" aria-hidden /> Export Your Data
+                <Download className="w-5 h-5" aria-hidden />
+                Export Your Data
               </div>
             </div>
             <div className="p-6 pt-0 space-y-4">
@@ -213,16 +228,19 @@ export function SettingsView() {
                 </div>
               </div>
               <Button className="h-9 px-4 py-2 w-full bg-blue-600 hover:bg-blue-700" onClick={() => void exportAllData()}>
-                <Download className="w-4 h-4 mr-2" aria-hidden /> Export All Data
+                <Download className="w-4 h-4 mr-2" aria-hidden />
+                Export All Data
               </Button>
             </div>
           </div>
+          </MotionWrap>
 
           {/* Import Data (live: amber warning box + visible file input) */}
           <div className={cn(CARD_PLAIN)}>
             <div className="flex flex-col space-y-1.5 p-6">
               <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-                <Upload className="w-5 h-5" aria-hidden /> Import Data
+                <Upload className="w-5 h-5" aria-hidden />
+                Import Data
               </div>
             </div>
             <div className="p-6 pt-0 space-y-4">
@@ -260,7 +278,8 @@ export function SettingsView() {
           <div className={cn(CARD_PLAIN)}>
             <div className="flex flex-col space-y-1.5 p-6">
               <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
-                <FileText className="w-5 h-5" aria-hidden /> Your Data Summary
+                <FileText className="w-5 h-5" aria-hidden />
+                Your Data Summary
               </div>
             </div>
             <div className="p-6 pt-0">
@@ -278,9 +297,10 @@ export function SettingsView() {
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end" style={entranceStyle(400)}>
             <Button onClick={() => void handleSave()} className="h-9 px-4 py-2 bg-primary-sage hover:bg-primary-sage/90 gap-2" disabled={saving}>
-              <Save className="w-4 h-4" aria-hidden /> {saving ? "Saving…" : "Save Settings"}
+              <Save className="w-4 h-4" aria-hidden />
+              {saving ? "Saving…" : "Save Settings"}
             </Button>
           </div>
         </div>

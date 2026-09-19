@@ -13,7 +13,16 @@ import { formatMoney, toMinorUnits } from "@/lib/money";
 import { ACCOUNT_TYPES, accountTypeLabel } from "@/lib/categories";
 import { ACCOUNT_TYPE_ICONS } from "@/lib/ui-maps";
 import { formatDate } from "@/lib/date-format";
-import {CARD_HOVER, CARD_PLAIN, ClassicTrash2, EmptyState, ErrorNote, LoadingRows, ViewHeader} from "@/components/finara/ui-bits";
+import {
+  CARD_HOVER,
+  CARD_PLAIN,
+  ClassicTrash2,
+  EmptyState,
+  ErrorNote,
+  LoadingRows,
+  MotionWrap,
+  ViewHeader,
+} from "@/components/finara/ui-bits";
 import type { AccountDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -110,7 +119,8 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
         subtitle="Manage your connected bank accounts"
         actions={
           <Button onClick={openCreate} className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
-            <Plus className="w-5 h-5 mr-2" aria-hidden /> Add Account
+            <Plus className="w-5 h-5 mr-2" aria-hidden />
+            Add Account
           </Button>
         }
       />
@@ -127,17 +137,19 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
             body="Add a bank account to start tracking your finances."
             action={
               <Button onClick={openCreate} className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
-                <Plus className="w-4 h-4 mr-1" aria-hidden /> Add your first account
+                <Plus className="w-4 h-4 mr-1" aria-hidden />
+                Add your first account
               </Button>
             }
           />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {accounts.map((account) => {
+          {accounts.map((account, accountIndex) => {
             const TypeIcon = ACCOUNT_TYPE_ICONS[account.type] ?? Landmark;
             return (
-              <div key={account.id} className={cn(CARD_HOVER, "h-full flex flex-col")}>
+              <MotionWrap key={account.id} delayMs={100 + Math.min(accountIndex, 8) * 100}>
+              <div className={cn(CARD_HOVER, "h-full flex flex-col")}>
                 <div className="space-y-1.5 p-6 flex flex-row items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 rounded-xl flex items-center justify-center">
@@ -195,6 +207,7 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
                   </a>
                 </div>
               </div>
+              </MotionWrap>
             );
           })}
         </div>
@@ -211,7 +224,8 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
             ("Save Changes" when editing) — not sage (live-probed). */}
         <DialogContent
           className="max-w-md bg-card dark:bg-card"
-          backdropClassName="bg-black/60"
+          overlayClassName="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+          overlayStyle={{ opacity: 1 }}
           showCloseButton={false}
           aria-describedby={undefined}
         >
@@ -281,7 +295,8 @@ export function AccountsView({ refreshKey = 0, onNavigate }: { refreshKey?: numb
               <Button type="submit" disabled={submitting}>
                 {submitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden /> Saving…
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden />
+                    Saving…
                   </>
                 ) : editing ? (
                   "Save Changes"

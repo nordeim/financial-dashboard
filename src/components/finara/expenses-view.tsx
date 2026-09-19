@@ -23,7 +23,18 @@ import {
 } from "@/lib/expense-filters";
 import { ExpenseFiltersPanel } from "@/components/finara/expense-filters-panel";
 import { AddTransactionDialog } from "@/components/finara/add-transaction-dialog";
-import {CARD_HOVER, CARD_PLAIN, ClassicFilterIcon, ClassicTrash2, EmptyState, ErrorNote, LoadingRows, ViewHeader} from "@/components/finara/ui-bits";
+import {
+  CARD_HOVER,
+  CARD_PLAIN,
+  ClassicFilterIcon,
+  ClassicTrash2,
+  EmptyState,
+  ErrorNote,
+  LoadingRows,
+  MotionWrap,
+  ViewHeader,
+  entranceStyle,
+} from "@/components/finara/ui-bits";
 import type { ExpenseDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -145,7 +156,8 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
         subtitle="Track and categorize all your spending"
         actions={
           <Button onClick={onAddExpense} className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
-            <Plus className="w-5 h-5 mr-2" aria-hidden /> Add Expense
+            <Plus className="w-5 h-5 mr-2" aria-hidden />
+            Add Expense
           </Button>
         }
       />
@@ -156,8 +168,12 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
         <LoadingRows rows={4} />
       ) : (
         <>
-          {/* Summary cards (live: red gradient total Card + dotted category cards, mb-8) */}
+          {/* Summary cards (live: red gradient total Card + dotted category cards, mb-8).
+              Round-14: each card mounts through a motion wrapper (live
+              framer-motion — the 4 wrappers settle at opacity 1/none and
+              stagger ~100ms). */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <MotionWrap delayMs={100}>
             <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white border-0 shadow-lg">
               <div className="p-6">
                 <div className="flex items-center justify-between">
@@ -169,8 +185,10 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                 </div>
               </div>
             </Card>
-            {(["Needs", "Wants", "Savings"] as const).map((category) => (
-              <Card key={category} className={cn(CARD_PLAIN, "card-hover")}>
+            </MotionWrap>
+            {(["Needs", "Wants", "Savings"] as const).map((category, categoryIndex) => (
+              <MotionWrap key={category} delayMs={200 + categoryIndex * 100}>
+              <Card className={cn(CARD_PLAIN, "card-hover")}>
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -183,11 +201,13 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                   </div>
                 </div>
               </Card>
+              </MotionWrap>
             ))}
           </div>
 
-          {/* Search + Filters (live: bare on the page, mb-6, NOT inside a card) */}
-          <div className="mb-6">
+          {/* Search + Filters (live: bare on the page, mb-6, NOT inside a
+              card — carries the entrance motion, live-measured). */}
+          <div className="mb-6" style={entranceStyle(500)}>
             <div className="space-y-4">
               <div className="flex gap-3">
                 <div className="flex-1 relative">
@@ -209,7 +229,8 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                 }}
                 aria-expanded={filtersOpen}
               >
-                <ClassicFilterIcon className="w-4 h-4" /> Filters{" "}
+                <ClassicFilterIcon className="w-4 h-4" />
+                Filters
                 <span className="bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {activeFilterCount}
                 </span>
@@ -273,7 +294,8 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                       onClick={() => void bulkDelete()}
                       disabled={deleting}
                     >
-                      <ClassicTrash2 className="w-4 h-4" aria-hidden /> Delete ({selectedIds.size})
+                      <ClassicTrash2 className="w-4 h-4" aria-hidden />
+                      Delete ({selectedIds.size})
                     </Button>
                     <Button
                       variant="ghost"
@@ -291,23 +313,24 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
             </div>
           </div>
 
-          {/* Expense History (live: separate card, receipt icon title, tabs in
-              the CardHeader row, NO card-hover) */}
+          {/* Expense History (live: separate card, receipt icon title, tabs
+              directly in the CardHeader row — round-14: no flex-wrap wrapper,
+              title + Tabs are siblings — NO card-hover; motion-wrapped). */}
+          <MotionWrap delayMs={600}>
           <Card className={cn(CARD_PLAIN)}>
             <CardHeader>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <CardTitle className="flex items-center gap-2 text-primary-navy dark:text-white">
-                  <Receipt className="w-5 h-5" aria-hidden /> Expense History ({filtered.length})
-                </CardTitle>
-                <Tabs value={tab} onValueChange={(value) => setTab(value as typeof tab)}>
-                  <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="All">All</TabsTrigger>
-                    <TabsTrigger value="Needs">Needs</TabsTrigger>
-                    <TabsTrigger value="Wants">Wants</TabsTrigger>
-                    <TabsTrigger value="Savings">Savings</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
+              <CardTitle className="flex items-center gap-2 text-primary-navy dark:text-white">
+                <Receipt className="w-5 h-5" aria-hidden />
+                {`Expense History (${filtered.length})`}
+              </CardTitle>
+              <Tabs value={tab} onValueChange={(value) => setTab(value as typeof tab)}>
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="All">All</TabsTrigger>
+                  <TabsTrigger value="Needs">Needs</TabsTrigger>
+                  <TabsTrigger value="Wants">Wants</TabsTrigger>
+                  <TabsTrigger value="Savings">Savings</TabsTrigger>
+                </TabsList>
+              </Tabs>
             </CardHeader>
             <CardContent>
               {filtered.length === 0 ? (
@@ -317,17 +340,19 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
                   body="Start tracking your spending to better manage your budget"
                   action={
                     <Button onClick={onAddExpense} className="bg-primary-sage text-white shadow-lg hover:bg-primary-sage/90">
-                      <Plus className="w-4 h-4 mr-1" aria-hidden /> Add Your First Expense
+                      <Plus className="w-4 h-4 mr-1" aria-hidden />
+                      Add Your First Expense
                     </Button>
                   }
                 />
               ) : (
                 <>
                   <div className="space-y-4" aria-label="Expense history">
-                    {filtered.map((expense) => (
+                    {filtered.map((expense, expenseIndex) => (
                       <div
                         key={expense.id}
                         className="flex items-center gap-4 p-4 bg-neutral-50/50 dark:bg-gray-700/30 rounded-xl hover:bg-neutral-100/50 dark:hover:bg-gray-700/50 transition-colors"
+                        style={entranceStyle(650 + Math.min(expenseIndex, 8) * 50)}
                       >
                         <Checkbox
                           checked={selectedIds.has(expense.id)}
@@ -392,6 +417,7 @@ export function ExpensesView({ onAddExpense, onQuickAdd, quickAddOpen, refreshKe
               )}
             </CardContent>
           </Card>
+          </MotionWrap>
         </>
       )}
 

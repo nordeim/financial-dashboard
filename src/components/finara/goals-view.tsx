@@ -15,7 +15,16 @@ import { formatMoney, percent, toMinorUnits } from "@/lib/money";
 import { GOAL_CATEGORIES, GOAL_PRIORITIES, goalCategoryEmoji, goalCategoryLabel, goalPriorityLabel } from "@/lib/categories";
 import { GOAL_TILE_GRADIENT, PRIORITY_BADGE } from "@/lib/ui-maps";
 import { formatDate } from "@/lib/date-format";
-import {CARD_HOVER, CARD_PLAIN, ClassicTrash2, EmptyState, ErrorNote, LoadingRows, ViewHeader} from "@/components/finara/ui-bits";
+import {
+  CARD_HOVER,
+  CARD_PLAIN,
+  ClassicTrash2,
+  EmptyState,
+  ErrorNote,
+  LoadingRows,
+  MotionWrap,
+  ViewHeader,
+} from "@/components/finara/ui-bits";
 import type { GoalDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -149,7 +158,8 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
         subtitle="Set and track your financial objectives"
         actions={
           <Button onClick={openCreate} className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
-            <Plus className="w-5 h-5 mr-2" aria-hidden /> New Goal
+            <Plus className="w-5 h-5 mr-2" aria-hidden />
+            New Goal
           </Button>
         }
       />
@@ -166,22 +176,23 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
             body="Create your first savings goal to start tracking your financial objectives"
             action={
               <Button onClick={openCreate} className="bg-primary-sage hover:bg-primary-sage/90 text-white shadow-lg">
-                <Plus className="w-4 h-4 mr-1" aria-hidden /> Create Your First Goal
+                <Plus className="w-4 h-4 mr-1" aria-hidden />
+                Create Your First Goal
               </Button>
             }
           />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {goals.map((goal) => {
+          {goals.map((goal, goalIndex) => {
             const progress = percent(goal.currentAmountMinor, goal.targetAmountMinor);
             // Progress-based (round-11 live probe): a negative-target goal
             // never shows Complete (live: 0.0% / $0.00 / -$500.00, no badge).
             const complete = progress >= 100;
             const remaining = daysRemaining(goal.deadline);
             return (
+              <MotionWrap key={goal.id} delayMs={100 + Math.min(goalIndex, 8) * 100}>
               <div
-                key={goal.id}
                 /* Round-11 live probe: complete cards carry the emerald ring
                    (verified post-reload at exactly 100% and at 150%). */
                 className={cn(CARD_HOVER, complete && "ring-2 ring-emerald-200 dark:ring-emerald-700")}
@@ -282,11 +293,13 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
                         setContribution("");
                       }}
                     >
-                      <DollarSign className="w-4 h-4 mr-1" aria-hidden /> Add Progress
+                      <DollarSign className="w-4 h-4 mr-1" aria-hidden />
+                      Add Progress
                     </Button>
                   )}
                 </div>
               </div>
+              </MotionWrap>
             );
           })}
         </div>
@@ -298,7 +311,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
             button, no description, p-6 pt-0 body. Labels carry
             dark:text-neutral-300 and inputs dark:bg-gray-800 dark:text-white
             dark:border-gray-700 (live-probed). */}
-        <DialogContent className="max-w-md dark:bg-gray-900 dark:text-white" showCloseButton={false} aria-describedby={undefined}>
+        <DialogContent className="max-w-md dark:bg-gray-900 dark:text-white" overlayStyle={{ opacity: 1, transform: "none" }} showCloseButton={false} aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle asChild>
               <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
@@ -393,7 +406,8 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
               <Button type="submit" className="flex-1 bg-primary-sage shadow hover:bg-primary-sage/90" disabled={submitting}>
                 {submitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden /> Saving…
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden />
+                    Saving…
                   </>
                 ) : editing ? (
                   "Update Goal"
@@ -411,7 +425,7 @@ export function GoalsView({ refreshKey = 0 }: { refreshKey?: number }) {
         {/* Round-6 live matrix: Add Progress = max-w-sm, NO max-h/scroll,
             dark:bg-gray-900 dark:text-white card, trending-up icon, NO close
             button, no description, p-6 pt-0 body. */}
-        <DialogContent className="max-w-sm dark:bg-gray-900 dark:text-white" showCloseButton={false} aria-describedby={undefined}>
+        <DialogContent className="max-w-sm dark:bg-gray-900 dark:text-white" overlayStyle={{ opacity: 1, transform: "none" }} showCloseButton={false} aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle asChild>
               <div className="font-semibold leading-none tracking-tight flex items-center gap-2 text-primary-navy dark:text-white">
