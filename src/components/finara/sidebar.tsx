@@ -32,6 +32,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { VIEW_PATHS } from "@/lib/routes";
+import { entranceStyle } from "@/components/finara/ui-bits";
 import { getServerTheme, getThemeSnapshot, subscribeTheme, toggleTheme, type Theme } from "@/components/finara/theme";
 
 /**
@@ -82,7 +83,7 @@ function BrandMark({ compact = false }: { compact?: boolean }) {
           "bg-emerald-500/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-emerald-400/30",
         )}
       >
-        <DollarSign className={cn("text-emerald-400", compact ? "w-5 h-5" : "w-6 h-6")} aria-hidden />
+        <DollarSign className={cn(compact ? "w-5 h-5" : "w-6 h-6", "text-emerald-400")} aria-hidden />
       </div>
       {compact ? (
         <h2 className="text-lg font-bold text-primary-navy dark:text-white">Finara</h2>
@@ -96,12 +97,16 @@ function BrandMark({ compact = false }: { compact?: boolean }) {
   );
 }
 
-/** "Synced" status badge (round 8 re-pin): the live app renders the Badge
- *  component + `gap-1 text-green-600 border-green-300 dark:*` tail — base
- *  classes first, usage tail last (plan F14). */
+/** "Synced" status badge (round-16 re-pin): the live app renders the Badge
+ *  component + `gap-1 text-green-600 border-green-300 dark:*` tail with NO
+ *  variant classes at all (base only — live-probed 2026-09-19). The outline
+ *  variant + tail reproduces the live string byte-exactly: tw-merge drops
+ *  the outline's text-foreground under the tail's text-green-600, so the
+ *  default variant's border-transparent/shadow/hover:bg-primary/80 never
+ *  render. */
 function SyncedBadge() {
   return (
-    <Badge className="gap-1 text-green-600 border-green-300 dark:text-green-400 dark:border-green-600">
+    <Badge variant="outline" className="gap-1 text-green-600 border-green-300 dark:text-green-400 dark:border-green-600">
       <Wifi className="w-3 h-3" aria-hidden />
       Synced
     </Badge>
@@ -181,7 +186,6 @@ function NavItem({
       aria-current={active ? "page" : undefined}
     >
       <div
-        tabIndex={0}
         className={cn(
           "flex items-center gap-3",
           compact ? "px-4 py-4" : "px-4 py-3",
@@ -195,8 +199,9 @@ function NavItem({
               )
             : "text-slate-300 hover:bg-white/10 hover:text-white",
         )}
+        tabIndex={0}
       >
-        <item.icon className={compact ? "h-6 w-6" : "h-5 w-5"} aria-hidden />
+        <item.icon className={compact ? "w-6 h-6" : "w-5 h-5"} aria-hidden />
         <span className={compact ? "text-lg" : undefined}>{item.label}</span>
       </div>
     </Link>
@@ -219,16 +224,16 @@ export function Sidebar({
 }) {
   return (
     <aside className="hidden lg:flex lg:w-64 lg:flex-col">
-      <div className="sidebar-gradient flex min-h-0 flex-1 flex-col">
-        <div className="flex h-16 items-center border-b border-slate-700/30 px-6">
+      <div className="flex flex-col flex-1 min-h-0 sidebar-gradient">
+        <div className="flex items-center h-16 px-6 border-b border-slate-700/30">
           <BrandMark />
         </div>
-        <nav className="flex-1 space-y-2 px-4 py-6">
+        <nav className="flex-1 px-4 py-6 space-y-2">
           {NAV_ITEMS.map((item) => (
             <NavItem key={item.id} item={item} active={item.id === active} onNavigate={onNavigate} />
           ))}
         </nav>
-        <div className="space-y-3 border-t border-slate-700/30 p-4">
+        <div className="p-4 space-y-3 border-t border-slate-700/30">
           <SyncedBadge />
           <div className="flex items-center gap-3">
             <UserMenu userName={userName} userEmail={userEmail} onSignOut={onSignOut} />
@@ -262,9 +267,11 @@ export function MobileTopNav({
   );
 
   return (
-    <div>
+    <>
       {/* Round 8 (F14): live mobile-header orders — container, inner row,
-          brand tile, and the two ghost buttons (theme w-8 h-8, menu h-9 w-9). */}
+          brand tile, and the two ghost buttons (theme w-8 h-8, menu h-9 w-9).
+          Round 16 (F3): NO wrapper div — the live renders the top bar and
+          the drawer as DIRECT children of the shell's flex container. */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-neutral-200 dark:border-gray-700">
         <div className="flex items-center justify-between h-16 px-4">
           <div className="flex items-center gap-3">
@@ -304,6 +311,7 @@ export function MobileTopNav({
         <div
           id="mobile-nav-menu"
           className="lg:hidden fixed inset-0 z-40 bg-slate-800 dark:bg-gray-900"
+          style={entranceStyle(0, "fin-drawer-in")}
         >
           <div className="flex flex-col h-full pt-20">
             <nav className="flex-1 px-4 py-6 space-y-2">
@@ -314,7 +322,7 @@ export function MobileTopNav({
             {/* Live drawer bottom (round-5): a direct full-width Sign Out
                 button — no Synced badge, no user menu (the badge lives in the
                 mobile top bar; Dark Mode has its own top-bar toggle). */}
-            <div className="border-t border-slate-700/30 p-4">
+            <div className="p-4 border-t border-slate-700/30">
               <Button
                 variant="outline"
                 onClick={onSignOut}
@@ -327,6 +335,6 @@ export function MobileTopNav({
           </div>
         </div>
       ) : null}
-    </div>
+    </>
   );
 }
