@@ -34,8 +34,8 @@ export const CARD_PLAIN =
  *  - with actions: `div.flex.flex-col.lg:flex-row.justify-between.items-start.lg:items-center.mb-8.gap-4`
  *    wrapping an inner `div > h1.mb-2 + p` plus `div.flex.gap-3` (the CTAs);
  *  - without actions (settings): a plain `div.mb-8 > h1.mb-2 + p`;
- *  - bare (import): no wrapper at all — `h1.mb-2` + `p.mb-8` directly,
- *    because the live import view never adopted the header component.
+ *  - bare (import): a MotionWrap (round-14: the live wraps the header
+ *    block in a classless motion div) around `h1.mb-2` + `p.mb-8`.
  */
 export function ViewHeader({
   title,
@@ -49,23 +49,28 @@ export function ViewHeader({
   bare?: boolean;
 }) {
   if (bare) {
+    // Round-14: the live Import page wraps its header block in a motion div
+    // (classless, settled `opacity: 1; transform: none;`) — MotionWrap.
     return (
-      <>
+      <MotionWrap delayMs={0}>
         <h1 className="text-3xl lg:text-4xl font-bold text-primary-navy dark:text-white mb-2">{title}</h1>
         <p className="text-neutral-600 dark:text-neutral-400 mb-8">{subtitle}</p>
-      </>
+      </MotionWrap>
     );
   }
   if (!actions) {
     return (
-      <div className="mb-8">
+      <div className="mb-8" style={entranceStyle(0)}>
         <h1 className="text-3xl lg:text-4xl font-bold text-primary-navy dark:text-white mb-2">{title}</h1>
         <p className="text-neutral-600 dark:text-neutral-400">{subtitle}</p>
       </div>
     );
   }
   return (
-    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
+    <div
+      className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4"
+      style={entranceStyle(0)}
+    >
       <div>
         <h1 className="text-3xl lg:text-4xl font-bold text-primary-navy dark:text-white mb-2">{title}</h1>
         <p className="text-neutral-600 dark:text-neutral-400">{subtitle}</p>
@@ -73,6 +78,43 @@ export function ViewHeader({
       {/* Round-5: live renders header actions directly in the flex row (no
           wrapper) — analytics passes its own flex-wrap wrapper (live-exact). */}
       {actions}
+    </div>
+  );
+}
+
+/**
+ * Round-14 entrance-motion helpers (live re-probe 2026-09-19). The live app
+ * mounts every view's header row, major cards, Dashboard tiles, list rows,
+ * and the Quick Actions panel through framer-motion wrappers that settle at
+ * `style="opacity: 1; transform: none;"` and animate on mount (opacity 0→1 +
+ * translateY 20px→0, ~330ms spring, ~100ms stagger — measured via rAF
+ * computed-style sampling). Repo policy keeps framer-motion out, so the
+ * settled inline style is replicated byte-for-byte and the entrance runs
+ * through the `fin-card-in` keyframes in globals.css (defined only under
+ * `prefers-reduced-motion: no-preference`; a missing keyframe list makes
+ * the animation a no-op, so reduced-motion users render settled instantly).
+ * The trailing animation properties inside the style attribute are the
+ * documented CSS-replication delta (class-invisible to the signature diff).
+ */
+export function entranceStyle(delayMs: number): React.CSSProperties {
+  return {
+    opacity: 1,
+    transform: "none",
+    animation: "fin-card-in 330ms ease-out backwards",
+    animationDelay: `${delayMs}ms`,
+  };
+}
+
+/**
+ * The classless wrapper variant for elements the live wraps OUTSIDE their
+ * card root (KPI StatCards, SectionCards, income/account/goal cards, the
+ * Import header block): a plain `<div style="opacity: 1; transform: none;">`
+ * carrying the entrance animation + stagger delay.
+ */
+export function MotionWrap({ delayMs, children }: { delayMs: number; children: ReactNode }) {
+  return (
+    <div style={entranceStyle(delayMs)}>
+      {children}
     </div>
   );
 }
@@ -197,6 +239,7 @@ export function GradientCard({
   href,
   capitalizeValue = false,
   ariaLabel,
+  style,
 }: {
   title: string;
   subtitle: string;
@@ -208,6 +251,9 @@ export function GradientCard({
   href?: string;
   capitalizeValue?: boolean;
   ariaLabel?: string;
+  /** Round-14: the live tiles carry the entrance-motion style on their own
+      root divs (not a wrapper) — threaded through from the views. */
+  style?: React.CSSProperties;
 }) {
   const inner = (
     <div className={cn("flex items-center justify-between", onClick ? "h-full" : undefined)}>
@@ -223,7 +269,7 @@ export function GradientCard({
   );
   if (onClick) {
     return (
-      <div className={cn(gradient, "rounded-2xl p-6 text-white card-hover")}>
+      <div className={cn(gradient, "rounded-2xl p-6 text-white card-hover")} style={style}>
         <a
           href={href ?? "#"}
           onClick={(event) => {
@@ -237,7 +283,11 @@ export function GradientCard({
       </div>
     );
   }
-  return <div className={cn(gradient, "rounded-2xl p-6 text-white")}>{inner}</div>;
+  return (
+    <div className={cn(gradient, "rounded-2xl p-6 text-white")} style={style}>
+      {inner}
+    </div>
+  );
 }
 
 function titleTint(gradient: string): string {

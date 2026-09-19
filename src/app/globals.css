@@ -340,9 +340,12 @@
 
 /* Insight card entrance (round 13 — the live's framer-motion rows fade in
    from the left with a 0.1s stagger; CSS replication, reduced-motion safe).
-   The page-wide fade-in-up/stagger entrance animations were REMOVED with
-   the live app's round-13 update (probed 2026-09-18: zero fade-in-up
-   elements, zero matching CSS rules, animationName none). */
+   Round-14 correction: the round-13 "entrance animations removed app-wide"
+   conclusion was a misdiagnosis — the live's page-wide entrances run on
+   framer-motion wrapper divs animating INLINE styles (CSS animationName is
+   always none for those); only the CSS-class animations (the fade-in-up /
+   stagger-N class system) were gone. The full entrance system is
+   re-replicated below. */
 @keyframes finara-insight-in {
   from {
     opacity: 0;
@@ -359,6 +362,67 @@
 @media (prefers-reduced-motion: reduce) {
   .insight-row {
     animation: none;
+  }
+}
+
+/* Round-14 entrance-motion system (live re-probe 2026-09-19): every view's
+   header row, major cards, Dashboard tiles, list rows, and the Quick
+   Actions panel mount through framer-motion wrappers animating opacity
+   0→1 + translateY 20px→0 over ~330ms (damped spring, −2.3px overshoot,
+   ~100ms stagger; rows ~50ms). The wrappers carry the settled inline style
+   `opacity: 1; transform: none;` plus an inline `animation` referencing
+   these keyframes — defined ONLY under prefers-reduced-motion:
+   no-preference, so reduced-motion users (and any environment without the
+   query match) render the settled state with no entrance. Keyframe values
+   are hand-fit to the rAF-sampled live frames. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes fin-card-in {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    35% {
+      opacity: 0.62;
+      transform: translateY(0.5px);
+    }
+    50% {
+      opacity: 0.84;
+      transform: translateY(-2.3px);
+    }
+    65% {
+      opacity: 0.93;
+      transform: translateY(0.4px);
+    }
+    80% {
+      opacity: 0.98;
+      transform: translateY(-0.5px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  /* Quick Add chooser (live framer-motion, rAF-sampled 2026-09-19): the
+     overlay fades 0→1 over ~320ms ease-out while the width wrapper scales
+     0.9→1 with a ~0.7% spring overshoot. */
+  @keyframes fin-overlay-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes fin-scale-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    70% {
+      opacity: 0.97;
+      transform: scale(1.007);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 }
 
