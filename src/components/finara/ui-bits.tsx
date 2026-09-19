@@ -96,11 +96,14 @@ export function ViewHeader({
  * The trailing animation properties inside the style attribute are the
  * documented CSS-replication delta (class-invisible to the signature diff).
  */
-export function entranceStyle(delayMs: number): React.CSSProperties {
+export function entranceStyle(
+  delayMs: number,
+  animationName: "fin-card-in" | "fin-drawer-in" = "fin-card-in",
+): React.CSSProperties {
   return {
     opacity: 1,
     transform: "none",
-    animation: "fin-card-in 330ms ease-out backwards",
+    animation: `${animationName} 330ms ease-out backwards`,
     animationDelay: `${delayMs}ms`,
   };
 }

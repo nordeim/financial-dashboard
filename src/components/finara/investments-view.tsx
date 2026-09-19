@@ -21,7 +21,6 @@ import {
   LoadingRows,
   MotionWrap,
   ViewHeader,
-  entranceStyle,
 } from "@/components/finara/ui-bits";
 import type { InvestmentDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -179,50 +178,52 @@ export function InvestmentsView({ refreshKey = 0 }: { refreshKey?: number }) {
         <LoadingRows rows={4} />
       ) : (
         <>
-          {/* KPI row (live: blue + emerald gradients, white return card, w-12 bare icons) */}
+          {/* KPI row (live: blue + emerald gradients, white return card, w-12
+              bare icons — round-16 F2: each card sits in a classless motion
+              wrapper like the Holdings/Sector cards, live-probed). */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div
-              className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg"
-              style={entranceStyle(100)}
-            >
-              <div className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-blue-100 text-sm font-medium mb-1">Portfolio Value</p>
-                    <p className="text-3xl font-bold">{formatMoney(portfolioValue, { currency })}</p>
+            <MotionWrap delayMs={100}>
+              <div className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg">
+                <div className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-blue-100 text-sm font-medium mb-1">Portfolio Value</p>
+                      <p className="text-3xl font-bold">{formatMoney(portfolioValue, { currency })}</p>
+                    </div>
+                    <Wallet className="w-12 h-12 text-blue-200" aria-hidden />
                   </div>
-                  <Wallet className="w-12 h-12 text-blue-200" aria-hidden />
                 </div>
               </div>
-            </div>
-            <div
-              className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-lg"
-              style={entranceStyle(200)}
-            >
-              <div className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium mb-1 text-emerald-100">Total Gain/Loss</p>
-                    <p className="text-3xl font-bold">{formatMoney(totalGain, { currency })}</p>
+            </MotionWrap>
+            <MotionWrap delayMs={200}>
+              <div className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-lg">
+                <div className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium mb-1 text-emerald-100">Total Gain/Loss</p>
+                      <p className="text-3xl font-bold">{formatMoney(totalGain, { currency })}</p>
+                    </div>
+                    <TrendingUp className="w-12 h-12 text-emerald-200" aria-hidden />
                   </div>
-                  <TrendingUp className="w-12 h-12 text-emerald-200" aria-hidden />
                 </div>
               </div>
-            </div>
-            <div className={cn(CARD_PLAIN)} style={entranceStyle(300)}>
-              <div className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-neutral-600 dark:text-neutral-400 text-sm font-medium mb-1">Total Return</p>
-                    <p className={cn("text-3xl font-bold", totalGain >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")}>
-                      {totalReturn.toFixed(2)}%
-                    </p>
+            </MotionWrap>
+            <MotionWrap delayMs={300}>
+              <div className={cn(CARD_PLAIN)}>
+                <div className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-neutral-600 dark:text-neutral-400 text-sm font-medium mb-1">Total Return</p>
+                      <p className={cn("text-3xl font-bold", totalGain >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")}>
+                        {totalReturn.toFixed(2)}%
+                      </p>
+                    </div>
+                    {/* Live: the Total Return icon is neutral in both themes (round-5). */}
+                    <ChartColumn className="w-12 h-12 text-neutral-400 dark:text-neutral-500" aria-hidden />
                   </div>
-                  {/* Live: the Total Return icon is neutral in both themes (round-5). */}
-                  <ChartColumn className="w-12 h-12 text-neutral-400 dark:text-neutral-500" aria-hidden />
                 </div>
               </div>
-            </div>
+            </MotionWrap>
           </div>
 
           {/* Holdings grid (live: table col-span-2 + sector list right) */}

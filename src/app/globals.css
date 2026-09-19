@@ -424,6 +424,32 @@
       transform: scale(1);
     }
   }
+  /* Mobile drawer (live framer-motion, rAF-sampled 2026-09-19, round 16):
+     slides in translateX(−300px)→0 with opacity 0→1 over ~330ms and a
+     spring overshoot — sampled frames: −251px@50ms (16%), −84px@100ms
+     (33%), +35px@200ms (60% overshoot), −4.3px@333ms, settled ~567ms. */
+  @keyframes fin-drawer-in {
+    0% {
+      opacity: 0;
+      transform: translateX(-300px);
+    }
+    35% {
+      opacity: 0.47;
+      transform: translateX(-84px);
+    }
+    60% {
+      opacity: 0.89;
+      transform: translateX(35px);
+    }
+    75% {
+      opacity: 0.98;
+      transform: translateX(-4.3px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
 }
 
 /* Finara: subtle custom scrollbar for long lists inside cards. */

@@ -278,7 +278,7 @@ export function FinaraApp({ route: initialRoute }: { route: FinaraRouteInput }) 
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 font-sans transition-colors duration-300 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300 font-sans">
       {/* Live shell anatomy: flex row > aside + main(flex col) > pt-16 wrapper
           (clears the fixed mobile top bar) > gradient canvas > max-w container. */}
       <div className="flex">
