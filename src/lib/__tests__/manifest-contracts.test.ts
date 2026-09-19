@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -112,5 +112,136 @@ describe("round 15 F3: the unused advisory-carrying dependencies stay removed", 
     for (const name of lockBanned) {
       expect(lock, `bun.lock must not resolve ${name}…`).not.toContain(name);
     }
+  });
+});
+
+describe("round 20 F2: the scaffold's dead runtime dependencies stay removed", () => {
+  // The base44 scaffold shipped the full shadcn component library and a
+  // kitchen-sink dependency set; the app renders 17 primitives and imports
+  // none of these packages (verified 2026-09-19: zero imports in src/e2e,
+  // or imports ONLY from the 31 vendored-but-unused ui files removed the
+  // same round). The zero-import group includes the famous look-alikes:
+  // @tanstack/react-query (the app uses the hand-rolled use-api.ts hook),
+  // date-fns (dates go through lib/date-format.ts), zod (validation is
+  // the require* guards in lib/api.ts), zustand (client state is local).
+  // If a future feature genuinely needs one of these, the spec moves WITH
+  // the feature's plan — never silently.
+  const banned = [
+    "@dnd-kit/core",
+    "@dnd-kit/sortable",
+    "@dnd-kit/utilities",
+    "@hookform/resolvers",
+    "@radix-ui/react-accordion",
+    "@radix-ui/react-alert-dialog",
+    "@radix-ui/react-aspect-ratio",
+    "@radix-ui/react-avatar",
+    "@radix-ui/react-collapsible",
+    "@radix-ui/react-context-menu",
+    "@radix-ui/react-hover-card",
+    "@radix-ui/react-menubar",
+    "@radix-ui/react-navigation-menu",
+    "@radix-ui/react-popover",
+    "@radix-ui/react-radio-group",
+    "@radix-ui/react-separator",
+    "@radix-ui/react-slider",
+    "@radix-ui/react-toggle",
+    "@radix-ui/react-toggle-group",
+    "@radix-ui/react-tooltip",
+    "@tanstack/react-query",
+    "@tanstack/react-table",
+    "cmdk",
+    "date-fns",
+    "embla-carousel-react",
+    "input-otp",
+    "next-themes",
+    "react-day-picker",
+    "react-hook-form",
+    "react-resizable-panels",
+    "sonner",
+    "vaul",
+    "zod",
+    "zustand",
+  ];
+
+  it.each(banned)("dependencies excludes %s", (name) => {
+    expect(pkg.dependencies).not.toHaveProperty(name);
+    expect(pkg.devDependencies).not.toHaveProperty(name);
+  });
+
+  it("the lockfile resolves no copies of the fully-removed packages", () => {
+    // Empirically verified after the round-20 removal: every one of these
+    // fully left the tree (even @radix-ui/react-separator — the kept
+    // dropdown-menu primitive renders its DropdownMenuSeparator through
+    // the dropdown-menu package itself, no radix-separator dependency).
+    const lockBanned = [
+      "@dnd-kit/core@",
+      "@dnd-kit/sortable@",
+      "@dnd-kit/utilities@",
+      "@hookform/resolvers@",
+      "@radix-ui/react-accordion@",
+      "@radix-ui/react-alert-dialog@",
+      "@radix-ui/react-aspect-ratio@",
+      "@radix-ui/react-avatar@",
+      "@radix-ui/react-collapsible@",
+      "@radix-ui/react-context-menu@",
+      "@radix-ui/react-hover-card@",
+      "@radix-ui/react-menubar@",
+      "@radix-ui/react-navigation-menu@",
+      "@radix-ui/react-popover@",
+      "@radix-ui/react-radio-group@",
+      "@radix-ui/react-separator@",
+      "@radix-ui/react-slider@",
+      "@radix-ui/react-toggle@",
+      "@radix-ui/react-toggle-group@",
+      "@radix-ui/react-tooltip@",
+      "@tanstack/react-query@",
+      "@tanstack/react-table@",
+      "cmdk@",
+      "embla-carousel-react@",
+      "input-otp@",
+      "next-themes@",
+      "react-day-picker@",
+      "react-hook-form@",
+      "react-resizable-panels@",
+      "sonner@",
+      "vaul@",
+      "zustand@",
+    ];
+    for (const name of lockBanned) {
+      expect(lock, `bun.lock must not resolve ${name}…`).not.toContain(name);
+    }
+  });
+});
+
+describe("round 20 F1: the ui inventory is exactly the app-rendered primitive set", () => {
+  // The ADR-015 pinned set the suite actually pins (ui-primitives +
+  // functional-parity + view-surfaces + dialog-forms reference only
+  // these). The 31 vendored-but-unused scaffold primitives were removed
+  // in round 20; this contract pins BOTH directions — a dead primitive
+  // never comes back through a copy-paste, and a live primitive is never
+  // dropped by an over-eager cleanup.
+  const expected = [
+    "alert.tsx",
+    "badge.tsx",
+    "button.tsx",
+    "card.tsx",
+    "checkbox.tsx",
+    "dialog.tsx",
+    "dropdown-menu.tsx",
+    "input.tsx",
+    "label.tsx",
+    "progress.tsx",
+    "scroll-area.tsx",
+    "select.tsx",
+    "switch.tsx",
+    "table.tsx",
+    "tabs.tsx",
+    "toast.tsx",
+    "toaster.tsx",
+  ];
+
+  it("src/components/ui contains exactly the 17 app-rendered primitives", () => {
+    const actual = readdirSync(join(process.cwd(), "src/components/ui")).sort();
+    expect(actual).toEqual(expected.sort());
   });
 });
