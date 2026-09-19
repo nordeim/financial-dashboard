@@ -8,10 +8,12 @@ import { useToast } from "@/hooks/use-toast";
 
 /**
  * Login gate mirroring the Finara sign-in screen (live-exact anatomy,
- * round-6 capture 2026-09-17): light gradient canvas, glass card with a
- * gradient top strip, ringed span-wrapped logo, RAW Google button (not the
- * shadcn Button base), custom py-2 inputs with ring-2 focus, slate-900
- * submit. Pinned by src/lib/__tests__/login-view.test.tsx.
+ * round-6 capture 2026-09-17, class orders re-pinned round-14 2026-09-19):
+ * light gradient canvas, glass card with a gradient top strip, ringed
+ * span-wrapped logo, RAW Google button (not the shadcn Button base) with a
+ * span-wrapped label, custom py-2 inputs with ring-2 focus, h-first field
+ * icons (the login h-first exception), slate-900 submit. Pinned by
+ * src/lib/__tests__/login-view.test.tsx.
  * This is a demo credential check, not production authentication —
  * see README (Authentication) before deploying anywhere real.
  */
@@ -53,24 +55,27 @@ export function LoginView({ onSignIn }: { onSignIn: (email: string) => void }) {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <div className="w-full max-w-md">
-        <div className="relative overflow-hidden rounded-2xl border-0 bg-white/95 text-card-foreground shadow-2xl backdrop-blur-sm">
+        <div className="text-card-foreground relative overflow-hidden border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-2xl">
           {/* Live-exact gradient top strip (left-0 right-0 spelling). */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200" aria-hidden />
-          <div className="p-8 sm:p-10 md:pb-10 md:pt-12 md:px-10">
-            <div className="flex flex-col items-center space-y-6 text-center sm:space-y-8">
-              <div className="group relative">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 opacity-30 blur-xl transition-opacity duration-300 group-hover:opacity-40" aria-hidden />
+          <div className="p-8 sm:p-10 md:pt-12 md:pb-10 md:px-10">
+            <div className="flex flex-col items-center text-center space-y-6 sm:space-y-8">
+              <div className="relative group">
+                <div
+                  className="absolute inset-0 bg-gradient-to-br from-slate-200 to-slate-300 rounded-full blur-xl opacity-30 group-hover:opacity-40 transition-opacity duration-300"
+                  aria-hidden
+                />
                 {/* Live logo anatomy: the ring/shadow/transition live on a span
                     wrapper; the img is a plain aspect-square fill. */}
                 <span className="flex shrink-0 overflow-hidden rounded-full relative h-20 w-20 sm:h-24 sm:w-24 shadow-lg ring-4 ring-white/50 group-hover:shadow-xl transition-all duration-300">
-                  <img src="/finara-logo.png" alt="Finara logo" className="aspect-square h-full w-full object-cover" />
+                  <img className="aspect-square h-full w-full object-cover" alt="Finara logo" src="/finara-logo.png" />
                 </span>
               </div>
               <div className="space-y-2 sm:space-y-3">
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Welcome to Finara</h1>
-                <p className="text-sm font-medium text-slate-500 sm:text-base">Sign in to continue</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Welcome to Finara</h1>
+                <p className="text-slate-500 text-sm sm:text-base font-medium">Sign in to continue</p>
               </div>
               <div className="w-full">
                 <div className="space-y-3">
@@ -106,7 +111,7 @@ export function LoginView({ onSignIn }: { onSignIn: (email: string) => void }) {
                         />
                       </svg>
                     </div>
-                    Continue with Google
+                    <span>Continue with Google</span>
                   </button>
                 </div>
                 {/* Live-exact divider: shrink-0 h-[1px] line + "or" chip. */}
@@ -115,7 +120,7 @@ export function LoginView({ onSignIn }: { onSignIn: (email: string) => void }) {
                     <div className="shrink-0 h-[1px] w-full bg-slate-200" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-3 font-medium tracking-wider text-slate-500">or</span>
+                    <span className="bg-white px-3 text-slate-500 font-medium tracking-wider">or</span>
                   </div>
                 </div>
                 {/* Live carries the spacing classes on the form itself. */}
@@ -126,7 +131,7 @@ export function LoginView({ onSignIn }: { onSignIn: (email: string) => void }) {
                         Email
                       </Label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" aria-hidden />
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-500" aria-hidden />
                         <input
                           id="email"
                           type="email"
@@ -144,7 +149,7 @@ export function LoginView({ onSignIn }: { onSignIn: (email: string) => void }) {
                         Password
                       </Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" aria-hidden />
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-500" aria-hidden />
                         <input
                           id="password"
                           type="password"
@@ -172,13 +177,14 @@ export function LoginView({ onSignIn }: { onSignIn: (email: string) => void }) {
                     >
                       {submitting ? (
                         <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden /> Signing in…
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden />
+                          Signing in…
                         </>
                       ) : (
                         "Sign in"
                       )}
                     </button>
-                    <div className="flex flex-col items-center justify-between gap-2 sm:flex-row sm:gap-0">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0">
                       <button
                         type="button"
                         onClick={() =>
