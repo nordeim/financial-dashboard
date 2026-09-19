@@ -31,6 +31,12 @@ import type { AppRoute } from "@/lib/routes";
  * 80)}.` — a 98-char mid-word truncation (probed on all 8); home,
  * /Dashboard, /login and 404s carry the full description.
  *
+ * Round 19: the description template now applies to the MAIN description
+ * and og:description metas too (the live renders ONE per-route string
+ * across description + og:description + twitter:description — probed on
+ * all 8 view routes), and /login renders twitter:image:alt "Base44 link
+ * preview" (app pages keep the bare twitter:image).
+ *
  * NOTE: Next merges metadata SHALLOWLY per top-level key — a page-level
  * `openGraph`/`icons` REPLACES the layout's entirely — so this seam
  * returns the COMPLETE openGraph block (title/url plus the
@@ -74,12 +80,14 @@ export function absoluteCanonicalUrl(canonical: string): string {
 }
 
 /**
- * The live's per-route twitter:description (round-18 probe): the eight
- * non-dashboard view routes render `{ViewLabel} on Finara.` + the
- * description truncated at exactly 80 chars (mid-word) + "."; every
- * other surface (/, /Dashboard, /login, 404s) carries the full text.
+ * The live's per-route description (round-18 twitter probe; round-19
+ * re-probe: the template now applies to the MAIN description and
+ * og:description metas too): the eight non-dashboard view routes render
+ * `{ViewLabel} on Finara.` + the description truncated at exactly 80
+ * chars (mid-word) + "."; every other surface (/, /Dashboard, /login,
+ * 404s) carries the full text.
  */
-function twitterDescription(route: AppRoute): string {
+function routeDescription(route: AppRoute): string {
   if (route.kind === "view" && route.view !== "dashboard") {
     const label = route.view.charAt(0).toUpperCase() + route.view.slice(1);
     return `${label} on Finara. ${SITE_DESCRIPTION.slice(0, 80)}.`;
@@ -111,13 +119,18 @@ export function buildRouteMetadata(rawPath: string): Metadata {
   const canonical = canonicalPath(rawPath, route.kind, route.kind === "view" ? route.view : undefined);
   const isLogin = route.kind === "login";
 
+  const description = routeDescription(route);
+
   const metadata: Metadata = {
     title: route.title,
-    description: SITE_DESCRIPTION,
+    // Round 19 (F1): the description template applies to the main
+    // description + og:description + twitter:description — the live
+    // renders one per-route string across all three metas.
+    description,
     alternates: { canonical },
     openGraph: {
       title: route.title,
-      description: SITE_DESCRIPTION,
+      description,
       url: canonical,
       siteName: "Finara",
       type: "website",
@@ -132,12 +145,18 @@ export function buildRouteMetadata(rawPath: string): Metadata {
     },
     // Round 18: the explicit twitter block replaces Next's openGraph
     // derivation — bare image (the live renders NO twitter:image dims)
-    // and the per-route description template.
+    // and the per-route description template. Round 19 (F2): the LOGIN
+    // image carries the live's alt (twitter:image:alt "Base44 link
+    // preview"); app routes keep the bare image.
     twitter: {
       card: "summary_large_image",
       title: route.title,
-      description: twitterDescription(route),
-      images: [{ url: "/finara-logo.png" }],
+      description,
+      images: [
+        isLogin
+          ? { url: "/finara-logo.png", alt: "Base44 link preview" }
+          : { url: "/finara-logo.png" },
+      ],
     },
     // Next's Twitter metadata type has no url field — the arbitrary-meta
     // escape hatch renders <meta name="twitter:url"> (live-probed: the
