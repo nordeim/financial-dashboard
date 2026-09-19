@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { FinaraApp } from "@/components/finara/finara-app";
+import { buildRouteMetadata } from "@/lib/route-metadata";
 import { parseRoute } from "@/lib/routes";
 
 /**
@@ -15,7 +16,9 @@ type PageProps = { params: Promise<{ view: string[] }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { view } = await params;
-  return { title: parseRoute("/" + view.join("/")).title };
+  // Round 17: per-route title + canonical + og (the live's head mirrors the
+  // document title per route; the dashboard canonical normalizes to "/").
+  return buildRouteMetadata("/" + view.join("/"));
 }
 
 export default async function CatchAllViewPage({ params }: PageProps) {
