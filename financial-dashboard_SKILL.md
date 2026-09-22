@@ -4,17 +4,17 @@ description: >
   Production-grade engineering skill for the Finara financial-dashboard
   codebase — a Next.js 16 + React 19 + TypeScript strict + Tailwind CSS v4
   (CSS-first @theme) + Prisma/SQLite single-page finance tracker maintained
-  as a pixel-faithful, live-probed clone of the Finara base44 app through 22
+  as a pixel-faithful, live-probed clone of the Finara base44 app through 23
   remediation rounds. Covers the SPA real-route architecture, the pinned
   design system (v3 palette pins, shadcn classic primitives), integer-minor-unit
   money math, the parity-remediation workflow (signature diffs, structural
   probes, HTTP-layer audits), TDD discipline, the E2E hermetic gate, and the
-  full debugging/anti-pattern knowledge from 22 rounds of production
+  full debugging/anti-pattern knowledge from 23 rounds of production
   hardening. Use when extending, debugging, auditing, onboarding onto, or
   replicating this codebase — or when cloning any live web app with the same
   rigor.
 version: 1.0.0
-last_updated: "2026-09-22 (round 22 — the full-stack verification round: the fourth consecutive zero-drift live re-probe, both operator focus areas cleared, no code changes)"
+last_updated: "2026-09-22 (round 23 — the fifth zero-drift verification round: the fifth consecutive zero-drift live re-probe, both operator focus areas cleared again, no code changes)"
 tags:
   - nextjs
   - react19
@@ -32,7 +32,7 @@ tags:
 
 > **Purpose:** A single-source-of-truth reference for any coding agent working
 > on `nordeim/financial-dashboard`. Every design decision, anti-pattern,
-> debugging procedure, and hard-won lesson from 22 rounds of live-probe parity
+> debugging procedure, and hard-won lesson from 23 rounds of live-probe parity
 > remediation, distilled and codebase-verified. Read the section you need;
 > trust the pins — they were all live-probed.
 
@@ -614,12 +614,21 @@ git ls-files | grep -E "\.env$|\.key$|ssh-key"   # empty
     corrupted** — the CI workflow's `branches: [main]` renders as
     `branches: ain]` because `[m` is the ANSI reset escape; the YAML
     parses and the raw bytes are clean (root-caused round 22, observed
-    round 21).
+    round 21). Round 23 extended the lesson: the artifact is
+    output-stream-GENERAL — it ate the [main] token inside the
+    session's own printed labels, so assert on bytes with MARKER-SAFE
+    needle construction (build the needle from concatenated fragments)
+    and let the boolean result speak.
 17. **Dev-only console diagnostics are not production defects** — React's
     "Cannot update a component while rendering a different component"
     warning fires in dev for the documented render-time route-adjustment
     pattern; the production console sweep stays clean (E2E-pinned).
     Classify by build mode before filing.
+18. **Leave the live account as you found it** — the live theme follows
+    the account (ADR-023, persisted server-side): verify the theme
+    state before AND after probing, and if a mis-click toggles it,
+    toggle it back (round 23 verified the dark state preserved both
+    ends of the session).
 
 ---
 
@@ -929,6 +938,7 @@ Validation: `requireString`, `requireSignedInt`, `requireFiniteNumber`,
 | 20 | Dead-code purge: 31 ui files + 34 dependencies; ui-inventory contract |
 | 21 | db-path contract implemented; `.env.example` aligned; mobile-nav + Tailwind v4 focus audit clean; suite verification |
 | 22 | Full-stack verification round: fourth consecutive zero-drift re-probe; mobile-nav + Tailwind v4 cleared again; interactive sweep + production-readiness review — no code changes |
+| 23 | Fifth zero-drift verification round: fifth consecutive zero-drift re-probe (19–23); mobile-nav + Tailwind v4 cleared again; focused interactive sweep (FAB/chooser/step-2/close-toggle both sides); audit tail 43/0-runtime; ANSI-artifact lesson extended (output-stream-general) — no code changes |
 
 ---
 
