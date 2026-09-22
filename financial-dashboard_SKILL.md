@@ -14,7 +14,7 @@ description: >
   replicating this codebase — or when cloning any live web app with the same
   rigor.
 version: 1.0.0
-last_updated: "2026-09-22 (round 23 — the fifth zero-drift verification round: the fifth consecutive zero-drift live re-probe, both operator focus areas cleared again, no code changes)"
+last_updated: "2026-09-23 (round 24 — the sixth zero-drift verification round: the sixth consecutive zero-drift live re-probe, both operator focus areas cleared again, and the round's remediation surface is documentation-debt alignment — the push-runbook's wrong remote + CI claim, the model-count/names drift, the PAD's stale version/tree/count/glossary entries, the Appendix B header — no code changes)"
 tags:
   - nextjs
   - react19
@@ -61,7 +61,7 @@ tags:
 19. [Color Reference (Complete)](#19-color-reference-complete)
 20. [The Complete TypeScript Interface Reference](#20-the-complete-typescript-interface-reference)
 21. [Appendix A — The ADR Catalog](#appendix-a--the-adr-catalog)
-22. [Appendix B — The 22-Round Parity History](#appendix-b--the-22-round-parity-history)
+22. [Appendix B — The 24-Round Parity History](#appendix-b--the-24-round-parity-history)
 23. [Appendix C — The Live-Site Validation Method](#appendix-c--the-live-site-validation-method)
 24. [Appendix D — Quick Reference Card](#appendix-d--quick-reference-card)
 
@@ -370,9 +370,9 @@ clone keeps confirmation toasts — reversible, documented in PAD §10).
 
 ## 7. Data Management: Seed, Import, Export
 
-**Schema (`prisma/schema.prisma`, 7 models):** User, Setting,
-BankAccount, IncomeSource, Expense, Budget, SavingsGoal, Investment,
-TransactionInsight. Every money column is `Int` named `*Minor`.
+**Schema (`prisma/schema.prisma`, 8 models):** Account, IncomeSource,
+Expense, Budget, Goal, Investment, Setting, Insight. Every money column
+is `Int` named `*Minor`.
 
 **Seed (`src/lib/seed.ts`):** six-month demo history — 4 accounts, 4
 income sources, ~96 expenses, 3 budgets, 3 goals, 8 holdings. Realism is a
@@ -416,8 +416,9 @@ leave them byte-shaped).
 
 **AI endpoints:** grounded in a DB snapshot built first — the model may
 phrase, never invent, figures. Insights are PERSISTED records
-(round 13): `GET /api/ai/insights` lists `TransactionInsight` rows
-(filtered `!is_dismissed`) and generates+persists ONLY when the table is
+(round 13): `GET /api/ai/insights` lists `Insight` records (the live's
+`TransactionInsight` equivalent, filtered `!is_dismissed`) and
+generates+persists ONLY when the table is
 completely empty (dismissed rows still count — dismissing everything
 leaves the empty state showing; refresh re-lists, NEVER regenerates).
 The LLM polish is env-gated (`FINARA_INSIGHTS_LLM_OFF=1` for hermetic
@@ -914,7 +915,7 @@ Validation: `requireString`, `requireSignedInt`, `requireFiniteNumber`,
 
 ---
 
-## Appendix B — The 22-Round Parity History
+## Appendix B — The 24-Round Parity History
 
 | Round | Focus |
 |-------|-------|
@@ -939,6 +940,7 @@ Validation: `requireString`, `requireSignedInt`, `requireFiniteNumber`,
 | 21 | db-path contract implemented; `.env.example` aligned; mobile-nav + Tailwind v4 focus audit clean; suite verification |
 | 22 | Full-stack verification round: fourth consecutive zero-drift re-probe; mobile-nav + Tailwind v4 cleared again; interactive sweep + production-readiness review — no code changes |
 | 23 | Fifth zero-drift verification round: fifth consecutive zero-drift re-probe (19–23); mobile-nav + Tailwind v4 cleared again; focused interactive sweep (FAB/chooser/step-2/close-toggle both sides); audit tail 43/0-runtime; ANSI-artifact lesson extended (output-stream-general) — no code changes |
+| 24 | Sixth zero-drift verification round (19–24) + documentation-debt alignment: mobile-nav + Tailwind v4 cleared again; focused interactive sweep + HTTP audit byte-exact; audit tail 43/0-runtime (CI bytes marker-safe-verified, the ANSI artifact re-demonstrated in the round's own script output); remediation = seven doc-drift fixes (the push-runbook's wrong remote + no-CI claim, the 7→8 model count + wrong model names, the PAD's stale 16.1.3/tailwind.config tree entry/378 count/glossary quarterly wording, this Appendix header) — no code changes |
 
 ---
 
