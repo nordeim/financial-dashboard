@@ -4,17 +4,17 @@ description: >
   Production-grade engineering skill for the Finara financial-dashboard
   codebase — a Next.js 16 + React 19 + TypeScript strict + Tailwind CSS v4
   (CSS-first @theme) + Prisma/SQLite single-page finance tracker maintained
-  as a pixel-faithful, live-probed clone of the Finara base44 app through 25
+  as a pixel-faithful, live-probed clone of the Finara base44 app through 26
   remediation rounds. Covers the SPA real-route architecture, the pinned
   design system (v3 palette pins, shadcn classic primitives), integer-minor-unit
   money math, the parity-remediation workflow (signature diffs, structural
   probes, HTTP-layer audits), TDD discipline, the E2E hermetic gate, and the
-  full debugging/anti-pattern knowledge from 23 rounds of production
+  full debugging/anti-pattern knowledge from 26 rounds of production
   hardening. Use when extending, debugging, auditing, onboarding onto, or
   replicating this codebase — or when cloning any live web app with the same
   rigor.
 version: 1.0.0
-last_updated: "2026-09-23 (round 25 — the seventh zero-drift verification round: the seventh consecutive zero-drift live re-probe (19–25), both operator focus areas cleared again (the mobile nav verified end-to-end both sides at 71/71 drawer nodes; no Tailwind v4 bug — the v3 pin wins the cascade), the raw-order chrome probes byte-identical, the production-readiness review clean with the round-24 fixes verified holding — a verification round, no code changes)"
+last_updated: "2026-09-23 (round 26 — the eighth zero-drift verification round: the eighth consecutive zero-drift live re-probe (19–26), both operator focus areas cleared again (the mobile nav verified end-to-end both sides at 71/71 drawer nodes; no Tailwind v4 bug — the v3 pin wins the cascade), the r26 capture set byte-identical to round-25's on every surface, the raw-order chrome probes byte-identical, the production-readiness review clean with the round-24/25 fixes verified holding — a verification round, no code changes)"
 tags:
   - nextjs
   - react19
@@ -32,7 +32,7 @@ tags:
 
 > **Purpose:** A single-source-of-truth reference for any coding agent working
 > on `nordeim/financial-dashboard`. Every design decision, anti-pattern,
-> debugging procedure, and hard-won lesson from 25 rounds of live-probe parity
+> debugging procedure, and hard-won lesson from 26 rounds of live-probe parity
 > remediation, distilled and codebase-verified. Read the section you need;
 > trust the pins — they were all live-probed.
 
@@ -61,7 +61,7 @@ tags:
 19. [Color Reference (Complete)](#19-color-reference-complete)
 20. [The Complete TypeScript Interface Reference](#20-the-complete-typescript-interface-reference)
 21. [Appendix A — The ADR Catalog](#appendix-a--the-adr-catalog)
-22. [Appendix B — The 25-Round Parity History](#appendix-b--the-25-round-parity-history)
+22. [Appendix B — The 26-Round Parity History](#appendix-b--the-26-round-parity-history)
 23. [Appendix C — The Live-Site Validation Method](#appendix-c--the-live-site-validation-method)
 24. [Appendix D — Quick Reference Card](#appendix-d--quick-reference-card)
 
@@ -915,7 +915,7 @@ Validation: `requireString`, `requireSignedInt`, `requireFiniteNumber`,
 
 ---
 
-## Appendix B — The 25-Round Parity History
+## Appendix B — The 26-Round Parity History
 
 | Round | Focus |
 |-------|-------|
@@ -942,6 +942,7 @@ Validation: `requireString`, `requireSignedInt`, `requireFiniteNumber`,
 | 23 | Fifth zero-drift verification round: fifth consecutive zero-drift re-probe (19–23); mobile-nav + Tailwind v4 cleared again; focused interactive sweep (FAB/chooser/step-2/close-toggle both sides); audit tail 43/0-runtime; ANSI-artifact lesson extended (output-stream-general) — no code changes |
 | 24 | Sixth zero-drift verification round (19–24) + documentation-debt alignment: mobile-nav + Tailwind v4 cleared again; focused interactive sweep + HTTP audit byte-exact; audit tail 43/0-runtime (CI bytes marker-safe-verified, the ANSI artifact re-demonstrated in the round's own script output); remediation = seven doc-drift fixes (the push-runbook's wrong remote + no-CI claim, the 7→8 model count + wrong model names, the PAD's stale 16.1.3/tailwind.config tree entry/378 count/glossary quarterly wording, this Appendix header) — no code changes |
 | 25 | Seventh zero-drift verification round (19–25): mobile-nav + Tailwind v4 cleared again (71/71 drawer nodes; the v3 pin wins the cascade — computed `#2563eb`/`#1e293b`/`#ef4444`/`#34d399`/`#4b5563`); raw-order chrome probes byte-identical (aside/nav/innerPane/active-pill); HTTP layer byte-exact incl. the per-route description template verified in-browser; audit tail 43/0-runtime; CI bytes clean; the seven round-24 doc fixes verified holding — verification only, no code changes |
+| 26 | Eighth zero-drift verification round (19–26): mobile-nav + Tailwind v4 cleared again (71/71 drawer nodes; the v3 pin wins the cascade — computed `#2563eb`/`#1e293b`/`#ef4444`/`#34d399`/`#4b5563`); the r26 capture set byte-identical to round-25's on all 9 desktop surfaces; raw-order chrome probes byte-identical; HTTP layer byte-exact incl. the per-route description template + the root-route default re-verified; audit tail 43/0-runtime; CI verified two ways (needles + GitHub run evidence) after a display-artifact false alarm resolved by hexdump — verification only, no code changes |
 
 ---
 
